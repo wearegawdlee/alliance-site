@@ -1,0 +1,54 @@
+# Alliance Garage Doors of Roswell — robots.txt
+# Allow major search and social bots, block common scrapers
+
+User-agent: *
+Disallow: /private/
+Allow: /
+
+Sitemap: https://www.alliancegaragedoors.com/sitemap.xml
+
+# --- Allowlist: legit crawlers ---
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: FacebookExternalHit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+# --- Blocklist: unnecessary crawlers ---
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: Yandex
+Disallow: /
+
+# End of file
