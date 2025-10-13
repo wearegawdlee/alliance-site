@@ -1,0 +1,223 @@
+---
+import Base from "../layouts/Base.astro";
+import ServiceAreas from "../components/ServiceAreas.jsx";
+
+const BIZ = {
+  name: "Alliance Garage Doors of Roswell",
+  phone: "(770)742-9433",
+  email: "alliancegaragedoorroswell@gmail.com",
+  address: "Roswell, GA 30075",
+  hours: "Mon–Sat 7:00am–7:00pm",
+};
+
+const title = `${BIZ.name} | Garage Door Repair & Installation in Roswell, GA`;
+const description =
+  "Same-day garage door repair, spring replacement, opener installs, and new doors. Sensible pricing. Serving Roswell & North Atlanta.";
+---
+
+<Base {title} {description}>
+  <!-- Header -->
+  <header class="bg-white border-b border-neutral-200">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="/logo-main.webp" alt={`${BIZ.name} logo`} class="h-10 md:h-24 object-contain" />
+      </div>
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#services" class="hover:text-neutral-600">Services</a>
+        <a href="#why" class="hover:text-neutral-600">Why Us</a>
+        <a href="#areas" class="hover:text-neutral-600">Areas</a>
+        <a href="#faq" class="hover:text-neutral-600">FAQ</a>
+        <a href="#contact" class="hover:text-neutral-600">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-cyan-900 via-teal-900 to-blue-900 text-white">
+    <div class="absolute inset-0 opacity-20" aria-hidden="true">
+      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
+    <div class="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
+      <h1 class="text-4xl md:text-5xl font-semibold leading-tight">
+        Top of class Garage Door Service for Roswell & North Atlanta
+      </h1>
+      <p class="mt-4 max-w-2xl text-neutral-200">
+        Spring and cable replacement, opener and new door installs. Get your quote today.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href={`tel:${BIZ.phone}`} class="rounded-2xl bg-white text-neutral-900 px-5 py-3 font-medium hover:bg-neutral-100">
+          Call {(BIZ.phone)}
+        </a>
+        <a href={`sms:${BIZ.phone}`} class="rounded-2xl bg-transparent ring-1 ring-white/40 px-5 py-3 font-medium hover:bg-white/10">
+          Text for ETA
+        </a>
+        <a href="#contact" class="rounded-2xl bg-transparent ring-1 ring-white/40 px-5 py-3 font-medium hover:bg-white/10">
+          Email
+        </a>
+      </div>
+      <p class="mt-3 text-sm text-neutral-300">Hours: {BIZ.hours}</p>
+    </div>
+  </section>
+
+  <!-- Trust bar -->
+  <section class="bg-white">
+    <div class="mx-auto max-w-6xl px-4 py-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
+      {["Family Owned","IDEA Certified","Licensed & Insured"].map((t) => (
+        <div class="rounded-xl border border-neutral-200 px-3 py-2 text-center text-sm">{t}</div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section id="services" class="bg-neutral-200">
+    <div class="mx-auto max-w-6xl px-4 py-16">
+      <h2 class="text-2xl md:text-3xl font-semibold">Services</h2>
+      <p class="mt-2 text-neutral-600 max-w-2xl">
+        Whether it’s a broken spring, dented panel, or a quiet new opener, we keep your doors functioning safely and securely.
+      </p>
+      <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {title:"Repairs",desc:"Broken springs, cables, rollers, tracks, panels, off-track doors, noisy operation.",bullets:["Torsion & extension springs","Cables/rollers/hinges","Track & alignment"]},
+          {title:"Openers",desc:"Install, replace, or fix belt/chain drive openers. Smart Wi-Fi setups included.",bullets:["LiftMaster • Genie","Keypads & remotes","MyQ, HomeKit, Google"]},
+          {title:"New Doors",desc:"Sales & installation — steel, carriage, insulated, glass. Free onsite measure.",bullets:["Design consult","Insulated R-values","Haul-away included"]},
+          {title:"Maintenance",desc:"Lube & tune, safety checks, balance, preventive parts before costly failures.",bullets:["Annual tune-ups","Safety sensors","Door balance & force"]},
+        ].map((s) => (
+          <article class="rounded-2xl bg-white border border-neutral-200 p-5">
+            <h3 class="font-semibold text-lg">{s.title}</h3>
+            <p class="mt-2 text-sm text-neutral-600">{s.desc}</p>
+            <ul class="mt-3 space-y-1 text-sm">
+              {s.bullets.map((b) => (
+                <li class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-neutral-900"></span>
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery using your images -->
+  <section class="bg-neutral-200">
+    <div class="mx-auto max-w-2xl px-12 py-8">
+      <h2 class="text-2xl md:text-3xl font-semibold text-center">Recent Work</h2>
+      <p class="mt-2 text-neutral-600 text-center">A few before and after pics from the past month.</p>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        {["/Before1.webp","/After1.webp"].map((src) => (
+          <img
+            src={src}
+            alt="Garage door project"
+            class="h-40 w-auto object-cover rounded-xl border border-neutral-200"
+            loading="lazy"
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- React island -->
+  <ServiceAreas client:visible />
+
+  <!-- Contact -->
+  <section id="contact" class="bg-neutral-50">
+    <div class="mx-auto max-w-6xl px-4 py-16 grid md:grid-cols-2 gap-10">
+      <div>
+        <h2 class="text-2xl md:text-3xl font-semibold">Get a Quote</h2>
+        <p class="mt-2 text-neutral-600">Call, text, or send the form. Include photos for fastest pricing.</p>
+        <div class="mt-4 space-y-2 text-sm">
+          <p><strong>Phone/Text:</strong> <a class="underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></p>
+          <p><strong>Email:</strong> <a class="underline" href={`mailto:${BIZ.email}`}>{BIZ.email}</a></p>
+          <p><strong>Address:</strong> {BIZ.address}</p>
+          <p><strong>Hours:</strong> {BIZ.hours}</p>
+        </div>
+      </div>
+
+      <form class="rounded-2xl bg-white border border-neutral-200 p-6 space-y-4"
+            action="https://formspree.io/f/xdkwwdnv" method="POST">
+        <div>
+          <label class="block text-sm font-medium">Name</label>
+          <input name="name" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Phone</label>
+          <input name="phone" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Email</label>
+          <input type="email" name="email" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">City</label>
+          <input name="city" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">What’s going on?</label>
+          <textarea name="message" rows={4} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, opener install, new doors…"></textarea>
+        </div>
+        <button type="submit" class="w-full rounded-2xl bg-neutral-900 text-white px-5 py-3 font-medium hover:bg-neutral-800">
+          Send Request
+        </button>
+        <p class="text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-neutral-200">
+    <div class="mx-auto max-w-6xl px-4 py-10 grid md:grid-cols-3 gap-8 text-sm">
+      <div>
+        <p class="mt-2 text-neutral-600 max-w-sm">Reliable installation and repair with fair and sensible pricing.</p>
+      </div>
+      <div>
+        <p class="font-medium">Quick Links</p>
+        <ul class="mt-2 space-y-1">
+          <li><a class="hover:underline" href="#services">Services</a></li>
+          <li><a class="hover:underline" href="#areas">Service Areas</a></li>
+          <li><a class="hover:underline" href="#faq">FAQ</a></li>
+          <li><a class="hover:underline" href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-medium">Contact</p>
+        <ul class="mt-2 space-y-1">
+          <li><a class="hover:underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></li>
+          <li><a class="hover:underline" href={`sms:${BIZ.phone}`}>Text us</a></li>
+          <li><a class="hover:underline" href={`mailto:${BIZ.email}`}>{BIZ.email}</a></li>
+          <li>{BIZ.address}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-neutral-200 py-4 text-center text-xs text-neutral-500">
+      © {new Date().getFullYear()} {BIZ.name}. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- LocalBusiness schema -->
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context":"https://schema.org",
+      "@type":"LocalBusiness",
+      name: BIZ.name,
+      telephone: BIZ.phone,
+      email: BIZ.email,
+      address: {
+        "@type":"PostalAddress",
+        streetAddress: BIZ.address,
+        addressLocality:"Roswell",
+        addressRegion:"GA",
+        postalCode:"30075",
+        addressCountry:"US"
+      },
+      url: "https://agdofroswell.com"
+    })}
+  </script>
+</Base>

@@ -1,0 +1,23 @@
+---
+// keep this filename exactly: src/layouts/Base.astro
+import "../styles/global.css";
+
+const {
+  title = "Alliance Garage Doors of Roswell",
+  description = "Same-day garage door repair & installation for Roswell & North Atlanta.",
+} = Astro.props;
+---
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/logo-main.webp" />
+  </head>
+  <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+    <slot />
+    <!-- Vercel Web Analytics (no React, SSR-safe) -->
+<script defer src="/_vercel/insights/script.js"></script>
+  </body>
+</html>
