@@ -1,14 +1,9 @@
-// Single‑file React component for a small‑business website
-// Tech: React + Tailwind CSS classes (no external UI deps)
-// Deploy anywhere (Netlify/Vercel/Static). Replace the TODO fields below.
-
-
 const BIZ = {
-  name: "Alliance Garage Doors of Roswell", // TODO: business name
-  phone: "(770)742-9433", // TODO: real phone
+  name: "Alliance Garage Doors of Roswell", 
+  phone: "(770)742-9433", 
   address: "Roswell, GA 30075", 
-  sms: "(770)742-9433", // TODO: SMS-capable number (can be same as phone)
-  email: "alliancegaragedoorroswell@gmail.com",// TODO: full street + city + ZIP
+  sms: "(770)742-9433",
+  email: "alliancegaragedoorroswell@gmail.com",
   hours: "Mon–Sat 7:00am–7:00pm",
   serviceAreas: [
     "Atlanta",
@@ -39,11 +34,10 @@ const BIZ = {
   
 };
 
-// Logo assets )
 const LOGO = {
-  main: "logo-main.webp", // horizontal lockup
-  markBlue: "house-logo.jpg", // square mark, blue
-  markWhite: "white-logo.png", // square mark, white
+  main: "logo-main.webp",
+  markBlue: "house-logo.jpg", 
+  markWhite: "white-logo.png",
 };
 
 export default function AllianceGarageDoorsSite() {
@@ -149,14 +143,15 @@ function Hero() {
 
 function TrustBar() {
   const items = [
-    "Same‑Day Service",
+    "Family Owned",
+    "IDEA Certified",
     "Licensed & Insured",
-    "Workmanship Warranty",
-    "Locally Owned",
+    
+    
   ];
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <div className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
         {items.map((t) => (
           <div key={t} className="rounded-xl border border-neutral-200 px-3 py-2 text-center text-sm">
             {t}
@@ -177,7 +172,7 @@ function Services() {
     {
       title: "Openers",
       desc: "Install, replace, or fix belt/chain drive openers. Smart Wi‑Fi setups included.",
-      bullets: ["LiftMaster • Chamberlain • Genie", "Keypads & remotes", "MyQ, HomeKit, Google"],
+      bullets: ["LiftMaster • Genie", "Keypads & remotes", "MyQ, HomeKit, Google"],
     },
     {
       title: "New Doors",
@@ -195,7 +190,7 @@ function Services() {
       <div className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-2xl md:text-3xl font-semibold">Services</h2>
         <p className="mt-2 text-neutral-600 max-w-2xl">
-          Whether it’s a broken spring at 7am or a quiet new opener, we keep your doors functioning safely and securely.
+          Whether it’s a broken spring, dented panel, or a quiet new opener, we keep your doors functioning safely and securely.
         </p>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((s) => (
@@ -249,7 +244,6 @@ function WhyUs() {
             We’re the crew neighbors call when they want it fixed right the first time.
           </p>
 
-          {/* Changed this line to make the cards 2 by 2 */}
           
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             {points.map((p) => (
