@@ -12,25 +12,63 @@ const BIZ = {
 
 const title = `${BIZ.name} | Garage Door Repair & Installation in Roswell, GA`;
 const description =
-  "Same-day garage door repair, spring replacement, opener installs, and new doors. Sensible pricing. Serving Roswell & North Atlanta.";
+  "Residential garage door repair, spring replacement, opener installs, and new doors. Sensible pricing. Serving Roswell & North Atlanta.";
 ---
 
 <Base {title} {description}>
   <!-- Header -->
-  <header class="bg-white border-b border-neutral-200">
-    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="/logo-main.webp" alt={`${BIZ.name} logo`} class="h-10 md:h-24 object-contain" />
-      </div>
-      <nav class="hidden md:flex items-center gap-6 text-sm">
-        <a href="#services" class="hover:text-neutral-600">Services</a>
-        <a href="#why" class="hover:text-neutral-600">Why Us</a>
-        <a href="#areas" class="hover:text-neutral-600">Areas</a>
-        <a href="#faq" class="hover:text-neutral-600">FAQ</a>
-        <a href="#contact" class="hover:text-neutral-600">Contact</a>
-      </nav>
+<header class="bg-white border-b border-neutral-200">
+  <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <img src="/logo-main.webp" alt={`${BIZ.name} logo`} class="h-10 md:h-36 object-contain" />
     </div>
-  </header>
+
+    <!-- Mobile Menu Button -->
+    <button
+      id="menu-btn"
+      class="md:hidden flex flex-col justify-between w-6 h-5 focus:outline-none"
+      aria-label="Toggle Menu"
+    >
+      <span class="block w-full h-0.5 bg-black"></span>
+      <span class="block w-full h-0.5 bg-black"></span>
+      <span class="block w-full h-0.5 bg-black"></span>
+    </button>
+
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-6 text-sm">
+      <a href="#services" class="hover:text-neutral-600">Services</a>
+      <a href="#why" class="hover:text-neutral-600">Why Us</a>
+      <a href="#areas" class="hover:text-neutral-600">Areas</a>
+      <a href="#faq" class="hover:text-neutral-600">FAQ</a>
+      <a href="#contact" class="hover:text-neutral-600">Contact</a>
+    </nav>
+  </div>
+
+  <!-- Mobile Dropdown -->
+  <nav
+    id="mobile-menu"
+    class="hidden flex-col items-start gap-4 px-4 pb-4 border-t border-neutral-200 md:hidden"
+  >
+    <a href="#services" class="hover:text-neutral-600">Services</a>
+    <a href="#why" class="hover:text-neutral-600">Why Us</a>
+    <a href="#areas" class="hover:text-neutral-600">Areas</a>
+    <a href="#faq" class="hover:text-neutral-600">FAQ</a>
+    <a href="#contact" class="hover:text-neutral-600">Contact</a>
+  </nav>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("menu-btn");
+      const menu = document.getElementById("mobile-menu");
+
+      btn.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
+      });
+    });
+  </script>
+</header>
+
 
   <!-- Hero -->
   <section class="relative overflow-hidden bg-gradient-to-br from-cyan-900 via-teal-900 to-blue-900 text-white">
@@ -46,10 +84,10 @@ const description =
     </div>
     <div class="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
       <h1 class="text-4xl md:text-5xl font-semibold leading-tight">
-        Top of class Garage Door Service for Roswell & North Atlanta
+        Top Of Class Garage Door Service For Roswell & North Atlanta
       </h1>
       <p class="mt-4 max-w-2xl text-neutral-200">
-        Spring and cable replacement, opener and new door installs. Get your quote today.
+        Residential garage door repair, spring replacement, opener installs, and new doors. Sensible pricing. Serving Roswell & North Atlanta.
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
         <a href={`tel:${BIZ.phone}`} class="rounded-2xl bg-white text-neutral-900 px-5 py-3 font-medium hover:bg-neutral-100">
@@ -106,6 +144,51 @@ const description =
     </div>
   </section>
 
+  <!-- Why Us -->
+<section id="why" class="bg-white">
+  <div class="mx-auto max-w-6xl px-4 py-16 grid md:grid-cols-1 gap-10">
+    <div>
+      <h2 class="text-2xl md:text-3xl font-semibold text-center">
+        Why choose {BIZ.name}?
+      </h2>
+      <p class="mt-3 text-neutral-600 text-center">
+        We’re the crew neighbors call when they want it fixed right the first time.
+      </p>
+
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          {
+            title: "No pressure, just solutions",
+            body:
+              "Clear diagnostics and options. If a repair is all you need, that’s what we’ll do.",
+          },
+          {
+            title: "Parts that last",
+            body:
+              "We use high-cycle springs, sealed rollers, and pro-grade hardware to extend service life.",
+          },
+          {
+            title: "Respect for your time",
+            body:
+              "Tight arrival windows and text updates so you’re not stuck waiting all day.",
+          },
+          {
+            title: "Local and accountable",
+            body:
+              "Owned in Roswell. We live where we work. Your referrals keep us honest.",
+          },
+        ].map((p) => (
+          <div class="rounded-xl border border-neutral-200 p-4">
+            <h3 class="font-medium">{p.title}</h3>
+            <p class="text-sm text-neutral-600 mt-1">{p.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+
   <!-- Gallery using your images -->
   <section class="bg-neutral-200">
     <div class="mx-auto max-w-2xl px-12 py-8">
@@ -131,12 +214,11 @@ const description =
   <section id="contact" class="bg-neutral-50">
     <div class="mx-auto max-w-6xl px-4 py-16 grid md:grid-cols-2 gap-10">
       <div>
-        <h2 class="text-2xl md:text-3xl font-semibold">Get a Quote</h2>
+        <h2 class="text-2xl md:text-3xl font-semibold">Get an Estimate</h2>
         <p class="mt-2 text-neutral-600">Call, text, or send the form. Include photos for fastest pricing.</p>
         <div class="mt-4 space-y-2 text-sm">
-          <p><strong>Phone/Text:</strong> <a class="underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></p>
+          <p><strong>Call/Text:</strong> <a class="underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></p>
           <p><strong>Email:</strong> <a class="underline" href={`mailto:${BIZ.email}`}>{BIZ.email}</a></p>
-          <p><strong>Address:</strong> {BIZ.address}</p>
           <p><strong>Hours:</strong> {BIZ.hours}</p>
         </div>
       </div>
@@ -163,10 +245,51 @@ const description =
           <label class="block text-sm font-medium">What’s going on?</label>
           <textarea name="message" rows={4} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, opener install, new doors…"></textarea>
         </div>
+        <div>
+          <label class="block text-sm font-medium">How did you hear about us?</label>
+            <select
+              id="source"
+              name="source"
+              required
+              class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
+              on:change={() => {
+                const otherField = document.getElementById('source_other');
+                const selected = document.getElementById('source').value;
+                if (selected === 'Other' || selected === 'Friend / Referral') 
+                {
+                  otherField.style.display = 'block';
+                } 
+                  else 
+                {
+                  otherField.style.display = 'none';
+                  otherField.value = '';
+                }
+              }}
+            >
+            <option value="">Select one</option>
+            <option>Google Search</option>
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>Nextdoor</option>
+            <option>Yard Sign / Truck</option>
+            <option>Friend / Referral</option>
+            <option>Repeat Customer</option>
+            <option>Other</option>
+          <input
+            style="display:block"
+            class="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2"
+            placeholder="If Other or Referral, tell us who/where"
+          />
+          </select>
+        </div>
+
+        
+        
         <button type="submit" class="w-full rounded-2xl bg-neutral-900 text-white px-5 py-3 font-medium hover:bg-neutral-800">
           Send Request
         </button>
         <p class="text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
+        <p class="text-xs text-neutral-500">We only use your info to reply. No sharing, no spam.</p>
       </form>
     </div>
   </section>
@@ -174,9 +297,6 @@ const description =
   <!-- Footer -->
   <footer class="bg-white border-t border-neutral-200">
     <div class="mx-auto max-w-6xl px-4 py-10 grid md:grid-cols-3 gap-8 text-sm">
-      <div>
-        <p class="mt-2 text-neutral-600 max-w-sm">Reliable installation and repair with fair and sensible pricing.</p>
-      </div>
       <div>
         <p class="font-medium">Quick Links</p>
         <ul class="mt-2 space-y-1">
@@ -190,9 +310,7 @@ const description =
         <p class="font-medium">Contact</p>
         <ul class="mt-2 space-y-1">
           <li><a class="hover:underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></li>
-          <li><a class="hover:underline" href={`sms:${BIZ.phone}`}>Text us</a></li>
           <li><a class="hover:underline" href={`mailto:${BIZ.email}`}>{BIZ.email}</a></li>
-          <li>{BIZ.address}</li>
         </ul>
       </div>
     </div>

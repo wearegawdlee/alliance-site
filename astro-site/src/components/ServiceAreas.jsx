@@ -3,9 +3,9 @@ import { useState, useMemo, useRef, useEffect } from "react";
 const BIZ = {
   phone: "(770)742-9433",
   serviceAreas: [
-    "Atlanta","Alpharetta","Buckhead","Buford","Brookhaven","Canton","Chamblee",
-    "Cumming","Decatur","Duluth","Dunwoody","Doraville","Johns Creek","Kennesaw",
-    "East Cobb","Marietta","Milton","Norcross","Roswell","Sandy Springs","Woodstock",
+    "Alpharetta","Atlanta","Brookhaven","Buckhead","Buford","Canton","Chamblee",
+    "Cumming","Decatur","Doraville","Duluth","Dunwoody","Druid Hills","East Cobb","Johns Creek","Kennesaw",
+    "Marietta","Milton","Norcross",  "Peachtree Corners", "Roswell", "Sandy Springs","Smyrna", "Suwanee", "Woodstock",
   ],
 };
 
