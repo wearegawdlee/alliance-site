@@ -39,6 +39,7 @@ const description =
     <nav class="hidden md:flex items-center gap-6 text-sm">
       <a href="#services" class="hover:text-neutral-600">Services</a>
       <a href="#why" class="hover:text-neutral-600">Why Us</a>
+      <a href="#recent" class="hover:text-neutral-600">Recent Work</a>
       <a href="#areas" class="hover:text-neutral-600">Areas</a>
       <a href="#faq" class="hover:text-neutral-600">FAQ</a>
       <a href="#contact" class="hover:text-neutral-600">Contact</a>
@@ -52,6 +53,7 @@ const description =
   >
     <a href="#services" class="hover:text-neutral-600">Services</a>
     <a href="#why" class="hover:text-neutral-600">Why Us</a>
+    <a href="#recent" class="hover:text-neutral-600">Recent Work</a>
     <a href="#areas" class="hover:text-neutral-600">Areas</a>
     <a href="#faq" class="hover:text-neutral-600">FAQ</a>
     <a href="#contact" class="hover:text-neutral-600">Contact</a>
@@ -84,20 +86,14 @@ const description =
     </div>
     <div class="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
       <h1 class="text-4xl md:text-5xl font-semibold leading-tight">
-        Top Of Class Garage Door Service For Roswell & North Atlanta
+        Garage Door Experts for Roswell & North Atlanta
       </h1>
       <p class="mt-4 max-w-2xl text-neutral-200">
-        Residential garage door repair, spring replacement, opener installs, and new doors. Sensible pricing. Serving Roswell & North Atlanta.
+        Replacement and repair for residential garage door systems.
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
-        <a href={`tel:${BIZ.phone}`} class="rounded-2xl bg-white text-neutral-900 px-5 py-3 font-medium hover:bg-neutral-100">
-          Call {(BIZ.phone)}
-        </a>
-        <a href={`sms:${BIZ.phone}`} class="rounded-2xl bg-transparent ring-1 ring-white/40 px-5 py-3 font-medium hover:bg-white/10">
-          Text for ETA
-        </a>
-        <a href="#contact" class="rounded-2xl bg-transparent ring-1 ring-white/40 px-5 py-3 font-medium hover:bg-white/10">
-          Email
+        <a href="#contact" class="rounded-3xl bg-white text-neutral-900 px-6 py-2 font-medium hover:bg-neutral-100">
+          Get an Estimate Today
         </a>
       </div>
       <p class="mt-3 text-sm text-neutral-300">Hours: {BIZ.hours}</p>
@@ -190,7 +186,7 @@ const description =
 
 
   <!-- Gallery using your images -->
-  <section class="bg-neutral-200">
+  <section id="recent" class="bg-neutral-200">
     <div class="mx-auto max-w-2xl px-12 py-8">
       <h2 class="text-2xl md:text-3xl font-semibold text-center">Recent Work</h2>
       <p class="mt-2 text-neutral-600 text-center">A few before and after pics from the past month.</p>
@@ -212,18 +208,17 @@ const description =
 
   <!-- Contact -->
   <section id="contact" class="bg-neutral-50">
-    <div class="mx-auto max-w-6xl px-4 py-16 grid md:grid-cols-2 gap-10">
-      <div>
+    <div class="mx-auto max-w-6xl px-4 py-16 grid md:grid-cols-1 gap-10">
+      <div class="text-center">
         <h2 class="text-2xl md:text-3xl font-semibold">Get an Estimate</h2>
         <p class="mt-2 text-neutral-600">Call, text, or send the form. Include photos for fastest pricing.</p>
         <div class="mt-4 space-y-2 text-sm">
           <p><strong>Call/Text:</strong> <a class="underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></p>
-          <p><strong>Email:</strong> <a class="underline" href={`mailto:${BIZ.email}`}>{BIZ.email}</a></p>
           <p><strong>Hours:</strong> {BIZ.hours}</p>
         </div>
       </div>
 
-      <form class="rounded-2xl bg-white border border-neutral-200 p-6 space-y-4"
+  <form class="w-full max-w-md mx-auto rounded-3xl bg-white border border-neutral-200 p-4 space-y-3"
             action="https://formspree.io/f/xdkwwdnv" method="POST">
         <div>
           <label class="block text-sm font-medium">Name</label>
@@ -288,8 +283,10 @@ const description =
         <button type="submit" class="w-full rounded-2xl bg-neutral-900 text-white px-5 py-3 font-medium hover:bg-neutral-800">
           Send Request
         </button>
+        <div class="text-center"
         <p class="text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
         <p class="text-xs text-neutral-500">We only use your info to reply. No sharing, no spam.</p>
+        </div>
       </form>
     </div>
   </section>
@@ -301,6 +298,8 @@ const description =
         <p class="font-medium">Quick Links</p>
         <ul class="mt-2 space-y-1">
           <li><a class="hover:underline" href="#services">Services</a></li>
+          <li><a class="hover:underline" href="#why">Why Us</a></li>
+          <li><a class="hover:underline" href="#recent">Recent Work</a></li>
           <li><a class="hover:underline" href="#areas">Service Areas</a></li>
           <li><a class="hover:underline" href="#faq">FAQ</a></li>
           <li><a class="hover:underline" href="#contact">Contact</a></li>
@@ -311,6 +310,23 @@ const description =
         <ul class="mt-2 space-y-1">
           <li><a class="hover:underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></li>
           <li><a class="hover:underline" href={`mailto:${BIZ.email}`}>{BIZ.email}</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-medium">Social</p>
+        <ul class="mt-2 space-y-2">
+          <li>
+            <a class="flex items-center gap-2 hover:underline" href="https://www.facebook.com/profile.php?id=61577271513745" target="_blank" rel="noopener noreferrer">
+              <svg class="h-4 w-4 text-neutral-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12.07C22 6.48 17.52 2 11.93 2S2 6.48 2 12.07C2 17.07 5.66 21.18 10.44 21.95v-6.93H8.08v-2.99h2.36V9.35c0-2.33 1.39-3.61 3.52-3.61 1.02 0 2.08.18 2.08.18v2.29h-1.17c-1.15 0-1.51.72-1.51 1.46v1.75h2.57l-.41 2.99h-2.16V21.95C18.34 21.18 22 17.07 22 12.07z"/></svg>
+              Facebook
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2 hover:underline" href="https://www.instagram.com/alliancegaragedoorsga/" target="_blank" rel="noopener noreferrer">
+              <svg class="h-4 w-4 text-neutral-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 6.2A3.8 3.8 0 1 0 15.8 12 3.8 3.8 0 0 0 12 8.2zM18.5 6.1a1.1 1.1 0 1 0 1.1 1.1 1.1 1.1 0 0 0-1.1-1.1z"/></svg>
+              Instagram
+            </a>
+          </li>
         </ul>
       </div>
     </div>
