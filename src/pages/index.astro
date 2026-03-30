@@ -235,7 +235,7 @@ const description =
         </div>
         <div>
           <label class="block text-sm font-medium">City</label>
-          <input name="city" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <input id="city" name="city" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
           <label class="block text-sm font-medium">What’s going on?</label>
@@ -354,5 +354,14 @@ const description =
       },
       url: "https://agdofroswell.com"
     })}
+  </script>
+
+  <script is:inline>
+    window.addEventListener("service-area-selected", (event) => {
+      const cityInput = document.getElementById("city");
+      if (!cityInput) return;
+      cityInput.value = event.detail;
+      cityInput.dispatchEvent(new Event("input", { bubbles: true }));
+    });
   </script>
 </Base>

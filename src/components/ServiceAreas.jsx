@@ -27,7 +27,13 @@ export default function ServiceAreas() {
         <div className="relative mt-6 max-w-md">
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setQuery(value);
+              if (BIZ.serviceAreas.includes(value)) {
+                window.dispatchEvent(new CustomEvent("service-area-selected", { detail: value }));
+              }
+            }}
             placeholder="Search your city..."
             list="service-areas"
             className="w-full rounded-2xl bg-white/5 px-4 py-3 pr-12 ring-1 ring-white/20 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/40"
