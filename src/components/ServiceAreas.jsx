@@ -26,24 +26,7 @@ export default function ServiceAreas() {
         <p className="mt-2 text-neutral-300">Based in Roswell, covering North Atlanta.</p>
 
         <div className="relative mt-6 max-w-md">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const value = query.trim();
-              if (!value) {
-                setResult({ ok: false, message: "Enter a city to check." });
-                return;
-              }
-              const match = BIZ.serviceAreas.find((area) => area.toLowerCase() === value.toLowerCase());
-              if (match) {
-                setResult({ ok: true, message: `Yes — we service ${match}.` });
-                window.dispatchEvent(new CustomEvent("service-area-selected", { detail: match }));
-              } else {
-                setResult({ ok: false, message: "Not seeing your area? Call us and we’ll check availability." });
-              }
-            }}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             <input
               value={query}
               onChange={(e) => {
@@ -53,17 +36,47 @@ export default function ServiceAreas() {
                   window.dispatchEvent(new CustomEvent("service-area-selected", { detail: value }));
                 }
               }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                const value = query.trim();
+                if (!value) {
+                  setResult({ ok: false, message: "Enter a city to check." });
+                  return;
+                }
+                const match = BIZ.serviceAreas.find((area) => area.toLowerCase() === value.toLowerCase());
+                if (match) {
+                  setResult({ ok: true, message: `Yes — we service ${match}.` });
+                  window.dispatchEvent(new CustomEvent("service-area-selected", { detail: match }));
+                } else {
+                  setResult({ ok: false, message: "Not seeing your area? Call us and we’ll check availability." });
+                }
+              }}
               placeholder="Search your city..."
               list="service-areas"
               className="w-full rounded-2xl bg-white/5 px-4 py-3 pr-12 ring-1 ring-white/20 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/40"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => {
+                const value = query.trim();
+                if (!value) {
+                  setResult({ ok: false, message: "Enter a city to check." });
+                  return;
+                }
+                const match = BIZ.serviceAreas.find((area) => area.toLowerCase() === value.toLowerCase());
+                if (match) {
+                  setResult({ ok: true, message: `Yes — we service ${match}.` });
+                  window.dispatchEvent(new CustomEvent("service-area-selected", { detail: match }));
+                } else {
+                  setResult({ ok: false, message: "Not seeing your area? Call us and we’ll check availability." });
+                }
+              }}
               className="w-full rounded-2xl bg-white text-black px-4 py-2 font-medium hover:bg-neutral-200"
             >
               Check Availability
             </button>
-          </form>
+          </div>
           {query && (
             <button
               onClick={() => setQuery("")}
