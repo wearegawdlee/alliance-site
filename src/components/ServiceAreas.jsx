@@ -11,6 +11,7 @@ const BIZ = {
 
 export default function ServiceAreas() {
   const [query, setQuery] = useState("");
+  const [result, setResult] = useState(null);
 
   const results = useMemo(() => {
     const s = query.trim().toLowerCase();
@@ -38,6 +39,26 @@ export default function ServiceAreas() {
             list="service-areas"
             className="w-full rounded-2xl bg-white/5 px-4 py-3 pr-12 ring-1 ring-white/20 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/40"
           />
+          <button
+            type="button"
+            onClick={() => {
+              const value = query.trim();
+              if (!value) {
+                setResult({ ok: false, message: "Enter a city to check." });
+                return;
+              }
+              const match = BIZ.serviceAreas.find((area) => area.toLowerCase() === value.toLowerCase());
+              if (match) {
+                setResult({ ok: true, message: `Yes — we service ${match}.` });
+                window.dispatchEvent(new CustomEvent("service-area-selected", { detail: match }));
+              } else {
+                setResult({ ok: false, message: "Not seeing your area? Call us and we’ll check availability." });
+              }
+            }}
+            className="mt-3 w-full rounded-2xl bg-white text-black px-4 py-2 font-medium hover:bg-neutral-200"
+          >
+            Check Availability
+          </button>
           {query && (
             <button
               onClick={() => setQuery("")}
@@ -52,6 +73,11 @@ export default function ServiceAreas() {
               <option value={area} key={area} />
             ))}
           </datalist>
+          {result && (
+            <p className={result.ok ? "mt-3 text-sm text-emerald-300" : "mt-3 text-sm text-amber-300"}>
+              {result.message}
+            </p>
+          )}
         </div>
       </div>
     </section>
