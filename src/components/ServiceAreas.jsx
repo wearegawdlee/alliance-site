@@ -26,22 +26,9 @@ export default function ServiceAreas() {
         <p className="mt-2 text-neutral-300">Based in Roswell, covering North Atlanta.</p>
 
         <div className="relative mt-6 max-w-md">
-          <input
-            value={query}
-            onChange={(e) => {
-              const value = e.target.value;
-              setQuery(value);
-              if (BIZ.serviceAreas.includes(value)) {
-                window.dispatchEvent(new CustomEvent("service-area-selected", { detail: value }));
-              }
-            }}
-            placeholder="Search your city..."
-            list="service-areas"
-            className="w-full rounded-2xl bg-white/5 px-4 py-3 pr-12 ring-1 ring-white/20 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/40"
-          />
-          <button
-            type="button"
-            onClick={() => {
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
               const value = query.trim();
               if (!value) {
                 setResult({ ok: false, message: "Enter a city to check." });
@@ -55,10 +42,28 @@ export default function ServiceAreas() {
                 setResult({ ok: false, message: "Not seeing your area? Call us and we’ll check availability." });
               }
             }}
-            className="mt-3 w-full rounded-2xl bg-white text-black px-4 py-2 font-medium hover:bg-neutral-200"
+            className="space-y-3"
           >
-            Check Availability
-          </button>
+            <input
+              value={query}
+              onChange={(e) => {
+                const value = e.target.value;
+                setQuery(value);
+                if (BIZ.serviceAreas.includes(value)) {
+                  window.dispatchEvent(new CustomEvent("service-area-selected", { detail: value }));
+                }
+              }}
+              placeholder="Search your city..."
+              list="service-areas"
+              className="w-full rounded-2xl bg-white/5 px-4 py-3 pr-12 ring-1 ring-white/20 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/40"
+            />
+            <button
+              type="submit"
+              className="w-full rounded-2xl bg-white text-black px-4 py-2 font-medium hover:bg-neutral-200"
+            >
+              Check Availability
+            </button>
+          </form>
           {query && (
             <button
               onClick={() => setQuery("")}
@@ -74,7 +79,7 @@ export default function ServiceAreas() {
             ))}
           </datalist>
           {result && (
-            <p className={result.ok ? "mt-3 text-sm text-emerald-300" : "mt-3 text-sm text-amber-300"}>
+            <p className={result.ok ? "mt-3 text-sm text-emerald-300" : "mt-3 text-sm text-amber-300"} aria-live="polite">
               {result.message}
             </p>
           )}
