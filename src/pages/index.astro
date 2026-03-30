@@ -10,6 +10,12 @@ const BIZ = {
   hours: "Mon–Sat 7:00am–7:00pm",
 };
 
+const serviceAreas = [
+  "Alpharetta","Atlanta","Brookhaven","Buckhead","Buford","Canton","Chamblee",
+  "Cumming","Decatur","Doraville","Duluth","Dunwoody","Druid Hills","East Cobb","Johns Creek","Kennesaw",
+  "Marietta","Milton","Norcross","Peachtree Corners","Roswell","Sandy Springs","Smyrna","Suwanee","Woodstock",
+];
+
 const title = `${BIZ.name} | Garage Door Repair & Installation in Roswell, GA`;
 const description =
   "Residential garage door repair, spring replacement, opener installs, and new doors. Sensible pricing. Serving Roswell & North Atlanta.";
@@ -234,7 +240,17 @@ const description =
         </div>
         <div>
           <label class="block text-sm font-medium">City</label>
-          <input name="city" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <input
+            name="city"
+            list="service-areas"
+            autocomplete="address-level2"
+            class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
+          />
+          <datalist id="service-areas">
+            {serviceAreas.map((area) => (
+              <option value={area} />
+            ))}
+          </datalist>
         </div>
         <div>
           <label class="block text-sm font-medium">What’s going on?</label>
