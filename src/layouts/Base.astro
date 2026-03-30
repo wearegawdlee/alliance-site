@@ -14,6 +14,14 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/house-Logo.png" />
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EGY4NR1KG6"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-EGY4NR1KG6');
+    </script>
   </head>
   <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
     <slot />
