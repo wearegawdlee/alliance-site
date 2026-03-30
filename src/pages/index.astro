@@ -1,6 +1,5 @@
 ---
 import Base from "../layouts/Base.astro";
-import ServiceAreas from "../components/ServiceAreas.jsx";
 
 const BIZ = {
   name: "Alliance Garage Doors of Roswell",
@@ -9,6 +8,12 @@ const BIZ = {
   address: "Roswell, GA 30075",
   hours: "Mon–Sat 7:00am–7:00pm",
 };
+
+const serviceAreas = [
+  "Alpharetta","Atlanta","Brookhaven","Buckhead","Buford","Canton","Chamblee",
+  "Cumming","Decatur","Doraville","Duluth","Dunwoody","Druid Hills","East Cobb","Johns Creek","Kennesaw",
+  "Marietta","Milton","Norcross","Peachtree Corners","Roswell","Sandy Springs","Smyrna","Suwanee","Woodstock",
+];
 
 
 const title = `${BIZ.name} | Garage Door Repair & Installation in Roswell, GA`;
@@ -204,8 +209,35 @@ const description =
     </div>
   </section>
 
-  <!-- React island -->
-  <ServiceAreas client:load />
+  <!-- Service Areas -->
+  <section id="areas" class="bg-black text-white py-16 px-4">
+    <div class="mx-auto max-w-6xl">
+      <h2 class="text-2xl md:text-3xl font-semibold">Service Areas</h2>
+      <p class="mt-2 text-neutral-300">Based in Roswell, covering North Atlanta.</p>
+
+      <div class="relative mt-6 max-w-md space-y-3">
+        <input
+          id="service-area-input"
+          placeholder="Search your city..."
+          list="service-areas"
+          class="w-full rounded-2xl bg-white/5 px-4 py-3 pr-12 ring-1 ring-white/20 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/40"
+        />
+        <button
+          type="button"
+          id="service-area-check"
+          class="w-full rounded-2xl bg-white text-black px-4 py-2 font-medium hover:bg-neutral-200"
+        >
+          Check Availability
+        </button>
+        <datalist id="service-areas">
+          {serviceAreas.map((area) => (
+            <option value={area} />
+          ))}
+        </datalist>
+        <p id="service-area-result" class="mt-3 text-sm" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
 
   <!-- Contact -->
   <section id="contact" class="bg-neutral-50">
@@ -363,5 +395,48 @@ const description =
       cityInput.value = event.detail;
       cityInput.dispatchEvent(new Event("input", { bubbles: true }));
     });
+  </script>
+
+  <script is:inline>
+    (function () {
+      const serviceAreas = [
+        "Alpharetta","Atlanta","Brookhaven","Buckhead","Buford","Canton","Chamblee",
+        "Cumming","Decatur","Doraville","Duluth","Dunwoody","Druid Hills","East Cobb","Johns Creek","Kennesaw",
+        "Marietta","Milton","Norcross","Peachtree Corners","Roswell","Sandy Springs","Smyrna","Suwanee","Woodstock",
+      ];
+      const input = document.getElementById("service-area-input");
+      const button = document.getElementById("service-area-check");
+      const result = document.getElementById("service-area-result");
+      const cityInput = document.getElementById("city");
+
+      const check = () => {
+        if (!input || !result) return;
+        const value = (input.value || "").trim();
+        if (!value) {
+          result.className = "mt-3 text-sm text-amber-300";
+          result.textContent = "Enter a city to check.";
+          return;
+        }
+        const match = serviceAreas.find((area) => area.toLowerCase() === value.toLowerCase());
+        if (match) {
+          result.className = "mt-3 text-sm text-emerald-300";
+          result.textContent = `Yes — we service ${match}.`;
+          if (cityInput) cityInput.value = match;
+        } else {
+          result.className = "mt-3 text-sm text-amber-300";
+          result.textContent = "Not seeing your area? Call us and we’ll check availability.";
+        }
+      };
+
+      if (button) button.addEventListener("click", check);
+      if (input) {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            check();
+          }
+        });
+      }
+    })();
   </script>
 </Base>
