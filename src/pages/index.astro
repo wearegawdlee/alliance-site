@@ -254,46 +254,34 @@ const description =
   <form class="w-full max-w-md mx-auto rounded-3xl bg-white border border-neutral-200 p-4 space-y-3"
             action="https://formspree.io/f/xdkwwdnv" method="POST">
         <div>
-          <label class="block text-sm font-medium">Name</label>
-          <input name="name" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <label class="block text-sm font-medium" for="name">Name</label>
+          <input id="name" name="name" autocomplete="name" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium">Phone</label>
-          <input name="phone" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <label class="block text-sm font-medium" for="phone">Phone</label>
+          <input id="phone" name="phone" autocomplete="tel" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium">Email</label>
-          <input type="email" name="email" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <label class="block text-sm font-medium" for="email">Email</label>
+          <input id="email" type="email" name="email" autocomplete="email" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium">City</label>
-          <input id="city" name="city" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <label class="block text-sm font-medium" for="city">City</label>
+          <input id="city" name="city" autocomplete="address-level2" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium">What’s going on?</label>
-          <textarea name="message" rows={4} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, opener install, new doors…"></textarea>
+          <label class="block text-sm font-medium" for="message">What’s going on?</label>
+          <textarea id="message" name="message" rows={4} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, opener install, new doors…"></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium">How did you hear about us?</label>
-            <select
-              id="source"
-              name="source"
-              required
-              class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
-              on:change={() => {
-                const otherField = document.getElementById('source_other');
-                const selected = document.getElementById('source').value;
-                if (selected === 'Other' || selected === 'Friend / Referral') 
-                {
-                  otherField.style.display = 'block';
-                } 
-                  else 
-                {
-                  otherField.style.display = 'none';
-                  otherField.value = '';
-                }
-              }}
-            >
+          <label class="block text-sm font-medium" for="source">How did you hear about us?</label>
+          <select
+            id="source"
+            name="source"
+            required
+            autocomplete="off"
+            class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
+          >
             <option value="">Select one</option>
             <option>Google Search</option>
             <option>Instagram</option>
@@ -303,12 +291,15 @@ const description =
             <option>Friend / Referral</option>
             <option>Repeat Customer</option>
             <option>Other</option>
+          </select>
           <input
-            style="display:block"
+            id="source_other"
+            name="source_other"
             class="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2"
             placeholder="If Other or Referral, tell us who/where"
+            style="display:none"
+            autocomplete="off"
           />
-          </select>
         </div>
 
         
@@ -316,9 +307,9 @@ const description =
         <button type="submit" class="w-full rounded-2xl bg-neutral-900 text-white px-5 py-3 font-medium hover:bg-neutral-800">
           Send Request
         </button>
-        <div class="text-center"
-        <p class="text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
-        <p class="text-xs text-neutral-500">We only use your info to reply. No sharing, no spam.</p>
+        <div class="text-center">
+          <p class="text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
+          <p class="text-xs text-neutral-500">We only use your info to reply. No sharing, no spam.</p>
         </div>
       </form>
     </div>
@@ -389,4 +380,5 @@ const description =
   </script>
 
   <script src="/service-areas.js" defer></script>
+  <script src="/form.js" defer></script>
 </Base>
