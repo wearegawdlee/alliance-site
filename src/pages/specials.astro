@@ -1,0 +1,134 @@
+---
+import Base from "../layouts/Base.astro";
+
+const BIZ = {
+  name: "Alliance Garage Doors of Roswell",
+  phone: "(770)742-9433",
+  phoneHref: "7707429433",
+  email: "contact@agdofroswell.com",
+  hours: "Mon–Sun 9:00am–8:00pm",
+};
+
+const title = `Spring Replacement & Conversion Special | ${BIZ.name}`;
+const description =
+  "Spring Replacement & Conversion Special: $150 off service through June 30, 2026. Fast lead capture page for Alliance Garage Doors of Roswell.";
+---
+
+<Base {title} {description}>
+  <section class="min-h-screen bg-gradient-to-br from-cyan-900 via-teal-900 to-blue-900 text-white">
+    <div class="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-4 py-10">
+      <div class="rounded-[2rem] border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-sm md:p-8">
+        <div class="flex justify-center">
+          <img src="/logo-main.webp" alt={`${BIZ.name} logo`} class="h-20 object-contain md:h-24" />
+        </div>
+
+        <div class="mt-6 text-center">
+          <p class="text-sm font-medium uppercase tracking-[0.2em] text-cyan-100">Roswell & North Atlanta</p>
+          <h1 class="mt-3 text-3xl font-semibold leading-tight md:text-4xl">
+            Spring Replacement & Conversion Special — $150 Off
+          </h1>
+          <p class="mt-3 text-base text-neutral-200 md:text-lg">
+            Make sure your garage door is running smoothly this spring. Ask about our spring replacement and conversion special before June 30, 2026.
+          </p>
+          <p class="mt-2 text-sm text-neutral-300">Hours: {BIZ.hours}</p>
+        </div>
+
+        <div class="mt-8 grid gap-3">
+          <a href={`tel:${BIZ.phoneHref}`} class="rounded-2xl bg-white px-5 py-4 text-center font-medium text-neutral-900 hover:bg-neutral-100">
+            Call Now — {BIZ.phone}
+          </a>
+          <a href="#quick-estimate" class="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 text-center font-medium hover:bg-white/20">
+            Claim $150 Off
+          </a>
+          <a href="/" class="rounded-2xl border border-white/20 bg-transparent px-5 py-4 text-center font-medium hover:bg-white/10">
+            Visit Full Website
+          </a>
+        </div>
+
+        <div class="mt-8 grid gap-3 md:grid-cols-3">
+          {[
+            {
+              title: "$150 Off Service",
+              body: "Current spring replacement and conversion special for qualified service."
+            },
+            {
+              title: "Free Inspections",
+              body: "We offer free inspections so you know what’s going on before making a decision."
+            },
+            {
+              title: "Free Quotes",
+              body: "Clear, straightforward quotes with no-pressure next steps."
+            }
+          ].map((item) => (
+            <div class="rounded-2xl border border-white/15 bg-white/10 p-4 text-center">
+              <h2 class="text-base font-semibold">{item.title}</h2>
+              <p class="mt-2 text-sm text-neutral-200">{item.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div class="mt-8 grid gap-2 text-center text-sm text-neutral-200 md:grid-cols-3">
+          <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-2">Family Owned</div>
+          <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-2">Licensed & Insured</div>
+          <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-2">Fast Local Response</div>
+        </div>
+
+        <form
+          id="quick-estimate"
+          class="mt-8 rounded-3xl bg-white p-4 text-neutral-900 md:p-5"
+          action="https://formspree.io/f/xdkwwdnv"
+          method="POST"
+        >
+          <input type="hidden" name="form_name" value="bio-funnel-specials" />
+          <input type="hidden" name="landing_page" value="/specials" />
+
+          <div class="mb-4 text-center">
+            <h2 class="text-xl font-semibold">Claim your spring special</h2>
+            <p class="mt-1 text-sm text-neutral-600">Keep it short — we’ll follow up fast and let you know next steps.</p>
+          </div>
+
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-medium" for="name">Name</label>
+              <input id="name" name="name" required autocomplete="name" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium" for="phone">Phone</label>
+              <input id="phone" name="phone" required autocomplete="tel" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+            </div>
+          </div>
+
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-medium" for="zip">ZIP Code</label>
+              <input id="zip" name="zip" required inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium" for="service_type">Service Type</label>
+              <select id="service_type" name="service_type" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2">
+                <option value="">Select one</option>
+                <option>Spring Replacement</option>
+                <option>Spring Conversion</option>
+                <option>Spring Repair / Inspection</option>
+                <option>Not Sure Yet</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="block text-sm font-medium" for="message">What do you need?</label>
+            <textarea id="message" name="message" rows={3} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, aging springs, conversion question, inspection request, etc."></textarea>
+          </div>
+
+          <button type="submit" class="mt-4 w-full rounded-2xl bg-neutral-900 px-5 py-3 font-medium text-white hover:bg-neutral-800">
+            Claim My $150 Off
+          </button>
+
+          <p class="mt-3 text-center text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <script src="/form.js" defer></script>
+</Base>

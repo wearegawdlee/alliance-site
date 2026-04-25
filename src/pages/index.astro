@@ -6,7 +6,7 @@ const BIZ = {
   phone: "(770)742-9433",
   email: "contact@agdofroswell.com",
   address: "Roswell, GA 30075",
-  hours: "Mon–Sat 7:00am–7:00pm",
+  hours: "Mon–Sun 9:00am–8:00pm",
 };
 
 const serviceAreas = [
@@ -80,28 +80,33 @@ const description =
         <rect width="100%" height="100%" fill="url(#grid)" />
       </svg>
     </div>
-    <div class="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
-      <h1 class="text-4xl md:text-5xl font-semibold leading-tight">
-        Garage Door Experts for Roswell & North Atlanta
-      </h1>
-      <p class="mt-4 max-w-2xl text-neutral-200">
-        Residential garage door replacement and repair.
-      </p>
-      <div class="mt-6 flex flex-wrap gap-3">
-        <a href="#contact" class="rounded-3xl bg-white text-neutral-900 px-6 py-2 font-medium hover:bg-neutral-100">
-          Get an Estimate Today
+    <div class="relative mx-auto max-w-6xl px-4 py-12 md:py-16">
+      <div class="max-w-3xl">
+        <h1 class="mt-4 text-4xl md:text-5xl font-semibold leading-tight">
+          Fast, reliable garage door repair and installation
+        </h1>
+        <p class="mt-4 max-w-2xl text-neutral-200 text-lg">
+          Broken spring, opener issue, off-track door, or full replacement.<br />
+          We help homeowners get it fixed quickly and safely.
+        </p>
+      </div>
+      <div class="mt-6 flex justify-center">
+        <a href="#contact" class="rounded-3xl border border-white/30 bg-white/10 px-8 py-4 text-lg font-medium hover:bg-white/20">
+          Your FREE Estimate
         </a>
       </div>
-      <p class="mt-3 text-sm text-neutral-300">Hours: {BIZ.hours}</p>
-    </div>
-  </section>
-
-  <!-- Trust bar -->
-  <section class="bg-white">
-    <div class="mx-auto max-w-6xl px-4 py-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
-      {["Family Owned","IDEA Certified","Licensed & Insured"].map((t) => (
-        <div class="rounded-xl border border-neutral-200 px-3 py-2 text-center text-sm">{t}</div>
-      ))}
+      <div class="mt-12 md:mt-16 flex flex-col items-center text-center">
+        <div class="grid w-full max-w-4xl gap-3 sm:grid-cols-3">
+          {[
+            "Family Owned",
+            "IDEA Certified",
+            "Licensed & Insured"
+          ].map((t) => (
+            <div class="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-sm text-white">{t}</div>
+          ))}
+        </div>
+        <p class="mt-4 text-sm text-neutral-300">Hours: {BIZ.hours}</p>
+      </div>
     </div>
   </section>
 
@@ -234,7 +239,7 @@ const description =
     <div class="mx-auto max-w-6xl px-4 py-16 grid md:grid-cols-1 gap-10">
       <div class="text-center">
         <h2 class="text-2xl md:text-3xl font-semibold">Get an Estimate</h2>
-        <p class="mt-2 text-neutral-600">Call, text, or send the form. Include photos for fastest pricing.</p>
+        <p class="mt-2 text-neutral-600">Call, text, or send the form. Include your service address and photos for fastest pricing.</p>
         <div class="mt-4 space-y-2 text-sm">
           <p><strong>Call/Text:</strong> <a class="underline" href={`tel:${BIZ.phone}`}>{BIZ.phone}</a></p>
           <p><strong>Hours:</strong> {BIZ.hours}</p>
@@ -256,12 +261,59 @@ const description =
           <input id="email" type="email" name="email" autocomplete="email" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium" for="city">City</label>
-          <input id="city" name="city" autocomplete="address-level2" class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <label class="block text-sm font-medium" for="preferred_contact">Preferred Contact Method</label>
+          <select
+            id="preferred_contact"
+            name="preferred_contact"
+            required
+            autocomplete="off"
+            class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
+          >
+            <option value="">Select one</option>
+            <option>Call</option>
+            <option>Text</option>
+            <option>Email</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium" for="address">Address</label>
+          <input id="address" name="address" autocomplete="address-line1" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+        </div>
+        <div class="grid gap-3 md:grid-cols-3">
+          <div>
+            <label class="block text-sm font-medium" for="city">City</label>
+            <input id="city" name="city" autocomplete="address-level2" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium" for="state">State</label>
+            <input id="state" name="state" value="GA" autocomplete="address-level1" readonly class="mt-1 w-full rounded-xl border border-neutral-300 bg-neutral-50 px-3 py-2 text-neutral-600" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium" for="zip">ZIP Code</label>
+            <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium" for="service_type">Service Type</label>
+          <select
+            id="service_type"
+            name="service_type"
+            required
+            autocomplete="off"
+            class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
+          >
+            <option value="">Select one</option>
+            <option>Repair</option>
+            <option>Opener</option>
+            <option>New Door</option>
+            <option>Maintenance</option>
+            <option>Free Estimate</option>
+            <option>Not Sure Yet</option>
+          </select>
         </div>
         <div>
           <label class="block text-sm font-medium" for="message">What’s going on?</label>
-          <textarea id="message" name="message" rows={4} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, opener install, new doors…"></textarea>
+          <textarea id="message" name="message" rows={4} class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" placeholder="Broken spring, opener issue, off-track door, new install…"></textarea>
         </div>
         <div>
           <label class="block text-sm font-medium" for="source">How did you hear about us?</label>
