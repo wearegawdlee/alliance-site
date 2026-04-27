@@ -1,0 +1,87 @@
+<%- include('partials-header', { title: `${lead.customer_name} | gdor_backoffice` }) %>
+
+<section class="page-header">
+  <div>
+    <h1><%= lead.customer_name %></h1>
+    <p><%= lead.phone %> <% if (lead.email) { %>• <%= lead.email %><% } %></p>
+  </div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="<%= routePath('/leads') %>">Back to Leads</a>
+    <a class="button button-primary" href="<%= routePath(`/leads/${lead.id}/edit`) %>">Edit Lead</a>
+  </div>
+</section>
+
+<section class="detail-grid">
+  <div class="card">
+    <h2>Lead Summary</h2>
+    <dl class="detail-list">
+      <div><dt>Status</dt><dd><span class="status-badge <%= statusBadgeClass(lead.status) %>"><%= formatLabel(lead.status) %></span></dd></div>
+      <div><dt>Service Type</dt><dd><%= formatLabel(lead.service_type) %></dd></div>
+      <div><dt>Lead Source</dt><dd><%= formatLabel(lead.lead_source) %></dd></div>
+      <div><dt>Owner</dt><dd><%= lead.assigned_user_name || '—' %></dd></div>
+      <div><dt>Quote</dt><dd><%= formatCurrency(lead.quoted_price) %></dd></div>
+      <div><dt>Follow Up</dt><dd><%= lead.follow_up_date || '—' %></dd></div>
+      <div><dt>Next Action</dt><dd><%= lead.next_action || '—' %></dd></div>
+      <div><dt>Address</dt><dd><%= [lead.address_line_1, lead.city, lead.state, lead.zip_code].filter(Boolean).join(', ') || '—' %></dd></div>
+      <div><dt>Created</dt><dd><%= new Date(lead.created_at).toLocaleString() %></dd></div>
+      <div><dt>Updated</dt><dd><%= new Date(lead.updated_at).toLocaleString() %></dd></div>
+    </dl>
+
+    <h3>Description</h3>
+    <p class="description-block"><%= lead.description || 'No description added yet.' %></p>
+  </div>
+
+  <div class="card">
+    <h2>Quick Status Update</h2>
+    <form class="stacked-form" method="POST" action="<%= routePath(`/leads/${lead.id}/status`) %>">
+      <label>
+        <span>Status</span>
+        <select name="status">
+          <% statusOptions.forEach((option) => { %>
+            <option value="<%= option %>" <%= lead.status === option ? 'selected' : '' %>><%= formatLabel(option) %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button class="button button-primary" type="submit">Update Status</button>
+    </form>
+
+    <hr />
+
+    <h2>Add Note</h2>
+    <form class="stacked-form" method="POST" action="<%= routePath(`/leads/${lead.id}/notes`) %>">
+      <label>
+        <span>Note</span>
+        <textarea name="note_text" rows="5" required></textarea>
+      </label>
+      <button class="button button-primary" type="submit">Add Note</button>
+    </form>
+
+    <hr />
+
+    <h2>Delete Lead</h2>
+    <form method="POST" action="<%= routePath(`/leads/${lead.id}/delete`) %>" onsubmit="return confirm('Delete this lead?');">
+      <button class="button button-danger" type="submit">Delete Lead</button>
+    </form>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Notes Timeline</h2>
+  <% if (notes.length === 0) { %>
+    <div class="empty-state">No notes yet.</div>
+  <% } else { %>
+    <div class="notes-list">
+      <% notes.forEach((note) => { %>
+        <article class="note-item">
+          <div class="note-meta">
+            <strong><%= note.created_by_name || 'Unknown' %></strong>
+            <span><%= new Date(note.created_at).toLocaleString() %></span>
+          </div>
+          <p><%= note.note_text %></p>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials-footer') %>

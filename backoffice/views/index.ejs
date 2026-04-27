@@ -1,0 +1,93 @@
+<%- include('partials-header', { title: 'Leads | gdor_backoffice' }) %>
+
+<section class="page-header">
+  <div>
+    <h1>Lead Tracker</h1>
+    <p>Track inbound leads, ownership, follow-ups, and status changes.</p>
+  </div>
+  <a class="button button-primary" href="<%= routePath('/leads/new') %>">Add Lead</a>
+</section>
+
+<section class="stats-grid">
+  <div class="stat-card"><span>Total Leads</span><strong><%= stats.total %></strong></div>
+  <div class="stat-card"><span>Open Leads</span><strong><%= stats.open %></strong></div>
+  <div class="stat-card"><span>Due Follow Ups</span><strong><%= stats.dueFollowUps %></strong></div>
+  <div class="stat-card"><span>Completed / Paid</span><strong><%= stats.completedOrPaid %></strong></div>
+</section>
+
+<section class="card">
+  <form class="filters" method="GET" action="<%= routePath('/leads') %>">
+    <input type="text" name="q" placeholder="Search name, phone, city, notes..." value="<%= filters.q %>" />
+
+    <select name="status">
+      <option value="">All Statuses</option>
+      <% statusOptions.forEach((option) => { %>
+        <option value="<%= option %>" <%= filters.status === option ? 'selected' : '' %>><%= formatLabel(option) %></option>
+      <% }) %>
+    </select>
+
+    <select name="source">
+      <option value="">All Sources</option>
+      <% leadSourceOptions.forEach((option) => { %>
+        <option value="<%= option %>" <%= filters.source === option ? 'selected' : '' %>><%= formatLabel(option) %></option>
+      <% }) %>
+    </select>
+
+    <select name="owner">
+      <option value="">All Owners</option>
+      <% users.forEach((user) => { %>
+        <option value="<%= user.name %>" <%= filters.owner === user.name ? 'selected' : '' %>><%= user.name %></option>
+      <% }) %>
+    </select>
+
+    <button class="button button-secondary" type="submit">Filter</button>
+  </form>
+</section>
+
+<section class="card table-card">
+  <% if (leads.length === 0) { %>
+    <div class="empty-state">No leads found.</div>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Created</th>
+          <th>Customer</th>
+          <th>Service</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th>Owner</th>
+          <th>Follow Up</th>
+          <th>Next Action</th>
+          <th>Quote</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% leads.forEach((lead) => { %>
+          <tr>
+            <td><%= lead.created_at ? new Date(lead.created_at).toLocaleString() : '—' %></td>
+            <td>
+              <a href="<%= routePath(`/leads/${lead.id}`) %>"><strong><%= lead.customer_name %></strong></a>
+              <div class="subtext"><%= lead.phone %></div>
+              <div class="subtext"><%= [lead.city, lead.state, lead.zip_code].filter(Boolean).join(', ') %></div>
+            </td>
+            <td><%= formatLabel(lead.service_type) %></td>
+            <td><%= formatLabel(lead.lead_source) %></td>
+            <td><span class="status-badge <%= statusBadgeClass(lead.status) %>"><%= formatLabel(lead.status) %></span></td>
+            <td><%= lead.assigned_user_name || '—' %></td>
+            <td><%= lead.follow_up_date || '—' %></td>
+            <td>
+              <%= lead.next_action || '—' %>
+              <% if (lead.description) { %>
+                <div class="subtext"><%= lead.description.length > 90 ? `${lead.description.slice(0, 90)}...` : lead.description %></div>
+              <% } %>
+            </td>
+            <td><%= formatCurrency(lead.quoted_price) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<%- include('partials-footer') %>

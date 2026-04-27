@@ -1,0 +1,28 @@
+<%- include('partials-header', { title: 'Login', hideSidebar: true }) %>
+<section class="auth-wrap">
+  <div class="auth-card card">
+    <h1>Back Office Login</h1>
+    <p class="auth-subtext">Sign in to access lead tracking and internal tools.</p>
+
+    <% if (authError) { %>
+      <div class="alert alert-danger"><%= authError %></div>
+    <% } %>
+
+    <form method="POST" action="<%= routePath('/login') %>" class="stacked-form">
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" placeholder="you@example.com" required autofocus />
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" required />
+      </label>
+
+      <button class="button button-primary button-full" type="submit">Log In</button>
+    </form>
+
+  </div>
+</section>
+
+<%- include('partials-footer') %>

@@ -1,0 +1,119 @@
+{
+  "counters": {
+    "leads": 3,
+    "leadNotes": 0,
+    "users": 5
+  },
+  "users": [
+    {
+      "id": 1,
+      "created_at": "2026-04-20T17:41:16.773Z",
+      "updated_at": "2026-04-20T17:41:16.773Z",
+      "is_active": true,
+      "password_hash": "$2a$10$3GZngFoPftlcXP8688DqvuWz2L8bR1Iydt1bgIsKTLfKC/X890Z8e",
+      "name": "Jay",
+      "role": "owner",
+      "email": "jay@local.gdor"
+    },
+    {
+      "id": 2,
+      "created_at": "2026-04-20T17:41:16.846Z",
+      "updated_at": "2026-04-20T17:41:16.846Z",
+      "is_active": true,
+      "password_hash": "$2a$10$SKhLApn8rpaNHnTvThKSDOn4C2N/eAQoq0cpV1QviZbKgaGbC3JRO",
+      "name": "Zundra",
+      "role": "admin",
+      "email": "zundra@local.gdor"
+    },
+    {
+      "id": 3,
+      "created_at": "2026-04-20T17:41:16.911Z",
+      "updated_at": "2026-04-20T17:41:16.911Z",
+      "is_active": true,
+      "password_hash": "$2a$10$SW1USt7m5Z6JiSrfYMp25OXgEoZ/xzLJcqTlJqqAS7GhFz12hShm6",
+      "name": "Adriana",
+      "role": "bookkeeping",
+      "email": "adriana@local.gdor"
+    },
+    {
+      "id": 4,
+      "created_at": "2026-04-20T17:41:16.975Z",
+      "updated_at": "2026-04-20T17:41:16.975Z",
+      "is_active": true,
+      "password_hash": "$2a$10$stOV.OVVRPvgWkcVDQ3ZzunsXiYhh6UZJf9fSFZsqOoRiISZn1bHS",
+      "name": "Denise",
+      "role": "marketing",
+      "email": "denise@local.gdor"
+    },
+    {
+      "id": 5,
+      "created_at": "2026-04-20T17:41:17.040Z",
+      "updated_at": "2026-04-20T17:41:17.040Z",
+      "is_active": true,
+      "password_hash": "$2a$10$wN5SA0NmmgefXz6jVk2fweK0wR93xFAQ8sDGLejlw2l2zMJ2Uom9G",
+      "name": "Deji",
+      "role": "apprentice",
+      "email": "deji@local.gdor"
+    }
+  ],
+  "leads": [
+    {
+      "id": 1,
+      "created_at": "2026-04-20T17:41:17.106Z",
+      "updated_at": "2026-04-20T17:41:17.106Z",
+      "customer_name": "John Carter",
+      "phone": "555-111-2222",
+      "email": "john@example.com",
+      "city": "Roswell",
+      "state": "GA",
+      "zip_code": "30075",
+      "service_type": "opener_install",
+      "lead_source": "facebook",
+      "status": "new",
+      "assigned_user_id": 1,
+      "quoted_price": 180,
+      "follow_up_date": "2026-04-22",
+      "next_action": "Call and confirm opener model",
+      "description": "Customer bought Chamberlain opener and wants install this weekend."
+    },
+    {
+      "id": 2,
+      "created_at": "2026-04-20T17:41:17.107Z",
+      "updated_at": "2026-04-20T17:41:17.107Z",
+      "customer_name": "Melissa Grant",
+      "phone": "555-222-3333",
+      "email": "melissa@example.com",
+      "city": "Alpharetta",
+      "state": "GA",
+      "zip_code": "30004",
+      "service_type": "garage_door_repair",
+      "lead_source": "google_business",
+      "status": "contacted",
+      "assigned_user_id": 2,
+      "quoted_price": 125,
+      "follow_up_date": "2026-04-21",
+      "next_action": "Send quote by text",
+      "description": "Door reverses halfway down. Wants same-day visit if possible."
+    },
+    {
+      "id": 3,
+      "created_at": "2026-04-20T17:41:17.107Z",
+      "updated_at": "2026-04-20T17:41:17.107Z",
+      "customer_name": "Daniel Brooks",
+      "phone": "555-444-5555",
+      "email": "",
+      "city": "Sandy Springs",
+      "state": "GA",
+      "zip_code": "30328",
+      "service_type": "keypad_remote_programming",
+      "lead_source": "referral",
+      "status": "scheduled",
+      "assigned_user_id": 5,
+      "quoted_price": 60,
+      "follow_up_date": "2026-04-23",
+      "next_action": "Visit Tuesday at 6pm",
+      "description": "Needs new keypad paired and two remotes programmed."
+    }
+  ],
+  "leadNotes": []
+}

@@ -1,0 +1,32 @@
+<% const isAuthLayout = typeof hideSidebar !== 'undefined' ? hideSidebar : false; %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title || 'gdor_backoffice' %></title>
+  <link rel="stylesheet" href="<%= assetPath('styles.css') %>" />
+</head>
+<body>
+  <div class="app-shell <%= isAuthLayout  ? 'app-shell-auth' : '' %>">
+    <% if (!isAuthLayout ) { %>
+      <aside class="sidebar">
+        <div class="brand">gdor_backoffice</div>
+        <nav>
+          <a href="<%= routePath('/leads') %>">Leads</a>
+          <a href="<%= routePath('/leads/new') %>">Add Lead</a>
+        </nav>
+
+        <% if (currentUser) { %>
+          <div class="sidebar-user">
+            <div class="sidebar-user-name"><%= currentUser.name %></div>
+            <div class="sidebar-user-meta"><%= currentUser.email %></div>
+            <form method="POST" action="<%= routePath('/logout') %>">
+              <button class="button button-secondary button-full" type="submit">Log Out</button>
+            </form>
+          </div>
+        <% } %>
+      </aside>
+    <% } %>
+    <main class="main-content <%= isAuthLayout  ? 'main-content-auth' : '' %>">
