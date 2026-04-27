@@ -1,0 +1,3 @@
+<%- include('../partials-header', { title: 'Billing' }) %>
+<section class="page-header"><div><h1>Billing</h1><p>Invoices and payment tracking.</p></div></section><section class="card"><table class="data-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead><tbody><% invoices.forEach(i=>{ %><tr><td><%= i.invoice_number || ('#' + i.id) %></td><td><%= i.customer %></td><td><%= i.status %></td><td><%= formatCurrency(i.total_amount) %></td></tr><% }) %><% if(!invoices.length){ %><tr><td colspan="4">No invoices.</td></tr><% } %></tbody></table></section>
+<%- include('../partials-footer') %>

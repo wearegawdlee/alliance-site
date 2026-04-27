@@ -22,6 +22,7 @@ pnpm-debug.log*
 # explicitly ignore backoffice secrets
 backoffice/.env
 backoffice/.env.*
+production*
 
 # macOS
 .DS_Store

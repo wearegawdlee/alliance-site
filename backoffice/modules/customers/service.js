@@ -1,0 +1,8 @@
+const repo = require('./repository');
+function toArray(value){ if(!value) return []; return Array.isArray(value)?value:[value]; }
+async function listCustomers(){return repo.listCustomers();}
+async function getCustomerDetail(id){return repo.getCustomerDetail(id);}
+async function getFormOptions(){return repo.getFormOptions();}
+async function createCustomer(body,user){return repo.createCustomer({display_name: String(body.display_name||'').trim(),customer_status_id: Number(body.customer_status_id),lead_source_id: body.lead_source_id?Number(body.lead_source_id):null,assigned_user_id: body.assigned_user_id?Number(body.assigned_user_id):null,company_name: String(body.company_name||'').trim()||null,notes_summary: String(body.notes_summary||'').trim()||null,first_name: String(body.first_name||'').trim()||null,last_name: String(body.last_name||'').trim()||null,phone: String(body.phone||'').trim()||null,email: String(body.email||'').trim()||null,preferred_contact_method: String(body.preferred_contact_method||'').trim()||null,address_line_1: String(body.address_line_1||'').trim()||null,city: String(body.city||'').trim()||null,state: String(body.state||'').trim()||'GA',postal_code: String(body.postal_code||'').trim()||null,service_line_ids: toArray(body.service_line_ids).map(Number).filter(Boolean),initial_note: String(body.initial_note||'').trim()||null,author_user_id: user && user.id});}
+async function addNote(customerId,userId,note){note=String(note||'').trim(); if(note) await repo.addNote(customerId,userId,note);}
+module.exports={listCustomers,getCustomerDetail,getFormOptions,createCustomer,addNote};

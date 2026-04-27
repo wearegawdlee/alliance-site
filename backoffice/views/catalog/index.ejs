@@ -1,0 +1,3 @@
+<%- include('../partials-header', { title: 'Catalog' }) %>
+<section class="page-header"><div><h1>Catalog</h1><p>Inventory and billable items used for invoices.</p></div></section><section class="card"><table class="data-table"><thead><tr><th>SKU</th><th>Name</th><th>Service</th><th>Unit Price</th><th>Cost</th></tr></thead><tbody><% items.forEach(i=>{ %><tr><td><%= i.sku || '—' %></td><td><%= i.name %></td><td><%= i.service_line || '—' %></td><td><%= formatCurrency(i.unit_price) %></td><td><%= formatCurrency(i.cost) %></td></tr><% }) %><% if(!items.length){ %><tr><td colspan="5">No catalog items.</td></tr><% } %></tbody></table></section>
+<%- include('../partials-footer') %>

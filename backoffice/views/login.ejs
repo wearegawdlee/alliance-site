@@ -1,28 +1,3 @@
 <%- include('partials-header', { title: 'Login', hideSidebar: true }) %>
-<section class="auth-wrap">
-  <div class="auth-card card">
-    <h1>Back Office Login</h1>
-    <p class="auth-subtext">Sign in to access lead tracking and internal tools.</p>
-
-    <% if (authError) { %>
-      <div class="alert alert-danger"><%= authError %></div>
-    <% } %>
-
-    <form method="POST" action="<%= routePath('/login') %>" class="stacked-form">
-      <label>
-        <span>Email</span>
-        <input type="email" name="email" placeholder="you@example.com" required autofocus />
-      </label>
-
-      <label>
-        <span>Password</span>
-        <input type="password" name="password" required />
-      </label>
-
-      <button class="button button-primary button-full" type="submit">Log In</button>
-    </form>
-
-  </div>
-</section>
-
+<section class="login-card"><h1><%= appConfig.brand.backofficeName %></h1><p>Sign in to access internal operations.</p><% if(error){ %><div class="alert"><%= error %></div><% } %><form method="post" action="<%= routePath('/login') %>"><label>Email<input name="email" type="email" required placeholder="you@example.com"></label><label>Password<input name="password" type="password" required></label><button class="button primary full">Log In</button></form></section>
 <%- include('partials-footer') %>

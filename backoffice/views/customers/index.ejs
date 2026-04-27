@@ -1,0 +1,4 @@
+<%- include('../partials-header', { title: 'Customers' }) %>
+<section class="page-header"><div><h1>Customers</h1><p>Prospects and customers across all service lines.</p></div><a class="button primary" href="<%= routePath('/customers/new') %>">New Customer</a></section>
+<section class="card"><table class="data-table"><thead><tr><th>Name</th><th>Status</th><th>Services</th><th>Phone</th><th>Email</th></tr></thead><tbody><% if(!customers.length){ %><tr><td colspan="5">No customers found.</td></tr><% } %><% customers.forEach(c=>{ %><tr><td><a href="<%= routePath('/customers/' + c.id) %>"><%= c.display_name %></a></td><td><span class="badge"><%= c.status %></span></td><td><%= c.services || '—' %></td><td><%= c.phone || '—' %></td><td><%= c.email || '—' %></td></tr><% }) %></tbody></table></section>
+<%- include('../partials-footer') %>

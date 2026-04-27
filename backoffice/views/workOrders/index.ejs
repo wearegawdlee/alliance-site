@@ -1,0 +1,3 @@
+<%- include('../partials-header', { title: 'Work Orders' }) %>
+<section class="page-header"><div><h1>Work Orders</h1><p>Field work across service lines.</p></div></section><section class="card"><table class="data-table"><thead><tr><th>Title</th><th>Customer</th><th>Status</th><th>Service</th><th>Quote</th></tr></thead><tbody><% workOrders.forEach(w=>{ %><tr><td><%= w.title %></td><td><%= w.customer %></td><td><%= w.status %></td><td><%= w.service_line %></td><td><%= formatCurrency(w.quoted_price) %></td></tr><% }) %><% if(!workOrders.length){ %><tr><td colspan="5">No work orders.</td></tr><% } %></tbody></table></section>
+<%- include('../partials-footer') %>
