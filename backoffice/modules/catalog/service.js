@@ -1,1 +1,3 @@
-const repo=require('./repository'); async function listInventory(){return repo.listInventory();} module.exports={listInventory};
+const repo=require('./repository');
+async function listCatalogItems(){return repo.listCatalogItems();}
+module.exports={listCatalogItems};
