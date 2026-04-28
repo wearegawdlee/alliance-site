@@ -1,0 +1,104 @@
+<%- include('../partials-header') %>
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Operational queue: leads, work orders, invoices, and recent activity.</p>
+  </div>
+  <div class="button-row">
+    <a class="button secondary" href="<%= routePath('/customers') %>">View Customers</a>
+    <a class="button primary" href="<%= routePath('/work-orders') %>">View Work Orders</a>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card"><span>Prospects</span><strong><%= dashboard.counts.prospect_count %></strong></div>
+  <div class="kpi-card"><span>Open Work Orders</span><strong><%= dashboard.counts.open_work_order_count %></strong></div>
+  <div class="kpi-card"><span>Unassigned</span><strong><%= dashboard.counts.unassigned_work_order_count %></strong></div>
+  <div class="kpi-card"><span>Unpaid Invoices</span><strong><%= dashboard.counts.unpaid_invoice_count %></strong></div>
+</div>
+
+<div class="dashboard-grid">
+  <section class="card priority-card">
+    <h2>Needs Attention</h2>
+    <% if(!dashboard.newLeads.length && !dashboard.attentionWorkOrders.length && !dashboard.unpaidInvoices.length){ %>
+      <p class="muted">Nothing urgent right now.</p>
+    <% } %>
+
+    <% if(dashboard.newLeads.length){ %>
+      <h3>New Website Leads</h3>
+      <div class="queue-list">
+      <% dashboard.newLeads.forEach(l=>{ %>
+        <a class="queue-item" href="<%= routePath('/customers/' + l.id) %>">
+          <strong><%= l.display_name %></strong>
+          <span><%= l.phone || l.email || 'No contact shown' %> · <%= l.city || 'Unknown city' %><%= l.state ? ', ' + l.state : '' %></span>
+        </a>
+      <% }) %>
+      </div>
+    <% } %>
+
+    <% if(dashboard.attentionWorkOrders.length){ %>
+      <h3>Work Orders</h3>
+      <div class="queue-list">
+      <% dashboard.attentionWorkOrders.forEach(wo=>{ %>
+        <a class="queue-item" href="<%= routePath('/work-orders/' + wo.id) %>">
+          <strong><%= wo.title %></strong>
+          <span><%= wo.customer %> · <%= wo.status %> · <%= wo.assigned_to || 'Unassigned' %></span>
+        </a>
+      <% }) %>
+      </div>
+    <% } %>
+
+    <% if(dashboard.unpaidInvoices.length){ %>
+      <h3>Unpaid Invoices</h3>
+      <div class="queue-list">
+      <% dashboard.unpaidInvoices.forEach(i=>{ %>
+        <a class="queue-item" href="<%= routePath('/billing') %>">
+          <strong><%= i.invoice_number %> — <%= i.customer %></strong>
+          <span><%= i.status %> · <%= formatCurrency(Number(i.total_amount) - Number(i.paid_amount || 0)) %> remaining</span>
+        </a>
+      <% }) %>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <h2>Today</h2>
+    <% if(!dashboard.today.length){ %><p class="muted">No scheduled jobs today.</p><% } %>
+    <div class="queue-list">
+      <% dashboard.today.forEach(wo=>{ %>
+        <a class="queue-item" href="<%= routePath('/work-orders/' + wo.id) %>">
+          <strong><%= wo.title %></strong>
+          <span><%= wo.scheduled_start_at ? new Date(wo.scheduled_start_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'Unscheduled' %> · <%= wo.customer %> · <%= wo.assigned_to || 'Unassigned' %></span>
+        </a>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Upcoming</h2>
+    <% if(!dashboard.upcoming.length){ %><p class="muted">No upcoming scheduled jobs.</p><% } %>
+    <div class="queue-list">
+      <% dashboard.upcoming.forEach(wo=>{ %>
+        <a class="queue-item" href="<%= routePath('/work-orders/' + wo.id) %>">
+          <strong><%= wo.title %></strong>
+          <span><%= wo.scheduled_start_at ? new Date(wo.scheduled_start_at).toLocaleString() : 'Unscheduled' %> · <%= wo.customer %> · <%= wo.assigned_to || 'Unassigned' %></span>
+        </a>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Recent Activity</h2>
+    <% if(!dashboard.recentActivity.length){ %><p class="muted">No activity yet.</p><% } %>
+    <div class="activity-list">
+      <% dashboard.recentActivity.forEach(a=>{ %>
+        <div class="activity-item">
+          <strong><%= a.event_type %></strong>
+          <span><%= a.event_body || (a.entity_type + ' #' + a.entity_id) %></span>
+          <small><%= new Date(a.created_at).toLocaleString() %></small>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+</div>
+<%- include('../partials-footer') %>

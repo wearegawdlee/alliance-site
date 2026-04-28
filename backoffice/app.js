@@ -11,6 +11,7 @@ const workOrderRoutes = require('./modules/workOrders/routes');
 const billingRoutes = require('./modules/billing/routes');
 const catalogRoutes = require('./modules/catalog/routes');
 const publicIntakeRoutes = require('./modules/publicIntake/routes');
+const dashboardRoutes = require('./modules/dashboard/routes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,9 +63,9 @@ app.use((req, res, next) => {
     next();
 });
 app.get('/', (req, res) => res.redirect(app.locals.routePath('/')));
-app.get(`${BASE_PATH}`, (req, res) => req.session.user ? res.redirect(app.locals.routePath('/customers')) : res.redirect(app.locals.routePath('/login')));
+app.get(`${BASE_PATH}`, (req, res) => req.session.user ? res.redirect(app.locals.routePath('/dashboard')) : res.redirect(app.locals.routePath('/login')));
 app.get(`${BASE_PATH}/login`, (req, res) => {
-    if (req.session.user) return res.redirect(app.locals.routePath('/customers'));
+    if (req.session.user) return res.redirect(app.locals.routePath('/dashboard'));
     res.render('login', {
         title: 'Login',
         hideSidebar: true,
@@ -110,7 +111,7 @@ app.post(`${BASE_PATH}/login`, async (req, res) => {
                 console.error(err);
                 return renderLoginError(res, 'Could not save session. Try again.')
             }
-            res.redirect(app.locals.routePath('/customers'));
+            res.redirect(app.locals.routePath('/dashboard'));
         });
     } catch (e) {
         console.error(e);
@@ -127,6 +128,7 @@ app.get(`${BASE_PATH}/health`, (req, res) => res.json({
     ok: true
 }));
 app.use(`${BASE_PATH}/api/public`, publicIntakeRoutes);
+app.use(app.locals.routePath('/dashboard'), requireAuth, dashboardRoutes);
 app.get(`${BASE_PATH}/leads`, requireAuth, (req, res) => res.redirect(app.locals.routePath('/customers')));
 app.use(app.locals.routePath('/customers'), requireAuth, customerRoutes);
 app.use(app.locals.routePath('/work-orders'), requireAuth, workOrderRoutes);
