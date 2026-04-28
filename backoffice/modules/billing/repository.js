@@ -5,6 +5,10 @@ async function listInvoices(){
 }
 async function getPaymentMethods(){ const r=await pool.query(`SELECT id,name FROM payment_methods WHERE is_active=true ORDER BY name`); return r.rows; }
 async function getInvoiceStatusId(client, code){ const r=await client.query(`SELECT id FROM invoice_statuses WHERE code=$1`,[code]); return r.rows[0]?.id; }
+async function getInvoiceSummary(invoiceId){
+  const r = await pool.query(`SELECT i.*,c.display_name customer,s.code status_code,s.name status,COALESCE(SUM(p.amount),0) paid_amount FROM invoices i JOIN customers c ON c.id=i.customer_id JOIN invoice_statuses s ON s.id=i.invoice_status_id LEFT JOIN payments p ON p.invoice_id=i.id WHERE i.id=$1 GROUP BY i.id,c.display_name,s.code,s.name`, [invoiceId]);
+  return r.rows[0] || null;
+}
 async function recordPayment(invoiceId,data){
   const client=await pool.connect();
   try{
@@ -24,6 +28,7 @@ async function recordPayment(invoiceId,data){
       }
     }
     await client.query('COMMIT');
+    return getInvoiceSummary(invoiceId);
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
-module.exports={listInvoices,getPaymentMethods,recordPayment};
+module.exports={listInvoices,getPaymentMethods,recordPayment,getInvoiceSummary};

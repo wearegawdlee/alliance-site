@@ -1,4 +1,5 @@
 const repository = require('./repository');
+const notifications = require('../notifications/service');
 
 function clean(value) {
   const trimmed = String(value || '').trim();
@@ -49,7 +50,9 @@ async function createWebsiteLead(body, req) {
     throw err;
   }
 
-  return repository.createWebsiteLead(data);
+  const result = await repository.createWebsiteLead(data);
+  notifications.notifyWebsiteLead({ customerId: result.customerId, lead: data });
+  return result;
 }
 
 module.exports = { createWebsiteLead };

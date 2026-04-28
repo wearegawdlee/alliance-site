@@ -11,7 +11,7 @@ async function run() {
   const c = await pool.connect();
   try {
     await c.query('BEGIN');
-    await c.query(`TRUNCATE activity_events,payments,invoice_line_items,invoices,estimate_line_items,estimates,work_order_status_history,work_order_assignments,work_order_notes,work_orders,assets,customer_notes,customer_service_lines,customer_locations,customer_contacts,customer_status_history,customers,catalog_items RESTART IDENTITY CASCADE`);
+    await c.query(`TRUNCATE activity_events,payments,invoice_line_items,invoices,estimate_line_items,estimates,work_order_status_history,work_order_assignments,work_order_line_items,work_order_notes,work_orders,assets,customer_notes,customer_service_lines,customer_locations,customer_contacts,customer_status_history,customers,catalog_items RESTART IDENTITY CASCADE`);
 
     const statuses = {
       prospect: await id('customer_statuses', 'prospect'),
@@ -56,6 +56,7 @@ async function run() {
         const type = await c.query(`SELECT id FROM work_order_types WHERE service_line_id=$1 AND code='repair'`, [d[2][0]]);
         const wo = await c.query(`INSERT INTO work_orders(customer_id,customer_location_id,asset_id,service_line_id,work_order_type_id,work_order_status_id,title,description,quoted_price) VALUES($1,$2,$3,$4,$5,$6,'Service Call','Demo seeded work order',325) RETURNING id`, [customerId, locationId, asset.rows[0].id, d[2][0], type.rows[0]?.id || null, woStatus]);
         await c.query(`INSERT INTO work_order_status_history(work_order_id,to_status_id,reason) VALUES($1,$2,'Seeded initial status')`, [wo.rows[0].id, woStatus]);
+        await c.query(`INSERT INTO work_order_line_items(work_order_id,description,quantity,unit_price,line_total) VALUES($1,'Service Labor',1,325,325)`, [wo.rows[0].id]);
         const est = await c.query(`INSERT INTO estimates(customer_id,customer_location_id,work_order_id,estimate_status_id,estimate_number,subtotal,total_amount) VALUES($1,$2,$3,$4,$5,325,325) RETURNING id`, [customerId, locationId, wo.rows[0].id, estimateStatus, `EST-${1000 + customerId}`]);
         await c.query(`INSERT INTO estimate_line_items(estimate_id,description,quantity,unit_price,line_total) VALUES($1,'Service Labor',1,325,325)`, [est.rows[0].id]);
         const inv = await c.query(`INSERT INTO invoices(customer_id,customer_location_id,work_order_id,estimate_id,invoice_status_id,invoice_number,subtotal,total_amount) VALUES($1,$2,$3,$4,$5,$6,325,325) RETURNING id`, [customerId, locationId, wo.rows[0].id, est.rows[0].id, invStatus, `INV-${1000 + customerId}`]);
