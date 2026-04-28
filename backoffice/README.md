@@ -76,3 +76,13 @@ pm2 restart gdor-backoffice --update-env
 ```
 
 This zip intentionally excludes `.env` and `node_modules`.
+
+## Public Lead Intake
+
+Website form submissions should post to:
+
+```text
+POST /backoffice/api/public/leads
+```
+
+See `docs/public-lead-intake.md`.

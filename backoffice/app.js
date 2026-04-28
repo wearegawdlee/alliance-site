@@ -10,6 +10,7 @@ const customerRoutes = require('./modules/customers/routes');
 const workOrderRoutes = require('./modules/workOrders/routes');
 const billingRoutes = require('./modules/billing/routes');
 const catalogRoutes = require('./modules/catalog/routes');
+const publicIntakeRoutes = require('./modules/publicIntake/routes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -125,6 +126,7 @@ app.post(`${BASE_PATH}/logout`, requireAuth, (req, res) => {
 app.get(`${BASE_PATH}/health`, (req, res) => res.json({
     ok: true
 }));
+app.use(`${BASE_PATH}/api/public`, publicIntakeRoutes);
 app.get(`${BASE_PATH}/leads`, requireAuth, (req, res) => res.redirect(app.locals.routePath('/customers')));
 app.use(app.locals.routePath('/customers'), requireAuth, customerRoutes);
 app.use(app.locals.routePath('/work-orders'), requireAuth, workOrderRoutes);
