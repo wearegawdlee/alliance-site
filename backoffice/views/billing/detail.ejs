@@ -1,113 +1,128 @@
 <%- include('../partials-header', { title: invoice.invoice.invoice_number || 'Invoice' }) %>
-
 <section class="page-header">
-  <div>
-    <h1><%= invoice.invoice.invoice_number || ('Invoice #' + invoice.invoice.id) %></h1>
-    <p>Invoice detail and itemized charges.</p>
-  </div>
+   <div>
+      <h1><%= invoice.invoice.invoice_number || ('Invoice #' + invoice.invoice.id) %></h1>
+      <p>Invoice detail and itemized charges.</p>
+   </div>
+   <% if(invoice.invoice.status_code !== 'paid'){ %>
 
-  <div class="button-row">
-    <a class="button secondary" href="<%= routePath('/billing') %>">← Back to Billing</a>
+<form method="POST"
+      action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/payments') %>"
+ class="inline-form">
 
-    <% if(invoice.invoice.customer_id){ %>
+  <input
+   type="number"
+   step="0.01"
+   name="amount"
+   value="<%= invoice.invoice.balance_due || invoice.invoice.total_amount %>"
+  />
+
+  <select name="payment_method_id">
+    <% paymentMethods.forEach(method=>{ %>
+      <option value="<%= method.id %>">
+        <%= method.name %>
+      </option>
+    <% }) %>
+  </select>
+
+  <button class="button">
+    Pay
+  </button>
+
+</form>
+
+<% } %>
+   <div class="button-row">
+      <a class="button secondary" href="<%= routePath('/billing') %>">← Back to Billing</a>
+      <% if(invoice.invoice.customer_id){ %>
       <a class="button secondary" href="<%= routePath('/customers/' + invoice.invoice.customer_id) %>">View Customer</a>
-    <% } %>
-
-    <% if(invoice.invoice.work_order_id){ %>
+      <% } %>
+      <% if(invoice.invoice.work_order_id){ %>
       <a class="button secondary" href="<%= routePath('/work-orders/' + invoice.invoice.work_order_id) %>">View Work Order</a>
-    <% } %>
-  </div>
+      <% } %>
+   </div>
 </section>
-
 <section class="card">
-  <div class="grid two">
-    <div>
-      <h2>Customer</h2>
-      <p>
-        <% if(invoice.invoice.customer_id){ %>
-          <a href="<%= routePath('/customers/' + invoice.invoice.customer_id) %>">
+   <div class="grid two">
+      <div>
+         <h2>Customer</h2>
+         <p>
+            <% if(invoice.invoice.customer_id){ %>
+            <a href="<%= routePath('/customers/' + invoice.invoice.customer_id) %>">
             <%= invoice.invoice.customer_name %>
-          </a>
-        <% } else { %>
-          <%= invoice.invoice.customer_name || '—' %>
-        <% } %>
-      </p>
-    </div>
-
-    <div>
-      <h2>Status</h2>
-      <p><span class="badge"><%= invoice.invoice.status || invoice.invoice.status_name || 'Draft' %></span></p>
-    </div>
-  </div>
-
-  <% if(invoice.invoice.work_order_id){ %>
-    <p class="muted">
+            </a>
+            <% } else { %>
+            <%= invoice.invoice.customer_name || '—' %>
+            <% } %>
+         </p>
+      </div>
+      <div>
+         <h2>Status</h2>
+         <p><span class="badge"><%= invoice.invoice.status || invoice.invoice.status_name || 'Draft' %></span></p>
+      </div>
+   </div>
+   <% if(invoice.invoice.work_order_id){ %>
+   <p class="muted">
       Generated from
       <a href="<%= routePath('/work-orders/' + invoice.invoice.work_order_id) %>">
-        <%= invoice.invoice.work_order_title || ('Work Order #' + invoice.invoice.work_order_id) %>
+      <%= invoice.invoice.work_order_title || ('Work Order #' + invoice.invoice.work_order_id) %>
       </a>
-    </p>
-  <% } %>
+   </p>
+   <% } %>
 </section>
-
 <section class="card">
-  <div class="section-title-row">
-    <h2>Line Items</h2>
-  </div>
-
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Description</th>
-        <th>Qty</th>
-        <th>Unit Price</th>
-        <th>Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% invoice.lineItems.forEach(item => { %>
-        <tr>
-          <td><%= item.description %></td>
-          <td><%= item.quantity %></td>
-          <td><%= formatCurrency(item.unit_price || item.amount || 0) %></td>
-          <td><%= formatCurrency(item.line_total || item.amount || 0) %></td>
-        </tr>
-      <% }) %>
-
-      <% if(!invoice.lineItems.length){ %>
-        <tr>
-          <td colspan="4">No line items.</td>
-        </tr>
-      <% } %>
-    </tbody>
-  </table>
-</section>
-
-<section class="card">
-  <h2>Payments</h2>
-
-  <% if(invoice.payments.length){ %>
-    <table class="data-table">
+   <div class="section-title-row">
+      <h2>Line Items</h2>
+   </div>
+   <table class="data-table">
       <thead>
-        <tr>
-          <th>Amount</th>
-          <th>Date</th>
-          <th>Method</th>
-        </tr>
+         <tr>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Amount</th>
+         </tr>
       </thead>
       <tbody>
-        <% invoice.payments.forEach(payment => { %>
-          <tr>
+         <% invoice.lineItems.forEach(item => { %>
+         <tr>
+            <td><%= item.description %></td>
+            <td><%= item.quantity %></td>
+            <td><%= formatCurrency(item.unit_price || item.amount || 0) %></td>
+            <td><%= formatCurrency(item.line_total || item.amount || 0) %></td>
+         </tr>
+         <% }) %>
+         <% if(!invoice.lineItems.length){ %>
+         <tr>
+            <td colspan="4">No line items.</td>
+         </tr>
+         <% } %>
+      </tbody>
+   </table>
+</section>
+<section class="card">
+   <h2>Payments</h2>
+   <% if(invoice.payments.length){ %>
+   <table class="data-table">
+      <thead>
+         <tr>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Method</th>
+         </tr>
+      </thead>
+      <tbody>
+         <% invoice.payments.forEach(payment => { %>
+         <tr>
             <td><%= formatCurrency(payment.amount) %></td>
             <td><%= payment.created_at ? new Date(payment.created_at).toLocaleString() : '—' %></td>
             <td><%= payment.payment_method || payment.method || '—' %></td>
-          </tr>
-        <% }) %>
+         </tr>
+         <% }) %>
       </tbody>
-    </table>
-  <% } else { %>
-    <p class="muted">No payments recorded.</p>
-  <% } %>
+   </table>
+   <% } else { %>
+   <p class="muted">No payments recorded.</p>
+   <% } %>
 </section>
-
 <%- include('../partials-footer') %>

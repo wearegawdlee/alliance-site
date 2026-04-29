@@ -1,16 +1,177 @@
 <%- include('../partials-header', { title: workOrder.title }) %>
-<section class="page-header"><div><h1><%= workOrder.title %></h1><p><span class="badge"><%= workOrder.status %></span> · <a href="<%= routePath('/customers/' + workOrder.customer_id) %>"><%= workOrder.customer %></a> · <%= workOrder.service_line %></p></div><a class="button secondary" href="<%= routePath('/work-orders') %>">Back</a></section>
-<section class="card workflow-card"><h2>Work Order Flow</h2><div class="workflow-steps workflow-steps-long">
-  <% const flow=[['requested','1. Request'],['contacted','2. Contacted'],['scheduled','3. Scheduled'],['assigned','4. Assigned'],['in_evaluation','5. Evaluation'],['estimate_pending','6. Estimate'],['approved','7. Approved'],['in_progress','8. In Progress'],['completed','9. Complete'],['invoiced','10. Invoiced'],['closed','11. Closed']]; %>
-  <% flow.forEach(f=>{ %><div class="step <%= workOrder.status_code === f[0] ? 'active' : '' %>"><%= f[1] %></div><% }) %>
-</div><div class="button-row">
-  <% [['contact','Contact Made'],['schedule','Schedule'],['assign','Assign'],['evaluate','Eval Started'],['estimate','Estimate Pending'],['approve','Approved'],['start','Start Work'],['complete','Complete Work'],['invoice','Mark Invoiced'],['close','Close'],['cancel','Cancel']].forEach(a=>{ %>
-    <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/transition') %>"><input type="hidden" name="action" value="<%= a[0] %>"><button class="button secondary"><%= a[1] %></button></form>
-  <% }) %>
-</div></section>
-<div class="grid two"><section class="card"><h2>Job</h2><p><strong>Location</strong><br><%= [workOrder.address_line_1, workOrder.city, workOrder.state, workOrder.postal_code].filter(Boolean).join(', ') || '—' %></p><p><strong>Type</strong><br><%= workOrder.work_order_type || '—' %></p><p><strong>Asset</strong><br><%= workOrder.asset || '—' %></p><p><strong>Description</strong><br><%= workOrder.description || '—' %></p></section><section class="card"><h2>Assignment / Scheduling</h2><p class="muted">Pricing can stay empty at intake. Use inspection items below after Jay evaluates the job.</p><form method="post" action="<%= routePath('/work-orders/' + workOrder.id) %>" class="form-grid"><label>Status<select name="work_order_status_id"><% workOrder.statuses.forEach(s=>{ %><option value="<%= s.id %>" <%= Number(s.id)===Number(workOrder.work_order_status_id) ? 'selected' : '' %>><%= s.name %></option><% }) %></select></label><label>Technician<select name="assigned_user_id"><option value="">Unassigned</option><% workOrder.users.forEach(u=>{ const assigned = workOrder.assignments.some(a => Number(a.user_id)===Number(u.id)); %><option value="<%= u.id %>" <%= assigned ? 'selected' : '' %>><%= u.display_name %></option><% }) %></select></label><label>Scheduled Start<input type="datetime-local" name="scheduled_start_at" value="<%= workOrder.scheduled_start_at ? new Date(workOrder.scheduled_start_at).toISOString().slice(0,16) : '' %>"></label><div class="grid two"><label>Quoted Price<input type="number" step="0.01" name="quoted_price" value="<%= workOrder.quoted_price || '' %>"></label><label>Final Price<input type="number" step="0.01" name="final_price" value="<%= workOrder.final_price || '' %>"></label></div><label>Reason / Internal Note<input name="reason" placeholder="Why this changed"></label><button class="button primary">Save Work Order</button></form></section></div>
-<section class="card"><div class="section-title-row"><div><h2>Inspection Items / Charges</h2><p class="muted">Post-inspection itemization. These become invoice line items when you generate the draft invoice.</p></div><strong><%= formatCurrency(workOrder.lineItemTotal) %></strong></div><table class="data-table"><thead><tr><th>Catalog</th><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th><th></th></tr></thead><tbody><% workOrder.lineItems.forEach(item=>{ %><tr><td><%= item.sku ? item.sku + ' · ' : '' %><%= item.catalog_name || 'Custom' %><br><span class="muted"><%= item.item_type || '' %></span></td><td><%= item.description %></td><td><%= item.quantity %></td><td><%= formatCurrency(item.unit_price) %></td><td><%= formatCurrency(item.line_total) %></td><td><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items/' + item.id + '/delete') %>"><button class="button secondary">Remove</button></form></td></tr><% }) %><% if(!workOrder.lineItems.length){ %><tr><td colspan="6">No inspection items yet.</td></tr><% } %></tbody></table><h3>Add Item</h3><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items') %>" class="form-grid"><label>Catalog Item<select name="catalog_item_id"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-price="<%= i.unit_price %>"><%= i.service_line ? i.service_line + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option><% }) %></select></label><label>Description<input name="description" placeholder="Spring replacement, operator install, labor, etc."></label><div class="grid two"><label>Quantity<input type="number" step="0.01" name="quantity" value="1"></label><label>Unit Price<input type="number" step="0.01" name="unit_price" value="0"></label></div><button class="button primary">Add Inspection Item</button></form></section>
-<section class="card"><h2>Field Notes</h2><p class="muted">For now, this is the bridge: Jay calls/texts Adriana with field findings, and she records them here.</p><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/notes') %>" class="note-form"><textarea name="note_body" placeholder="Technician evaluation, parts needed, customer approval, etc."></textarea><button class="button primary">Add Field Note</button></form><% workOrder.notes.forEach(n=>{ %><div class="note"><%= n.note_body %><small><%= n.author || 'System' %> · <%= formatDate(n.created_at) %></small></div><% }) %></section>
-<section class="card"><h2>Generate Invoice</h2><p class="muted">Creates a draft invoice. If inspection items exist, those itemized charges are copied into invoice line items.</p><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/invoices') %>" class="form-grid"><label>Fallback Description<input name="description" value="<%= workOrder.title %>"></label><label>Fallback Total Amount<input type="number" step="0.01" name="total_amount" value="<%= workOrder.lineItemTotal || workOrder.final_price || workOrder.quoted_price || '' %>"></label><label>Invoice Notes<textarea name="notes"></textarea></label><label class="check"><input type="checkbox" name="mark_completed" value="1" checked> Mark work order invoiced</label><button class="button primary">Generate Draft Invoice</button></form><% if(workOrder.invoices.length){ %><h3>Invoices</h3><table class="data-table"><thead><tr><th>#</th><th>Status</th><th>Total</th></tr></thead><tbody><% workOrder.invoices.forEach(i=>{ %><tr><td><%= i.invoice_number || ('#' + i.id) %></td><td><%= i.status %></td><td><%= formatCurrency(i.total_amount) %></td></tr><% }) %></tbody></table><% } %></section>
-<section class="card"><h2>Status History</h2><table class="data-table"><thead><tr><th>When</th><th>From</th><th>To</th><th>By</th><th>Reason</th></tr></thead><tbody><% workOrder.history.forEach(h=>{ %><tr><td><%= formatDate(h.created_at) %></td><td><%= h.from_status || '—' %></td><td><%= h.to_status %></td><td><%= h.changed_by || 'System' %></td><td><%= h.reason || '—' %></td></tr><% }) %></tbody></table></section>
+<section class="page-header">
+   <div>
+      <h1><%= workOrder.title %></h1>
+      <p><span class="badge"><%= workOrder.status %></span> · <a href="<%= routePath('/customers/' + workOrder.customer_id) %>"><%= workOrder.customer %></a> · <%= workOrder.service_line %></p>
+   </div>
+   <a class="button secondary" href="<%= routePath('/work-orders') %>">Back</a>
+</section>
+<section class="card workflow-card">
+   <h2>Work Order Flow</h2>
+   <div class="workflow-steps workflow-steps-long">
+      <% const flow=[['requested','1. Request'],['contacted','2. Contacted'],['scheduled','3. Scheduled'],['assigned','4. Assigned'],['in_evaluation','5. Evaluation'],['estimate_pending','6. Estimate'],['approved','7. Approved'],['in_progress','8. In Progress'],['completed','9. Complete'],['invoiced','10. Invoiced'],['closed','11. Closed']]; %>
+      <% flow.forEach(f=>{ %>
+      <div class="step <%= workOrder.status_code === f[0] ? 'active' : '' %>"><%= f[1] %></div>
+      <% }) %>
+   </div>
+   <div class="button-row">
+      <% [['contact','Contact Made'],['schedule','Schedule'],['assign','Assign'],['evaluate','Eval Started'],['estimate','Estimate Pending'],['approve','Approved'],['start','Start Work'],['complete','Complete Work'],['invoice','Mark Invoiced'],['close','Close'],['cancel','Cancel']].forEach(a=>{ %>
+      <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/transition') %>"><input type="hidden" name="action" value="<%= a[0] %>"><button class="button secondary"><%= a[1] %></button></form>
+      <% }) %>
+   </div>
+</section>
+<div class="grid two">
+   <section class="card">
+      <h2>Job</h2>
+      <p><strong>Location</strong><br><%= [workOrder.address_line_1, workOrder.city, workOrder.state, workOrder.postal_code].filter(Boolean).join(', ') || '—' %></p>
+      <p><strong>Type</strong><br><%= workOrder.work_order_type || '—' %></p>
+      <p><strong>Asset</strong><br><%= workOrder.asset || '—' %></p>
+      <p><strong>Description</strong><br><%= workOrder.description || '—' %></p>
+   </section>
+   <section class="card">
+      <h2>Assignment / Scheduling</h2>
+      <p class="muted">Pricing can stay empty at intake. Use inspection items below after Jay evaluates the job.</p>
+      <form method="post" action="<%= routePath('/work-orders/' + workOrder.id) %>" class="form-grid">
+         <label>
+            Status
+            <select name="work_order_status_id">
+               <% workOrder.statuses.forEach(s=>{ %>
+               <option value="<%= s.id %>" <%= Number(s.id)===Number(workOrder.work_order_status_id) ? 'selected' : '' %>><%= s.name %></option>
+               <% }) %>
+            </select>
+         </label>
+         <label>
+            Technician
+            <select name="assigned_user_id">
+               <option value="">Unassigned</option>
+               <% workOrder.users.forEach(u=>{ const assigned = workOrder.assignments.some(a => Number(a.user_id)===Number(u.id)); %>
+               <option value="<%= u.id %>" <%= assigned ? 'selected' : '' %>><%= u.display_name %></option>
+               <% }) %>
+            </select>
+         </label>
+         <label>Scheduled Start<input type="datetime-local" name="scheduled_start_at" value="<%= workOrder.scheduled_start_at ? new Date(workOrder.scheduled_start_at).toISOString().slice(0,16) : '' %>"></label>
+         <div class="grid two"><label>Quoted Price<input type="number" step="0.01" name="quoted_price" value="<%= workOrder.quoted_price || '' %>"></label><label>Final Price<input type="number" step="0.01" name="final_price" value="<%= workOrder.final_price || '' %>"></label></div>
+         <label>Reason / Internal Note<input name="reason" placeholder="Why this changed"></label><button class="button primary">Save Work Order</button>
+      </form>
+   </section>
+</div>
+<section class="card">
+   <div class="section-title-row">
+      <div>
+         <h2>Inspection Items / Charges</h2>
+         <p class="muted">Post-inspection itemization. These become invoice line items when you generate the draft invoice.</p>
+      </div>
+      <strong><%= formatCurrency(workOrder.lineItemTotal) %></strong>
+   </div>
+   <table class="data-table">
+      <thead>
+         <tr>
+            <th>Catalog</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Total</th>
+            <th></th>
+         </tr>
+      </thead>
+      <tbody>
+         <% workOrder.lineItems.forEach(item=>{ %>
+         <tr>
+            <td><%= item.sku ? item.sku + ' · ' : '' %><%= item.catalog_name || 'Custom' %><br><span class="muted"><%= item.item_type || '' %></span></td>
+            <td><%= item.description %></td>
+            <td><%= item.quantity %></td>
+            <td><%= formatCurrency(item.unit_price) %></td>
+            <td><%= formatCurrency(item.line_total) %></td>
+            <td>
+               <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items/' + item.id + '/delete') %>"><button class="button secondary">Remove</button></form>
+            </td>
+         </tr>
+         <% }) %><% if(!workOrder.lineItems.length){ %>
+         <tr>
+            <td colspan="6">No inspection items yet.</td>
+         </tr>
+         <% } %>
+      </tbody>
+   </table>
+   <h3>Add Item</h3>
+   <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items') %>" class="form-grid">
+      <label>
+         Catalog Item
+         <select name="catalog_item_id">
+            <option value="">Custom / not in catalog</option>
+            <% workOrder.catalogItems.forEach(i=>{ %>
+            <option value="<%= i.id %>" data-price="<%= i.unit_price %>"><%= i.service_line ? i.service_line + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option>
+            <% }) %>
+         </select>
+      </label>
+      <label>Description<input name="description" placeholder="Spring replacement, operator install, labor, etc."></label>
+      <div class="grid two"><label>Quantity<input type="number" step="0.01" name="quantity" value="1"></label><label>Unit Price<input type="number" step="0.01" name="unit_price" value="0"></label></div>
+      <button class="button primary">Add Inspection Item</button>
+   </form>
+</section>
+<section class="card">
+   <h2>Field Notes</h2>
+   <p class="muted">For now, this is the bridge: Jay calls/texts Adriana with field findings, and she records them here.</p>
+   <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/notes') %>" class="note-form"><textarea name="note_body" placeholder="Technician evaluation, parts needed, customer approval, etc."></textarea><button class="button primary">Add Field Note</button></form>
+   <% workOrder.notes.forEach(n=>{ %>
+   <div class="note"><%= n.note_body %><small><%= n.author || 'System' %> · <%= formatDate(n.created_at) %></small></div>
+   <% }) %>
+</section>
+<section class="card">
+   <h2>Generate Invoice</h2>
+   <p class="muted">Creates a draft invoice. If inspection items exist, those itemized charges are copied into invoice line items.</p>
+   <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/invoices') %>" class="form-grid"><label>Fallback Description<input name="description" value="<%= workOrder.title %>"></label><label>Fallback Total Amount<input type="number" step="0.01" name="total_amount" value="<%= workOrder.lineItemTotal || workOrder.final_price || workOrder.quoted_price || '' %>"></label><label>Invoice Notes<textarea name="notes"></textarea></label><label class="check"><input type="checkbox" name="mark_completed" value="1" checked> Mark work order invoiced</label><button class="button primary">Generate Draft Invoice</button></form>
+   <% if(workOrder.invoices.length){ %>
+   <h3>Invoices</h3>
+   <table class="data-table">
+      <thead>
+         <tr>
+            <th>#</th>
+            <th>Status</th>
+            <th>Total</th>
+         </tr>
+      </thead>
+      <tbody>
+         <% workOrder.invoices.forEach(i=>{ %>
+         <tr>
+            <td>
+
+                                <a href="/backoffice/billing/invoices/<%= i.id %>">
+                        <%= i.invoice_number %>
+                    </a>    
+
+            </td>
+            <td><%= i.status %></td>
+            <td><%= formatCurrency(i.total_amount) %></td>
+         </tr>
+         <% }) %>
+      </tbody>
+   </table>
+   <% } %>
+</section>
+<section class="card">
+   <h2>Status History</h2>
+   <table class="data-table">
+      <thead>
+         <tr>
+            <th>When</th>
+            <th>From</th>
+            <th>To</th>
+            <th>By</th>
+            <th>Reason</th>
+         </tr>
+      </thead>
+      <tbody>
+         <% workOrder.history.forEach(h=>{ %>
+         <tr>
+            <td><%= formatDate(h.created_at) %></td>
+            <td><%= h.from_status || '—' %></td>
+            <td><%= h.to_status %></td>
+            <td><%= h.changed_by || 'System' %></td>
+            <td><%= h.reason || '—' %></td>
+         </tr>
+         <% }) %>
+      </tbody>
+   </table>
+</section>
 <%- include('../partials-footer') %>

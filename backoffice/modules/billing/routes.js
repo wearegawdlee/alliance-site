@@ -23,7 +23,8 @@ router.post("/invoices/:id/payments", async (req, res, next) => {
 router.get("/invoices/:id", async (req, res, next) => {
   try {
     const invoice = await service.getInvoiceDetail(req.params.id);
-    res.render("billing/detail", { invoice });
+    const paymentMethods = await service.getPaymentMethods();
+    res.render("billing/detail", { invoice, paymentMethods });
   } catch (err) {
     next(err);
   }

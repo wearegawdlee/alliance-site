@@ -86,20 +86,23 @@ async function recordPayment(invoiceId, data) {
 }
 
 async function getInvoiceDetail(id) {
-  const invoiceResult = await pool.query(
-    `
-    SELECT
-      i.*,
-      c.display_name customer_name,
-      wo.id work_order_id,
-      wo.title work_order_title
-    FROM invoices i
-    JOIN customers c
-      ON c.id=i.customer_id
-    LEFT JOIN work_orders wo
-      ON wo.id=i.work_order_id
-    WHERE i.id=$1
-  `,
+const invoiceResult = await pool.query(`
+SELECT
+  i.*,
+  s.code status_code,
+  s.name status_name,
+  c.id customer_id,
+  c.display_name customer_name,
+  wo.id work_order_id,
+  wo.title work_order_title
+FROM invoices i
+JOIN invoice_statuses s
+  ON s.id=i.invoice_status_id
+JOIN customers c
+  ON c.id=i.customer_id
+LEFT JOIN work_orders wo
+  ON wo.id=i.work_order_id
+WHERE i.id=$1`,
     [id],
   );
 
