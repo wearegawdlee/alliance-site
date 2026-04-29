@@ -1,10 +1,10 @@
-const express = require('express');
-const service = require('./service');
+const express = require("express");
+const service = require("./service");
 
 const router = express.Router();
 const attempts = new Map();
 
-router.post('/leads', rateLimit, async (req, res, next) => {
+router.post("/leads", rateLimit, async (req, res, next) => {
   try {
     const result = await service.createWebsiteLead(req.body, req);
 
@@ -16,7 +16,7 @@ router.post('/leads', rateLimit, async (req, res, next) => {
     return res.status(201).json({
       ok: true,
       customerId: result.customerId,
-      message: 'Lead received'
+      message: "Lead received",
     });
   } catch (error) {
     if (error.status) {
@@ -29,7 +29,7 @@ router.post('/leads', rateLimit, async (req, res, next) => {
 function rateLimit(req, res, next) {
   const windowMs = 15 * 60 * 1000;
   const maxAttempts = 8;
-  const key = req.ip || 'unknown';
+  const key = req.ip || "unknown";
   const now = Date.now();
   const current = attempts.get(key) || { count: 0, resetAt: now + windowMs };
 
@@ -42,7 +42,12 @@ function rateLimit(req, res, next) {
   attempts.set(key, current);
 
   if (current.count > maxAttempts) {
-    return res.status(429).json({ ok: false, error: 'Too many submissions. Please try again later.' });
+    return res
+      .status(429)
+      .json({
+        ok: false,
+        error: "Too many submissions. Please try again later.",
+      });
   }
 
   next();

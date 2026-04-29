@@ -34,6 +34,7 @@ Routing:
 Unified single-stack AWS deployment was chosen intentionally over split hosting.
 
 Reasons:
+
 - one stack to own
 - simpler routing
 - easier internal/public form integration
@@ -178,12 +179,15 @@ Domain slices scale better.
 Rules:
 
 Routes:
+
 - HTTP concerns only
 
 Services:
+
 - business logic/orchestration
 
 Repositories:
+
 - persistence/SQL only
 
 Guiding principle:
@@ -230,12 +234,13 @@ Root cause:
 Passing render local named:
 
 ```js
-client
+client;
 ```
 
 collided with EJS internal `client` option.
 
 Resolution:
+
 - renamed domain entity from Client to Customer
 - regenerated app
 - issue resolved
@@ -257,6 +262,7 @@ npm run db:reset
 ```
 
 Performs:
+
 - drop schema
 - recreate schema
 - run migrations
@@ -296,12 +302,15 @@ Field service platform including:
 Potential product opportunity recognized because we have:
 
 Operator pain insight:
+
 - Jay
 
 Backoffice pain insight:
+
 - Adriana
 
 Engineering execution:
+
 - us
 
 This is strategic context.

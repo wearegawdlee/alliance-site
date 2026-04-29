@@ -1,7 +1,16 @@
-const pool = require('../../db/pool');
+const pool = require("../../db/pool");
 
-async function getDashboard(){
-  const [newLeads, uncontacted, attentionWorkOrders, today, upcoming, unpaidInvoices, recentActivity, counts] = await Promise.all([
+async function getDashboard() {
+  const [
+    newLeads,
+    uncontacted,
+    attentionWorkOrders,
+    today,
+    upcoming,
+    unpaidInvoices,
+    recentActivity,
+    counts,
+  ] = await Promise.all([
     pool.query(`SELECT c.id,c.display_name,c.created_at,ls.name lead_source,cc.phone,cc.email,cl.city,cl.state
       FROM customers c
       JOIN customer_statuses cs ON cs.id=c.customer_status_id
@@ -56,13 +65,24 @@ async function getDashboard(){
       WHERE s.code NOT IN ('paid','void')
       GROUP BY i.id,i.invoice_number,i.total_amount,i.due_date,c.display_name,s.name
       ORDER BY i.due_date ASC NULLS LAST, i.created_at DESC LIMIT 8`),
-    pool.query(`SELECT * FROM activity_events ORDER BY created_at DESC LIMIT 10`),
+    pool.query(
+      `SELECT * FROM activity_events ORDER BY created_at DESC LIMIT 10`,
+    ),
     pool.query(`SELECT
       (SELECT count(*) FROM customers c JOIN customer_statuses cs ON cs.id=c.customer_status_id WHERE cs.code='prospect')::int AS prospect_count,
       (SELECT count(*) FROM work_orders wo JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id WHERE wos.code NOT IN ('closed','cancelled'))::int AS open_work_order_count,
       (SELECT count(*) FROM work_orders wo LEFT JOIN work_order_assignments woa ON woa.work_order_id=wo.id JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id WHERE woa.id IS NULL AND wos.code NOT IN ('closed','cancelled'))::int AS unassigned_work_order_count,
-      (SELECT count(*) FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE s.code NOT IN ('paid','void'))::int AS unpaid_invoice_count`)
+      (SELECT count(*) FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE s.code NOT IN ('paid','void'))::int AS unpaid_invoice_count`),
   ]);
-  return {newLeads:newLeads.rows, uncontacted:uncontacted.rows, attentionWorkOrders:attentionWorkOrders.rows, today:today.rows, upcoming:upcoming.rows, unpaidInvoices:unpaidInvoices.rows, recentActivity:recentActivity.rows, counts:counts.rows[0]};
+  return {
+    newLeads: newLeads.rows,
+    uncontacted: uncontacted.rows,
+    attentionWorkOrders: attentionWorkOrders.rows,
+    today: today.rows,
+    upcoming: upcoming.rows,
+    unpaidInvoices: unpaidInvoices.rows,
+    recentActivity: recentActivity.rows,
+    counts: counts.rows[0],
+  };
 }
-module.exports={getDashboard};
+module.exports = { getDashboard };

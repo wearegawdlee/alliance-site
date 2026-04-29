@@ -47,33 +47,39 @@ A submission creates:
 
 ```html
 <form id="lead-form">
-  <input type="text" name="company_website" tabindex="-1" autocomplete="off" style="display:none" />
+  <input
+    type="text"
+    name="company_website"
+    tabindex="-1"
+    autocomplete="off"
+    style="display:none"
+  />
   <!-- existing fields -->
 </form>
 
 <script>
-  const form = document.querySelector('#lead-form');
+  const form = document.querySelector("#lead-form");
 
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const payload = Object.fromEntries(new FormData(form).entries());
 
-    const response = await fetch('/backoffice/api/public/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const response = await fetch("/backoffice/api/public/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     const result = await response.json();
 
     if (!response.ok || !result.ok) {
-      alert(result.error || 'Something went wrong. Please call or text us.');
+      alert(result.error || "Something went wrong. Please call or text us.");
       return;
     }
 
     form.reset();
-    alert('Thanks! We received your request and will contact you shortly.');
+    alert("Thanks! We received your request and will contact you shortly.");
   });
 </script>
 ```

@@ -20,11 +20,11 @@ router.post("/invoices/:id/payments", async (req, res, next) => {
     next(e);
   }
 });
-router.get('/invoices/:id', async (req, res, next)=>{
-  try{
+router.get("/invoices/:id", async (req, res, next) => {
+  try {
     const invoice = await service.getInvoiceDetail(req.params.id);
-    res.render('billing/detail', { invoice });
-  } catch(err){
+    res.render("billing/detail", { invoice });
+  } catch (err) {
     next(err);
   }
 });

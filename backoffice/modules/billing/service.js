@@ -22,7 +22,12 @@ async function recordPayment(id, body) {
   if (invoice) notifications.notifyPaymentRecorded(invoice);
   return invoice;
 }
-async function getInvoiceDetail(id){
+async function getInvoiceDetail(id) {
   return repo.getInvoiceDetail(id);
 }
-module.exports = { listInvoices, getPaymentMethods, recordPayment, getInvoiceDetail };
+module.exports = {
+  listInvoices,
+  getPaymentMethods,
+  recordPayment,
+  getInvoiceDetail,
+};
