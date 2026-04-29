@@ -52,7 +52,7 @@
       <h3>Unpaid Invoices</h3>
       <div class="queue-list">
       <% dashboard.unpaidInvoices.forEach(i=>{ %>
-        <a class="queue-item" href="<%= routePath(`/billing/invoices/${i.id}`) %>">
+        <a class="queue-item" href="<%= routePath('/billing') %>">
           <strong><%= i.invoice_number %> — <%= i.customer %></strong>
           <span><%= i.status %> · <%= formatCurrency(Number(i.total_amount) - Number(i.paid_amount || 0)) %> remaining</span>
         </a>

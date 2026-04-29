@@ -8,10 +8,10 @@
     "db:migrate": "dotenv -e .env -- node-pg-migrate up",
     "db:seed:users": "dotenv -e .env -- node scripts/seed-users.js",
     "db:seed:domain": "dotenv -e .env -- node scripts/seed-domain.js",
-    "db:reset": "npm run db:drop-schema && npm run db:migrate && npm run db:seed:users && npm run db:seed:domain",
+    "db:reset": "npm run db:drop-schema && npm run db:migrate && npm run db:seed:users && npm run db:seed:domain && npm run db:seed:tax-rates",
     "bootstrap": "npm install && npm run db:reset",
     "notify:test": "dotenv -e .env -- node scripts/send-test-notification.js",
-    "prettifyjs": "npx prettier --write ."
+    "db:seed:tax-rates": "dotenv -e .env -- node scripts/seed-ga-tax-rates.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

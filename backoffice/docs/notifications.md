@@ -15,18 +15,16 @@ Add these values to `.env` on EC2:
 
 ```bash
 NOTIFICATIONS_ENABLED=true
-APP_BASE_URL=https://agdofroswell.com
+APP_BASE_URL=https://your-domain.com
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
+SMTP_USER=your-sending-account@your-domain.com
+SMTP_PASS=your-app-password-or-smtp-password
 
-SMTP_USER=admin@agdofroswell.com
-SMTP_PASS=xxxxxxxxxxxxxxxx
-
-SMTP_FROM="Alliance Backoffice <admin@agdofroswell.com>"
-
-NOTIFY_LEADS_EMAIL=leads@agdofroswell.com
+NOTIFICATION_EMAIL_FROM="Alliance Backoffice <your-sending-account@your-domain.com>"
+NOTIFICATION_EMAIL_TO=contact@your-domain.com,adriana@your-domain.com,jay@your-domain.com
 ```
 
 For Google Workspace/Gmail, use an app password or SMTP-compatible credential for the sending account.

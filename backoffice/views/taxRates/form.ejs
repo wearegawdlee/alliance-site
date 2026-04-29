@@ -1,0 +1,62 @@
+<%- include('../partials-header', { title }) %>
+
+<section class="page-header">
+  <div>
+    <h1><%= taxRate ? 'Edit Tax Rate' : 'New Tax Rate' %></h1>
+    <p>Enter rates as percentages. Example: enter <strong>7.75</strong> for 7.75%.</p>
+  </div>
+  <a class="button secondary" href="<%= routePath('/tax-rates') %>">Back</a>
+</section>
+
+<section class="card">
+  <form method="post" action="<%= taxRate ? routePath('/tax-rates/' + taxRate.id) : routePath('/tax-rates') %>" class="form-grid">
+    <div class="grid two">
+      <label>
+        State
+        <input name="state" maxlength="2" value="<%= taxRate?.state || 'GA' %>" required>
+      </label>
+
+      <label>
+        County
+        <input name="county" value="<%= taxRate?.county || '' %>" placeholder="Fulton" required>
+      </label>
+    </div>
+
+    <div class="grid two">
+      <label>
+        City
+        <input name="city" value="<%= taxRate?.city || '' %>" placeholder="Optional">
+      </label>
+
+      <label>
+        Postal Code
+        <input name="postal_code" value="<%= taxRate?.postal_code || '' %>" placeholder="Optional">
+      </label>
+    </div>
+
+    <div class="grid two">
+      <label>
+        Rate (%)
+        <input type="number" step="0.001" min="0" name="rate_percent" value="<%= taxRate?.rate_percent ?? 0 %>" required>
+      </label>
+
+      <label>
+        Effective Start
+        <input type="date" name="effective_start_date" value="<%= taxRate?.effective_start_date ? new Date(taxRate.effective_start_date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10) %>" required>
+      </label>
+    </div>
+
+    <label>
+      Effective End
+      <input type="date" name="effective_end_date" value="<%= taxRate?.effective_end_date ? new Date(taxRate.effective_end_date).toISOString().slice(0,10) : '' %>">
+    </label>
+
+    <label class="check">
+      <input type="checkbox" name="is_active" value="1" <%= !taxRate || taxRate.is_active ? 'checked' : '' %>> Active
+    </label>
+
+    <button class="button primary"><%= taxRate ? 'Save Tax Rate' : 'Create Tax Rate' %></button>
+  </form>
+</section>
+
+<%- include('../partials-footer') %>
