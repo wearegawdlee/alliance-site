@@ -31,4 +31,45 @@ async function recordPayment(invoiceId,data){
     return getInvoiceSummary(invoiceId);
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
-module.exports={listInvoices,getPaymentMethods,recordPayment,getInvoiceSummary};
+
+async function getInvoiceDetail(id){
+  const invoiceResult = await pool.query(`
+    SELECT
+      i.*,
+      c.display_name customer_name,
+      wo.id work_order_id,
+      wo.title work_order_title
+    FROM invoices i
+    JOIN customers c
+      ON c.id=i.customer_id
+    LEFT JOIN work_orders wo
+      ON wo.id=i.work_order_id
+    WHERE i.id=$1
+  `,[id]);
+
+  const lineItems = await pool.query(`
+    SELECT *
+    FROM invoice_line_items
+    WHERE invoice_id=$1
+    ORDER BY id
+  `,[id]);
+
+  const payments = await pool.query(`
+    SELECT *
+    FROM payments
+    WHERE invoice_id=$1
+    ORDER BY created_at DESC
+  `,[id]);
+
+  return {
+    invoice: invoiceResult.rows[0],
+    lineItems: lineItems.rows,
+    payments: payments.rows
+  };
+}
+
+module.exports = {
+ ...module.exports,
+ getInvoiceDetail
+};
+module.exports={listInvoices,getPaymentMethods,recordPayment,getInvoiceSummary, getInvoiceDetail};

@@ -13,6 +13,11 @@ function payload(body){
     is_active: body.is_active === '1' || body.is_active === 'true' || body.is_active === 'on'
   };
 }
+
+async function getInvoiceDetail(id){
+  return billingRepository.getInvoiceDetail(id);
+}
+
 async function listCatalogItems(query){return repo.listCatalogItems(query||{});}
 async function getCatalogOptions(){return repo.getCatalogOptions();}
 async function getCatalogItem(id){return repo.getCatalogItem(id);}
