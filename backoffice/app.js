@@ -85,19 +85,6 @@ app.post(`${BASE_PATH}/login`, async (req, res) => {
             passwordLength: password.length
         });
 
-        if (!user) {
-            console.log("User with email", email, "not found");
-        } else {
-            const passwordMatches =
-                await bcrypt.compare(
-                    password,
-                    user.password_hash
-                );
-
-            console.log('USER FOUND', !!user);
-            console.log('PASSWORD MATCHES', passwordMatches);
-        }
-
         if (!user) return renderLoginError(res);
         const ok = await bcrypt.compare(password, user.password_hash);
         if (!ok) return renderLoginError(res);
