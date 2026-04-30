@@ -251,15 +251,19 @@ const description =
         </div>
       </div>
 
-  <form class="w-full max-w-md mx-auto rounded-3xl bg-white border border-neutral-200 p-4 space-y-3"
-            action="https://formspree.io/f/xdkwwdnv" method="POST">
+  <form
+          class="w-full max-w-md mx-auto rounded-3xl bg-white border border-neutral-200 p-4 space-y-3"
+          data-lead-form
+          data-lead-source="Homepage estimate form"
+        >
+        <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
         <div>
           <label class="block text-sm font-medium" for="name">Name</label>
           <input id="name" name="name" autocomplete="name" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
           <label class="block text-sm font-medium" for="phone">Phone</label>
-          <input id="phone" name="phone" autocomplete="tel" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
+          <input id="phone" name="phone" autocomplete="tel" inputmode="tel" pattern="[0-9()+.\-\s]{7,20}" maxlength="20" required class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2" />
         </div>
         <div>
           <label class="block text-sm font-medium" for="email">Email</label>
@@ -308,10 +312,12 @@ const description =
             class="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2"
           >
             <option value="">Select one</option>
-            <option>Repair</option>
-            <option>Opener</option>
-            <option>New Door</option>
-            <option>Maintenance</option>
+            <option>Broken Spring / Spring Replacement</option>
+            <option>Garage Door Repair</option>
+            <option>Garage Door Opener Repair</option>
+            <option>New Garage Door Installation</option>
+            <option>Spring Conversion</option>
+            <option>Maintenance / Tune-Up</option>
             <option>Free Estimate</option>
             <option>Not Sure Yet</option>
           </select>
@@ -354,6 +360,7 @@ const description =
         <button type="submit" class="w-full rounded-2xl bg-neutral-900 text-white px-5 py-3 font-medium hover:bg-neutral-800">
           Send Request
         </button>
+        <p class="hidden rounded-xl px-3 py-2 text-sm" data-lead-status role="status" aria-live="polite"></p>
         <div class="text-center">
           <p class="text-xs text-neutral-500">By submitting, you agree to be contacted about your service request.</p>
           <p class="text-xs text-neutral-500">We only use your info to reply. No sharing, no spam.</p>

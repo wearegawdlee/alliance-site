@@ -12,7 +12,15 @@ export default defineConfig({
   integrations: [react()],
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      proxy: {
+        '/backoffice': {
+          target: 'http://localhost:3001',
+          changeOrigin: true
+        }
+      }
+    }
   },
 
   adapter: vercel()
