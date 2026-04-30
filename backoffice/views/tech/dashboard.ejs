@@ -1,0 +1,19 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header tech-page-header">
+  <div><h1>My Work</h1><p>Assigned jobs and field actions.</p></div>
+</section>
+<section class="tech-job-list">
+  <% dashboard.jobs.forEach(job=>{ %>
+  <a class="tech-job-card" href="<%= routePath('/work-orders/' + job.id) %>">
+    <div class="tech-job-card-header">
+      <strong><%= job.title %></strong>
+      <span class="badge"><%= job.status %></span>
+    </div>
+    <p><%= job.customer %> · <%= job.service_line %></p>
+    <p class="muted"><%= [job.address_line_1, job.city, job.state, job.postal_code].filter(Boolean).join(', ') || 'No address' %></p>
+    <div class="button-row"><span class="chip"><%= job.scheduled_start_at ? new Date(job.scheduled_start_at).toLocaleString() : 'Unscheduled' %></span><span class="chip"><%= job.item_count %> items</span></div>
+  </a>
+  <% }) %>
+  <% if(!dashboard.jobs.length){ %><section class="card"><p class="muted">No assigned work orders.</p></section><% } %>
+</section>
+<%- include('../partials-footer') %>

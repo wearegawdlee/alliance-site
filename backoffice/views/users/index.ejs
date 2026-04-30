@@ -1,0 +1,24 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header">
+  <div><h1>User Management</h1><p>Manage users, positions, and access roles.</p></div>
+  <a class="button primary" href="<%= routePath('/users/new') %>">New User</a>
+</section>
+<section class="card">
+  <table class="data-table">
+    <thead><tr><th>Name</th><th>Email</th><th>Position</th><th>Roles</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% users.forEach(user=>{ %>
+      <tr>
+        <td><%= user.display_name %></td>
+        <td><%= user.email %></td>
+        <td><%= user.position || '—' %></td>
+        <td><%= user.role_names || '—' %></td>
+        <td><span class="badge"><%= user.is_active ? 'Active' : 'Inactive' %></span></td>
+        <td><a class="button secondary" href="<%= routePath('/users/' + user.id + '/edit') %>">Edit</a></td>
+      </tr>
+      <% }) %>
+      <% if(!users.length){ %><tr><td colspan="6">No users yet.</td></tr><% } %>
+    </tbody>
+  </table>
+</section>
+<%- include('../partials-footer') %>

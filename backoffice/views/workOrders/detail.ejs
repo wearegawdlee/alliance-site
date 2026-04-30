@@ -13,7 +13,7 @@
 <% } %>
 
 <section class="card workflow-card">
-  <h2>Work Order Flow</h2>
+  <h2>Work Order Status</h2>
   <div class="workflow-steps">
     <% const flow=[['open','1. Open'],['completed','2. Completed'],['cancelled','Cancelled']]; %>
     <% flow.forEach(f=>{ %><div class="step <%= workOrder.status_code === f[0] ? 'active' : '' %>"><%= f[1] %></div><% }) %>
@@ -40,8 +40,7 @@
     <p><strong>Description</strong><br><%= workOrder.description || '—' %></p>
   </section>
   <section class="card">
-    <h2>Assignment / Scheduling</h2>
-    <p class="muted">Scheduling, assignment, and itemization are editable while the invoice remains unpaid.</p>
+    <h2>Scheduling</h2>
     <form method="post" action="<%= routePath('/work-orders/' + workOrder.id) %>" class="form-grid">
       <label>Technician<select name="assigned_user_id" <%= workOrder.isLocked ? 'disabled' : '' %>><option value="">Unassigned</option><% workOrder.users.forEach(u=>{ const assigned = workOrder.assignments.some(a => Number(a.user_id)===Number(u.id)); %><option value="<%= u.id %>" <%= assigned ? 'selected' : '' %>><%= u.display_name %></option><% }) %></select></label>
       <div class="grid two">
@@ -49,14 +48,72 @@
         <label>Scheduled End<input type="datetime-local" name="scheduled_end_at" value="<%= workOrder.scheduled_end_at ? new Date(workOrder.scheduled_end_at).toISOString().slice(0,16) : '' %>" <%= workOrder.isLocked ? 'disabled' : '' %>></label>
       </div>
       <div class="grid two"><label>Quoted Price<input type="number" step="0.01" name="quoted_price" value="<%= workOrder.quoted_price || '' %>" <%= workOrder.isLocked ? 'disabled' : '' %>></label><label>Final Price<input type="number" step="0.01" name="final_price" value="<%= workOrder.final_price || '' %>" <%= workOrder.isLocked ? 'disabled' : '' %>></label></div>
-      <label>Reason / Internal Note<input name="reason" placeholder="Why this changed" <%= workOrder.isLocked ? 'disabled' : '' %>></label>
+
+      <div class="card subtle-card">
+        <h4>Discount</h4>
+        <p class="muted">Discount applied to the invoice when the work order is completed or regenerated.</p>
+
+        <div class="grid two">
+          <label>
+            Type
+            <select name="discount_type" id="discountTypeSelect" <%= workOrder.isLocked ? 'disabled' : '' %>>
+              <% const discountTypes=[['none','None'],['military','Military'],['senior','Senior'],['courtesy','Courtesy'],['other','Other']]; %>
+              <% discountTypes.forEach(d=>{ %>
+                <option value="<%= d[0] %>" <%= (workOrder.discount_type || 'none') === d[0] ? 'selected' : '' %>><%= d[1] %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <label>
+            Mode
+            <select name="discount_value_type" id="discountValueTypeSelect" <%= workOrder.isLocked ? 'disabled' : '' %>>
+              <option value="flat" <%= (workOrder.discount_value_type || 'flat') === 'flat' ? 'selected' : '' %>>Flat Amount</option>
+              <option value="percent" <%= workOrder.discount_value_type === 'percent' ? 'selected' : '' %>>Percent</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="grid two">
+          <label id="discountAmountLabel">
+            Amount
+            <input type="number" step="0.01" name="discount_amount" value="<%= workOrder.discount_amount || '' %>" <%= workOrder.isLocked ? 'disabled' : '' %>>
+          </label>
+          <label id="discountPercentLabel">
+            Percent
+            <input type="number" step="0.01" name="discount_percent" value="<%= workOrder.discount_percent || '' %>" <%= workOrder.isLocked ? 'disabled' : '' %>>
+          </label>
+        </div>
+
+        <label id="discountReasonLabel">
+         Reason
+          <input name="discount_reason" value="<%= workOrder.discount_reason || '' %>" placeholder="Required for Other; optional for standard discounts" <%= workOrder.isLocked ? 'disabled' : '' %>>
+        </label>
+      </div>
+
+
+      <div class="card subtle-card">
+        <h4>Deposit</h4>
+        <p class="muted">Deposit applied to the invoice when the work order is completed or regenerated.</p>
+        <div class="grid two">
+          <label>
+            Deposit Amount
+            <input type="number" step="0.01" name="deposit_amount" value="<%= workOrder.deposit_amount || '' %>" <%= workOrder.isLocked ? 'disabled' : '' %>>
+          </label>
+          <label>
+            Deposit Note
+            <input name="deposit_note" value="<%= workOrder.deposit_note || '' %>" placeholder="Check #, cash, card, who received it, etc." <%= workOrder.isLocked ? 'disabled' : '' %>>
+          </label>
+        </div>
+      </div>
+
+      <label>Work Order Note<input name="reason" placeholder="Why this changed" <%= workOrder.isLocked ? 'disabled' : '' %>></label>
       <% if(!workOrder.isLocked){ %><button class="button primary">Save Work Order</button><% } %>
     </form>
   </section>
 </div>
 
 <section class="card">
-  <div class="section-title-row"><div><h2>Inspection Items / Charges</h2><p class="muted">These become invoice line items when you complete or regenerate the work order.</p></div><strong><%= formatCurrency(workOrder.lineItemTotal) %></strong></div>
+  <div class="section-title-row"><div><h2>Service Items</h2></div><strong><%= formatCurrency(workOrder.lineItemTotal) %></strong></div>
   <table class="data-table"><thead><tr><th>Catalog</th><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th><th></th></tr></thead><tbody>
     <% workOrder.lineItems.forEach(item=>{ %><tr><td><%= item.sku ? item.sku + ' · ' : '' %><%= item.catalog_name || 'Custom' %><br><span class="muted"><%= item.item_type || '' %></span></td><td><%= item.description %></td><td><%= item.quantity %></td><td><%= formatCurrency(item.unit_price) %></td><td><%= formatCurrency(item.line_total) %></td><td><% if(!workOrder.isLocked){ %><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items/' + item.id + '/delete') %>"><button class="button secondary">Remove</button></form><% } %></td></tr><% }) %>
     <% if(!workOrder.lineItems.length){ %><tr><td colspan="6">No inspection items yet. Completing this work order will not generate an invoice until items are added.</td></tr><% } %>
@@ -66,16 +123,15 @@
   <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items') %>" class="form-grid">
     <label>Catalog Item<select name="catalog_item_id" id="catalogItemSelect"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-price="<%= i.unit_price || '' %>" data-description="<%= i.name || '' %>"><%= i.service_line ? i.service_line + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option><% }) %></select></label>
     <label>Description<input id="descriptionField" name="description" placeholder="Spring replacement, operator install, labor, etc."></label>
-    <div class="grid two"><label>Quantity<input type="number" step="0.01" name="quantity" value="1"></label><label>Unit Price<input id="unitPriceField" type="number" step="0.01" name="unit_price" value=""></label></div>
-    <button class="button primary">Add Inspection Item</button>
+    <div class="grid two"><label>Quantity<input type="number" step="0.01" name="quantity" value="1"></label><label>Price<input id="unitPriceField" type="number" step="0.01" name="unit_price" value=""></label></div>
+    <button class="button primary">Add Item</button>
   </form>
   <% } %>
 </section>
 
 <section class="card">
-  <h2>Field Notes</h2>
-  <p class="muted">For now, this is the bridge: Jay calls/texts Adriana with field findings, and she records them here.</p>
-  <% if(!workOrder.isLocked){ %><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/notes') %>" class="note-form"><textarea name="note_body" placeholder="Technician evaluation, parts needed, customer approval, etc."></textarea><button class="button primary">Add Field Note</button></form><% } %>
+  <h2>Notes</h2>
+  <% if(!workOrder.isLocked){ %><form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/notes') %>" class="note-form"><textarea name="note_body" placeholder="Technician evaluation, parts needed, customer approval, etc."></textarea><button class="button primary">Add Note</button></form><% } %>
   <% workOrder.notes.forEach(n=>{ %><div class="note"><%= n.note_body %><small><%= n.author || 'System' %> · <%= formatDate(n.created_at) %></small></div><% }) %>
 </section>
 
@@ -103,6 +159,22 @@ document.addEventListener('DOMContentLoaded', function(){
     if(price !== undefined && price !== null && price !== '') unitPriceField.value = Number(price).toFixed(2);
     if(!descriptionField.value.trim()) descriptionField.value = selectedOption.dataset.description || selectedOption.text.replace(/\s+\(.*\)\s*$/, '').trim();
   });
+
+  const discountValueType = document.getElementById('discountValueTypeSelect');
+  const discountAmountLabel = document.getElementById('discountAmountLabel');
+  const discountPercentLabel = document.getElementById('discountPercentLabel');
+
+  function updateDiscountMode(){
+    if(!discountValueType || !discountAmountLabel || !discountPercentLabel) return;
+    const isPercent = discountValueType.value === 'percent';
+    discountAmountLabel.style.display = isPercent ? 'none' : '';
+    discountPercentLabel.style.display = isPercent ? '' : 'none';
+  }
+
+  if(discountValueType){
+    discountValueType.addEventListener('change', updateDiscountMode);
+    updateDiscountMode();
+  }
 });
 </script>
 

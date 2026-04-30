@@ -159,4 +159,8 @@ function normalizeBasePath(value) {
     if (!t || t === '/') return '';
     return (t.startsWith('/') ? t : `/${t}`).replace(/\/+$/, '');
 }
-app.listen(PORT, () => console.log(`${appConfig.brand.backofficeName} listening on http://localhost:${PORT}${BASE_PATH}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`${appConfig.brand.backofficeName} listening on http://localhost:${PORT}${BASE_PATH}`));
+}
+
+module.exports = { app, requireAuth, normalizeBasePath };

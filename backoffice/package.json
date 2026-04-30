@@ -11,7 +11,10 @@
     "db:reset": "npm run db:drop-schema && npm run db:migrate && npm run db:seed:users && npm run db:seed:domain && npm run db:seed:tax-rates",
     "bootstrap": "npm install && npm run db:reset",
     "notify:test": "dotenv -e .env -- node scripts/send-test-notification.js",
-    "db:seed:tax-rates": "dotenv -e .env -- node scripts/seed-ga-tax-rates.js"
+    "db:seed:tax-rates": "dotenv -e .env -- node scripts/seed-ga-tax-rates.js",
+    "test": "jest --runInBand",
+    "test:reset": "node scripts/reset-test-db.js",
+    "test:integration": "npm run test:reset && npm test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -24,6 +27,8 @@
   },
   "devDependencies": {
     "dotenv-cli": "^7.4.4",
-    "node-pg-migrate": "^7.9.0"
+    "node-pg-migrate": "^7.9.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
   }
 }

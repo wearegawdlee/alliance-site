@@ -106,7 +106,35 @@ async function updateWorkOrder(id, data, userId) {
     await assertWorkOrderMutable(client, id);
     const cur = await client.query(`SELECT work_order_status_id FROM work_orders WHERE id=$1`, [id]);
     if (!cur.rows[0]) throw new Error('Work order not found');
-    await client.query(`UPDATE work_orders SET scheduled_start_at=$1,scheduled_end_at=$2,quoted_price=$3,final_price=$4,updated_at=current_timestamp WHERE id=$5`, [data.scheduled_start_at || null, data.scheduled_end_at || null, data.quoted_price || null, data.final_price || null, id]);
+    await client.query(`
+      UPDATE work_orders
+      SET scheduled_start_at=$1,
+          scheduled_end_at=$2,
+          quoted_price=$3,
+          final_price=$4,
+          discount_type=$5,
+          discount_value_type=$6,
+          discount_percent=$7,
+          discount_amount=$8,
+          discount_reason=$9,
+          deposit_amount=$10,
+          deposit_note=$11,
+          updated_at=current_timestamp
+      WHERE id=$12
+    `, [
+      data.scheduled_start_at || null,
+      data.scheduled_end_at || null,
+      data.quoted_price || null,
+      data.final_price || null,
+      data.discount_type || null,
+      data.discount_value_type || 'flat',
+      data.discount_percent || 0,
+      data.discount_amount || 0,
+      data.discount_reason || null,
+      data.deposit_amount || 0,
+      data.deposit_note || null,
+      id,
+    ]);
     await client.query(`DELETE FROM work_order_assignments WHERE work_order_id=$1`, [id]);
     if (data.assigned_user_id) await client.query(`INSERT INTO work_order_assignments(work_order_id,user_id,role_on_job) VALUES($1,$2,'technician')`, [id, data.assigned_user_id]);
     if (data.reason) await client.query(`INSERT INTO work_order_notes(work_order_id,author_user_id,note_body) VALUES($1,$2,$3)`, [id, userId || null, data.reason]);
@@ -123,7 +151,7 @@ async function transition(id, action, userId, reason) {
     if (!cur.rows[0]) throw new Error('Work order not found');
     const current = cur.rows[0].status_code;
     let code = null;
-    if (action === 'complete' && current === 'open') code = 'completed';
+    if (action === 'complete' && (current === 'open' || current === 'completed')) code = 'completed';
     if (action === 'cancel' && current === 'open') code = 'cancelled';
     if (!code) throw new Error(`Invalid work order transition: ${current} -> ${action}`);
     const toId = await getStatusId(client, code);
@@ -156,6 +184,34 @@ async function deleteLineItem(workOrderId, lineItemId) {
 
 function roundMoney(value) {
   return Number(Number(value || 0).toFixed(2));
+}
+
+function calculateDiscount(wo, subtotal) {
+  const type = wo.discount_type || null;
+  const valueType = wo.discount_value_type === 'percent' ? 'percent' : 'flat';
+  const percent = Number(wo.discount_percent || 0);
+  const flatAmount = Number(wo.discount_amount || 0);
+
+  if (!type || type === 'none') {
+    return { discountType: null, discountValueType: 'flat', discountPercent: 0, discountAmount: 0 };
+  }
+
+  if (valueType === 'percent') {
+    const safePercent = Math.max(0, Math.min(100, percent));
+    return {
+      discountType: type,
+      discountValueType: 'percent',
+      discountPercent: safePercent,
+      discountAmount: roundMoney(subtotal * (safePercent / 100)),
+    };
+  }
+
+  return {
+    discountType: type,
+    discountValueType: 'flat',
+    discountPercent: 0,
+    discountAmount: roundMoney(Math.max(0, Math.min(subtotal, flatAmount))),
+  };
 }
 
 async function findTaxRateForWorkOrder(client, workOrderId) {
@@ -201,20 +257,25 @@ async function syncInvoiceForWorkOrder(client, id, userId, notes) {
   let inv = (await client.query(`SELECT i.*,s.code status_code FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.work_order_id=$1`, [id])).rows[0];
   if (inv?.status_code === 'paid') throw new Error('Paid invoices cannot be regenerated.');
 
-  const discountAmount = roundMoney(inv?.discount_amount || 0);
+  const discount = calculateDiscount(wo, subtotal);
+  const discountAmount = discount.discountAmount;
+  const depositAmount = roundMoney(Math.max(0, Number(wo.deposit_amount || 0)));
   const taxableAmount = roundMoney(Math.max(0, subtotal - discountAmount));
   const taxRate = await findTaxRateForWorkOrder(client, id);
   const rate = Number(taxRate?.rate || 0);
   const taxAmount = roundMoney(taxableAmount * rate);
   const totalAmount = roundMoney(taxableAmount + taxAmount);
+  const balanceDue = roundMoney(Math.max(0, totalAmount - depositAmount));
 
   if (!inv) {
     inv = (await client.query(`
       INSERT INTO invoices(
         customer_id,customer_location_id,work_order_id,invoice_status_id,tax_rate_id,
-        invoice_number,issue_date,due_date,subtotal,discount_amount,taxable_amount,tax_rate,tax_amount,total_amount,notes
+        invoice_number,issue_date,due_date,
+        discount_type,discount_value_type,discount_percent,discount_reason,deposit_amount,deposit_note,
+        subtotal,discount_amount,taxable_amount,tax_rate,tax_amount,total_amount,balance_due,notes
       )
-      VALUES($1,$2,$3,$4,$5,$6,current_date,current_date + interval '14 days',$7,$8,$9,$10,$11,$12,$13)
+      VALUES($1,$2,$3,$4,$5,$6,current_date,current_date + interval '14 days',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
       RETURNING *
     `, [
       wo.customer_id,
@@ -223,28 +284,42 @@ async function syncInvoiceForWorkOrder(client, id, userId, notes) {
       created,
       taxRate?.id || null,
       `INV-${Date.now()}`,
+      discount.discountType,
+      discount.discountValueType,
+      discount.discountPercent,
+      wo.discount_reason || null,
+      depositAmount,
+      wo.deposit_note || null,
       subtotal,
       discountAmount,
       taxableAmount,
       rate,
       taxAmount,
       totalAmount,
+      balanceDue,
       notes || null,
     ])).rows[0];
   } else {
     await client.query(`
       UPDATE invoices
       SET tax_rate_id=$1,
-          subtotal=$2,
-          discount_amount=$3,
-          taxable_amount=$4,
-          tax_rate=$5,
-          tax_amount=$6,
-          total_amount=$7,
-          notes=COALESCE($8,notes),
+          discount_type=$2,
+          discount_value_type=$3,
+          discount_percent=$4,
+          discount_reason=$5,
+          deposit_amount=$6,
+          deposit_note=$7,
+          subtotal=$8,
+          discount_amount=$9,
+          taxable_amount=$10,
+          tax_rate=$11,
+          tax_amount=$12,
+          total_amount=$13,
+          balance_due=$14,
+          notes=COALESCE($15,notes),
           updated_at=current_timestamp
-      WHERE id=$9
-    `, [taxRate?.id || null, subtotal, discountAmount, taxableAmount, rate, taxAmount, totalAmount, notes || null, inv.id]);
+      WHERE id=$16
+    `, [taxRate?.id || null, discount.discountType, discount.discountValueType, discount.discountPercent, wo.discount_reason || null, depositAmount, wo.deposit_note || null, subtotal, discountAmount, taxableAmount, rate, taxAmount, totalAmount, balanceDue, notes || null, inv.id]);
     await client.query(`DELETE FROM invoice_line_items WHERE invoice_id=$1`, [inv.id]);
   }
 
@@ -253,7 +328,7 @@ async function syncInvoiceForWorkOrder(client, id, userId, notes) {
   }
 
   await client.query(`UPDATE work_orders SET final_price=$1,updated_at=current_timestamp WHERE id=$2`, [totalAmount, id]);
-  await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body,metadata) VALUES('work_order',$1,$2,'invoice.synced','Invoice synchronized from completed work order',$3)`, [id, userId || null, JSON.stringify({ invoiceId: inv.id, subtotal, taxRateId: taxRate?.id || null, taxRate: rate, taxAmount, totalAmount })]);
+  await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body,metadata) VALUES('work_order',$1,$2,'invoice.synced','Invoice synchronized from completed work order',$3)`, [id, userId || null, JSON.stringify({ invoiceId: inv.id, subtotal, discountAmount, depositAmount, taxRateId: taxRate?.id || null, taxRate: rate, taxAmount, totalAmount, balanceDue })]);
   return inv.id;
 }
 

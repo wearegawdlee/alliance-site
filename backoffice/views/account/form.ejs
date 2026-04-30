@@ -1,0 +1,11 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header"><div><h1>My Account</h1><p>Manage your own profile and password.</p></div></section>
+<section class="card">
+  <form method="post" action="<%= routePath('/account') %>" class="form-grid">
+    <label>Email<input value="<%= account.email %>" disabled></label>
+    <label>Name<input name="display_name" value="<%= account.display_name %>" required></label>
+    <label>New Password<input type="password" name="password" placeholder="Leave blank to keep current password"></label>
+    <button class="button primary">Save Account</button>
+  </form>
+</section>
+<%- include('../partials-footer') %>

@@ -4,8 +4,30 @@ function clean(v){ const s=String(v||'').trim(); return s || null; }
 async function listWorkOrders(query){return repo.listWorkOrders(query || {});}
 async function getWorkOrderFilters(){return repo.getWorkOrderFilters();}
 async function getWorkOrderDetail(id){return repo.getWorkOrderDetail(id);}
+function moneyOrZero(value) {
+  if (value === undefined || value === null || value === '') return 0;
+  return Number(value) || 0;
+}
+
 async function updateWorkOrder(id,body,user){
-  await repo.updateWorkOrder(id,{assigned_user_id:body.assigned_user_id?Number(body.assigned_user_id):null,scheduled_start_at:clean(body.scheduled_start_at),scheduled_end_at:clean(body.scheduled_end_at),quoted_price:body.quoted_price?Number(body.quoted_price):null,final_price:body.final_price?Number(body.final_price):null,reason:clean(body.reason)},user?.id);
+  const discountType = clean(body.discount_type);
+  const discountValueType = body.discount_value_type === 'percent' ? 'percent' : 'flat';
+
+  await repo.updateWorkOrder(id,{
+    assigned_user_id:body.assigned_user_id?Number(body.assigned_user_id):null,
+    scheduled_start_at:clean(body.scheduled_start_at),
+    scheduled_end_at:clean(body.scheduled_end_at),
+    quoted_price:body.quoted_price?Number(body.quoted_price):null,
+    final_price:body.final_price?Number(body.final_price):null,
+    discount_type: discountType === 'none' ? null : discountType,
+    discount_value_type: discountValueType,
+    discount_percent: discountValueType === 'percent' ? moneyOrZero(body.discount_percent) : 0,
+    discount_amount: discountValueType === 'flat' ? moneyOrZero(body.discount_amount) : 0,
+    discount_reason: clean(body.discount_reason),
+    deposit_amount: moneyOrZero(body.deposit_amount),
+    deposit_note: clean(body.deposit_note),
+    reason:clean(body.reason)
+  },user?.id);
   if (body.assigned_user_id) {
     const workOrder = await repo.getWorkOrderDetail(id);
     notifications.notifyWorkOrderAssigned(workOrder);

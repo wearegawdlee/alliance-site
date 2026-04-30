@@ -1,0 +1,32 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header">
+  <div><h1><%= user ? 'Edit User' : 'New User' %></h1><p>Positions describe job titles. Roles control access.</p></div>
+  <a class="button secondary" href="<%= routePath('/users') %>">Back</a>
+</section>
+<section class="card">
+  <form method="post" action="<%= user ? routePath('/users/' + user.id) : routePath('/users') %>" class="form-grid">
+    <div class="grid two">
+      <label>Name<input name="display_name" value="<%= user?.display_name || '' %>" required></label>
+      <label>Email<input type="email" name="email" value="<%= user?.email || '' %>" required></label>
+    </div>
+    <div class="grid two">
+      <label>Position<input name="position" value="<%= user?.position || '' %>" placeholder="Owner, Admin, Technician, Bookkeeper, etc."></label>
+      <label>Password<input type="password" name="password" placeholder="<%= user ? 'Leave blank to keep current password' : 'Temporary password' %>"></label>
+    </div>
+    <section class="card subtle-card">
+      <h3>Roles</h3>
+      <p class="muted">A user can have multiple roles. Admin has full access.</p>
+      <div class="check-grid">
+        <% roles.forEach(role=>{ %>
+        <label class="check">
+          <input type="checkbox" name="role_ids" value="<%= role.id %>" <%= user && user.role_ids.includes(Number(role.id)) ? 'checked' : '' %>>
+          <span><strong><%= role.name %></strong><br><span class="muted"><%= role.description || role.code %></span></span>
+        </label>
+        <% }) %>
+      </div>
+    </section>
+    <label class="check"><input type="checkbox" name="is_active" <%= !user || user.is_active ? 'checked' : '' %>> Active</label>
+    <button class="button primary"><%= user ? 'Save User' : 'Create User' %></button>
+  </form>
+</section>
+<%- include('../partials-footer') %>
