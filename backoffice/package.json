@@ -12,9 +12,8 @@
     "bootstrap": "npm install && npm run db:reset",
     "notify:test": "dotenv -e .env -- node scripts/send-test-notification.js",
     "db:seed:tax-rates": "dotenv -e .env -- node scripts/seed-ga-tax-rates.js",
-    "test": "jest --runInBand",
-    "test:reset": "node scripts/reset-test-db.js",
-    "test:integration": "npm run test:reset && npm test"
+    "pretest": "node scripts/reset-test-db.js",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

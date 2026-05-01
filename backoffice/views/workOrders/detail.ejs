@@ -121,7 +121,8 @@
   <% if(!workOrder.isLocked){ %>
   <h3>Add Item</h3>
   <form method="post" action="<%= routePath('/work-orders/' + workOrder.id + '/line-items') %>" class="form-grid">
-    <label>Catalog Item<select name="catalog_item_id" id="catalogItemSelect"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-price="<%= i.unit_price || '' %>" data-description="<%= i.name || '' %>"><%= i.service_line ? i.service_line + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option><% }) %></select></label>
+    <label>Category<select id="catalogCategoryFilter"><option value="">All categories</option><% (workOrder.catalogCategories || []).forEach(c=>{ %><option value="<%= c.id %>"><%= c.name %></option><% }) %></select></label>
+    <label>Catalog Item<select name="catalog_item_id" id="catalogItemSelect"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-category-id="<%= i.catalog_category_id || '' %>" data-price="<%= i.unit_price || '' %>" data-description="<%= i.name || '' %>"><%= i.category_name ? i.category_name + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option><% }) %></select></label>
     <label>Description<input id="descriptionField" name="description" placeholder="Spring replacement, operator install, labor, etc."></label>
     <div class="grid two"><label>Quantity<input type="number" step="0.01" name="quantity" value="1"></label><label>Price<input id="unitPriceField" type="number" step="0.01" name="unit_price" value=""></label></div>
     <button class="button primary">Add Item</button>
@@ -148,17 +149,40 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
+  const categoryFilter = document.getElementById('catalogCategoryFilter');
   const catalogSelect = document.getElementById('catalogItemSelect');
   const unitPriceField = document.getElementById('unitPriceField');
   const descriptionField = document.getElementById('descriptionField');
-  if(!catalogSelect || !unitPriceField || !descriptionField) return;
-  catalogSelect.addEventListener('change', function(){
-    const selectedOption = this.options[this.selectedIndex];
-    if(!selectedOption || !selectedOption.value){ unitPriceField.value = ''; return; }
-    const price = selectedOption.dataset.price;
-    if(price !== undefined && price !== null && price !== '') unitPriceField.value = Number(price).toFixed(2);
-    if(!descriptionField.value.trim()) descriptionField.value = selectedOption.dataset.description || selectedOption.text.replace(/\s+\(.*\)\s*$/, '').trim();
-  });
+  if(catalogSelect && unitPriceField && descriptionField){
+    const catalogOptions = Array.from(catalogSelect.options);
+
+    function filterCatalogItems(){
+      if(!categoryFilter) return;
+      const categoryId = categoryFilter.value;
+      catalogOptions.forEach(option => {
+        if(!option.value){ option.hidden = false; return; }
+        option.hidden = !!categoryId && option.dataset.categoryId !== categoryId;
+      });
+      const selectedOption = catalogSelect.options[catalogSelect.selectedIndex];
+      if(selectedOption && selectedOption.hidden){
+        catalogSelect.value = '';
+        unitPriceField.value = '';
+      }
+    }
+
+    if(categoryFilter){
+      categoryFilter.addEventListener('change', filterCatalogItems);
+      filterCatalogItems();
+    }
+
+    catalogSelect.addEventListener('change', function(){
+      const selectedOption = this.options[this.selectedIndex];
+      if(!selectedOption || !selectedOption.value){ unitPriceField.value = ''; return; }
+      const price = selectedOption.dataset.price;
+      if(price !== undefined && price !== null && price !== '') unitPriceField.value = Number(price).toFixed(2);
+      if(!descriptionField.value.trim()) descriptionField.value = selectedOption.dataset.description || selectedOption.text.replace(/\s+\(.*\)\s*$/, '').trim();
+    });
+  }
 
   const discountValueType = document.getElementById('discountValueTypeSelect');
   const discountAmountLabel = document.getElementById('discountAmountLabel');

@@ -1,7 +1,12 @@
 const express=require('express');const service=require('./service');const router=express.Router();
-router.get('/',async(req,res,next)=>{try{const [items,options]=await Promise.all([service.listCatalogItems(req.query),service.getCatalogOptions()]);res.render('catalog/index',{title:'Catalog',items,options,query:req.query});}catch(e){next(e);}});
+router.get('/',async(req,res,next)=>{try{const [items,categories,options]=await Promise.all([service.listCatalogItems(req.query),service.listCatalogCategories(req.query),service.getCatalogOptions()]);res.render('catalog/index',{title:'Catalog',items,categories,options,query:req.query});}catch(e){next(e);}});
 router.get('/new',async(req,res,next)=>{try{res.render('catalog/form',{title:'New Catalog Item',item:null,options:await service.getCatalogOptions()});}catch(e){next(e);}});
-router.post('/',async(req,res,next)=>{try{const id=await service.createCatalogItem(req.body);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});
+router.post('/',async(req,res,next)=>{try{await service.createCatalogItem(req.body);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});
+router.get('/categories/new',async(req,res,next)=>{try{res.render('catalog/category-form',{title:'New Catalog Category',category:null,options:await service.getCatalogOptions()});}catch(e){next(e);}});
+router.post('/categories',async(req,res,next)=>{try{await service.createCatalogCategory(req.body);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});
+router.get('/categories/:id/edit',async(req,res,next)=>{try{const category=await service.getCatalogCategory(req.params.id);if(!category)return res.status(404).send('Catalog category not found');res.render('catalog/category-form',{title:'Edit Catalog Category',category,options:await service.getCatalogOptions()});}catch(e){next(e);}});
+router.post('/categories/:id',async(req,res,next)=>{try{await service.updateCatalogCategory(req.params.id,req.body);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});
+router.post('/categories/:id/delete',async(req,res,next)=>{try{await service.deleteCatalogCategory(req.params.id);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});
 router.get('/:id/edit',async(req,res,next)=>{try{const item=await service.getCatalogItem(req.params.id);if(!item)return res.status(404).send('Catalog item not found');res.render('catalog/form',{title:'Edit Catalog Item',item,options:await service.getCatalogOptions()});}catch(e){next(e);}});
 router.post('/:id',async(req,res,next)=>{try{await service.updateCatalogItem(req.params.id,req.body);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});
 router.post('/:id/delete',async(req,res,next)=>{try{await service.deleteCatalogItem(req.params.id);res.redirect(req.app.locals.routePath('/catalog'));}catch(e){next(e);}});

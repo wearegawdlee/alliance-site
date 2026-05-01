@@ -1,19 +1,30 @@
-<%- include('../partials-header', { title }) %>
-<section class="page-header tech-page-header">
-  <div><h1>My Work</h1><p>Assigned jobs and field actions.</p></div>
-</section>
-<section class="tech-job-list">
-  <% dashboard.jobs.forEach(job=>{ %>
-  <a class="tech-job-card" href="<%= routePath('/work-orders/' + job.id) %>">
-    <div class="tech-job-card-header">
-      <strong><%= job.title %></strong>
-      <span class="badge"><%= job.status %></span>
-    </div>
-    <p><%= job.customer %> · <%= job.service_line %></p>
-    <p class="muted"><%= [job.address_line_1, job.city, job.state, job.postal_code].filter(Boolean).join(', ') || 'No address' %></p>
-    <div class="button-row"><span class="chip"><%= job.scheduled_start_at ? new Date(job.scheduled_start_at).toLocaleString() : 'Unscheduled' %></span><span class="chip"><%= job.item_count %> items</span></div>
-  </a>
-  <% }) %>
-  <% if(!dashboard.jobs.length){ %><section class="card"><p class="muted">No assigned work orders.</p></section><% } %>
-</section>
+<%- include('../partials-header', { title: 'My Jobs' }) %>
+
+<section class="page-header tech-page-header"><div><h1>My Jobs</h1><p>Assigned work orders for the field.</p></div></section>
+
+<% const jobs = dashboard.jobs || []; %>
+<% const today = jobs.filter(j => j.scheduled_start_at && new Date(j.scheduled_start_at).toDateString() === new Date().toDateString()); %>
+<% const upcoming = jobs.filter(j => j.status_code !== 'completed' && (!j.scheduled_start_at || new Date(j.scheduled_start_at).toDateString() !== new Date().toDateString())); %>
+<% const completed = jobs.filter(j => j.status_code === 'completed'); %>
+
+<section class="tech-tabs"><a href="#today">Today (<%= today.length %>)</a><a href="#upcoming">Upcoming (<%= upcoming.length %>)</a><a href="#completed">Completed (<%= completed.length %>)</a></section>
+
+<section class="card tech-section" id="today"><h2>Today</h2>
+<% today.forEach(job => { %>
+  <a class="tech-job-card" href="<%= routePath('/tech/work-orders/' + job.id) %>"><div class="tech-job-card-top"><strong><%= job.scheduled_start_at ? new Date(job.scheduled_start_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'Unscheduled' %></strong><span class="badge"><%= job.status %></span></div><h2><%= job.title %></h2><p><%= job.customer %></p><p class="muted"><%= [job.address_line_1, job.city, job.state, job.postal_code].filter(Boolean).join(', ') || 'No address' %></p><p class="muted"><%= job.service_line %> · <%= job.item_count %> item<%= Number(job.item_count) === 1 ? '' : 's' %> · <%= formatCurrency(job.item_total) %></p></a>
+<% }) %>
+<% if(!today.length){ %><p class="muted">No jobs scheduled for today.</p><% } %></section>
+
+<section class="card tech-section" id="upcoming"><h2>Upcoming / Unscheduled</h2>
+<% upcoming.forEach(job => { %>
+  <a class="tech-job-card" href="<%= routePath('/tech/work-orders/' + job.id) %>"><div class="tech-job-card-top"><strong><%= job.scheduled_start_at ? new Date(job.scheduled_start_at).toLocaleDateString() : 'Unscheduled' %></strong><span class="badge"><%= job.status %></span></div><h2><%= job.title %></h2><p><%= job.customer %></p><p class="muted"><%= [job.address_line_1, job.city, job.state, job.postal_code].filter(Boolean).join(', ') || 'No address' %></p><p class="muted"><%= job.service_line %> · <%= job.item_count %> item<%= Number(job.item_count) === 1 ? '' : 's' %> · <%= formatCurrency(job.item_total) %></p></a>
+<% }) %>
+<% if(!upcoming.length){ %><p class="muted">No upcoming jobs.</p><% } %></section>
+
+<section class="card tech-section" id="completed"><h2>Completed</h2>
+<% completed.forEach(job => { %>
+  <a class="tech-job-card" href="<%= routePath('/tech/work-orders/' + job.id) %>"><div class="tech-job-card-top"><strong><%= job.scheduled_start_at ? new Date(job.scheduled_start_at).toLocaleDateString() : 'Unscheduled' %></strong><span class="badge"><%= job.status %></span></div><h2><%= job.title %></h2><p><%= job.customer %></p><p class="muted"><%= [job.address_line_1, job.city, job.state, job.postal_code].filter(Boolean).join(', ') || 'No address' %></p><p class="muted"><%= job.service_line %> · <%= job.item_count %> item<%= Number(job.item_count) === 1 ? '' : 's' %> · <%= formatCurrency(job.item_total) %></p></a>
+<% }) %>
+<% if(!completed.length){ %><p class="muted">No completed jobs.</p><% } %></section>
+
 <%- include('../partials-footer') %>
