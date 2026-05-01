@@ -64,12 +64,23 @@ async function run() {
       }
     }
 
-    await c.query(`INSERT INTO catalog_items(sku,name,item_type,unit_price,service_line_id) VALUES
-      ('SPRING-001','Torsion Spring','part',149,$1),
-      ('OPEN-100','Garage Opener Install','service',399,$1),
-      ('POOL-CLN','Pool Cleaning Visit','service',95,$2),
-      ('SCREEN-MOTOR','Motorized Screen Motor','part',525,$3)
-      ON CONFLICT DO NOTHING`, [services.garage, services.pool, services.screens]);
+    const categoryIds = {};
+    for (const [key, serviceId, code] of [
+      ['garageSprings', services.garage, 'springs'],
+      ['garageOpeners', services.garage, 'openers'],
+      ['poolCleaning', services.pool, 'cleaning'],
+      ['screenMotors', services.screens, 'motors']
+    ]) {
+      const cr = await c.query(`SELECT id FROM catalog_categories WHERE service_line_id=$1 AND code=$2`, [serviceId, code]);
+      categoryIds[key] = cr.rows[0]?.id || null;
+    }
+
+    await c.query(`INSERT INTO catalog_items(sku,name,item_type,unit_price,service_line_id,catalog_category_id) VALUES
+      ('SPRING-001','Torsion Spring','part',149,$1,$4),
+      ('OPEN-100','Garage Opener Install','service',399,$1,$5),
+      ('POOL-CLN','Pool Cleaning Visit','service',95,$2,$6),
+      ('SCREEN-MOTOR','Motorized Screen Motor','part',525,$3,$7)
+      ON CONFLICT DO NOTHING`, [services.garage, services.pool, services.screens, categoryIds.garageSprings, categoryIds.garageOpeners, categoryIds.poolCleaning, categoryIds.screenMotors]);
     await c.query('COMMIT');
     console.log('Domain seed complete');
   } catch(e) {

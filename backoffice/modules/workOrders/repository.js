@@ -78,18 +78,20 @@ async function getWorkOrderDetail(id) {
     LEFT JOIN invoice_statuses invs ON invs.id=inv.invoice_status_id
     WHERE wo.id=$1`, [id]);
   if (!wr.rows[0]) return null;
-  const [statuses, users, assignments, notes, history, invoices, lineItems, catalogItems] = await Promise.all([
+  const serviceLineId = wr.rows[0].service_line_id;
+  const [statuses, users, assignments, notes, history, invoices, lineItems, catalogItems, catalogCategories] = await Promise.all([
     pool.query(`SELECT id,code,name FROM work_order_statuses WHERE is_active=true ORDER BY sort_order`),
     pool.query(`SELECT id,display_name FROM users WHERE is_active=true ORDER BY display_name`),
     pool.query(`SELECT woa.*,u.display_name FROM work_order_assignments woa JOIN users u ON u.id=woa.user_id WHERE woa.work_order_id=$1 ORDER BY woa.id`, [id]),
     pool.query(`SELECT won.*,u.display_name author FROM work_order_notes won LEFT JOIN users u ON u.id=won.author_user_id WHERE won.work_order_id=$1 ORDER BY won.created_at DESC`, [id]),
     pool.query(`SELECT h.*,fs.name from_status,ts.name to_status,u.display_name changed_by FROM work_order_status_history h LEFT JOIN work_order_statuses fs ON fs.id=h.from_status_id JOIN work_order_statuses ts ON ts.id=h.to_status_id LEFT JOIN users u ON u.id=h.changed_by_user_id WHERE h.work_order_id=$1 ORDER BY h.created_at DESC`, [id]),
     pool.query(`SELECT i.*,s.code status_code,s.name status FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.work_order_id=$1 ORDER BY i.created_at DESC`, [id]),
-    pool.query(`SELECT woli.*, ci.sku, ci.name catalog_name, ci.item_type FROM work_order_line_items woli LEFT JOIN catalog_items ci ON ci.id=woli.catalog_item_id WHERE woli.work_order_id=$1 ORDER BY woli.sort_order, woli.id`, [id]),
-    pool.query(`SELECT ci.id, ci.sku, ci.name, ci.item_type, ci.unit_price, sl.name service_line FROM catalog_items ci LEFT JOIN service_lines sl ON sl.id=ci.service_line_id WHERE ci.is_active=true ORDER BY sl.name NULLS LAST, ci.name`)
+    pool.query(`SELECT woli.*, ci.sku, ci.name catalog_name, ci.item_type, cc.name category_name FROM work_order_line_items woli LEFT JOIN catalog_items ci ON ci.id=woli.catalog_item_id LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id WHERE woli.work_order_id=$1 ORDER BY woli.sort_order, woli.id`, [id]),
+    pool.query(`SELECT ci.id, ci.sku, ci.name, ci.item_type, ci.unit_price, ci.catalog_category_id, cc.name category_name, sl.name service_line FROM catalog_items ci LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id LEFT JOIN service_lines sl ON sl.id=ci.service_line_id WHERE ci.is_active=true AND (ci.service_line_id=$1 OR ci.service_line_id IS NULL) AND (ci.catalog_category_id IS NULL OR cc.is_active=true) ORDER BY cc.sort_order NULLS LAST, cc.name NULLS LAST, ci.name`, [serviceLineId]),
+    pool.query(`SELECT id, service_line_id, code, name FROM catalog_categories WHERE is_active=true AND service_line_id=$1 ORDER BY sort_order, name`, [serviceLineId])
   ]);
   const lineItemTotal = lineItems.rows.reduce((sum, item) => sum + Number(item.line_total || 0), 0);
-  return { ...wr.rows[0], statuses: statuses.rows, users: users.rows, assignments: assignments.rows, notes: notes.rows, history: history.rows, invoices: invoices.rows, lineItems: lineItems.rows, catalogItems: catalogItems.rows, lineItemTotal, isLocked: invoices.rows.some((i) => i.status_code === 'paid') };
+  return { ...wr.rows[0], statuses: statuses.rows, users: users.rows, assignments: assignments.rows, notes: notes.rows, history: history.rows, invoices: invoices.rows, lineItems: lineItems.rows, catalogItems: catalogItems.rows, catalogCategories: catalogCategories.rows, lineItemTotal, isLocked: invoices.rows.some((i) => i.status_code === 'paid') };
 }
 
 async function getStatusId(client, code) { const r = await client.query(`SELECT id FROM work_order_statuses WHERE code=$1`, [code]); return r.rows[0]?.id; }

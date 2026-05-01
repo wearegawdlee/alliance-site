@@ -49,10 +49,27 @@ async function recordPayment(invoiceId,data){
     const invoice=(await client.query(`SELECT i.*,s.code status_code FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.id=$1`,[invoiceId])).rows[0];
     if(!invoice) throw new Error('Invoice not found');
     if(invoice.status_code !== 'submitted') throw new Error('Invoice must be submitted before payment can be recorded.');
-    const amount=Number(data.amount || invoice.balance_due || invoice.total_amount || 0);
+    const balanceDue = Number(invoice.balance_due || invoice.total_amount || 0);
+    const priorPaid = Number((await client.query(`SELECT COALESCE(SUM(amount),0) paid FROM payments WHERE invoice_id=$1`,[invoiceId])).rows[0].paid || 0);
+    const remaining = Math.max(0, balanceDue - priorPaid);
+
+    const amount =
+      data.amount !== undefined && data.amount !== null
+        ? Number(data.amount)
+        : Number(remaining);
+
+    if (!amount || amount <= 0) {
+      throw new Error('Payment amount must be greater than zero.');
+    }
+
+    if (amount > remaining) {
+      throw new Error('Payment amount cannot exceed remaining balance.');
+    }
+
+
     await client.query(`INSERT INTO payments(invoice_id,payment_method_id,amount,reference_number,notes) VALUES($1,$2,$3,$4,$5)`,[invoiceId,data.payment_method_id||null,amount,data.reference_number||null,data.notes||null]);
     const paid=(await client.query(`SELECT COALESCE(SUM(amount),0) paid FROM payments WHERE invoice_id=$1`,[invoiceId])).rows[0].paid;
-    if(Number(paid) >= Number(invoice.balance_due || invoice.total_amount)){
+    if(Number(paid) >= balanceDue){
       const paidStatus=await getInvoiceStatusId(client,'paid');
       await client.query(`UPDATE invoices SET invoice_status_id=$1,paid_at=current_timestamp,updated_at=current_timestamp WHERE id=$2`,[paidStatus,invoiceId]);
     }

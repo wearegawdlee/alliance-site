@@ -81,6 +81,14 @@ async function invoiceForWorkOrder(workOrderId) {
   return result.rows[0] || null;
 }
 
+async function addLineItem(workOrderId, { price = 100, qty = 1 } = {}) {
+  await pool.query(
+    `INSERT INTO work_order_line_items(work_order_id, description, quantity, unit_price)
+     VALUES($1, 'Test Item', $2, $3)`,
+    [workOrderId, qty, price]
+  );
+}
+
 async function close() {
   await pool.end();
 }
@@ -88,6 +96,8 @@ async function close() {
 module.exports = {
   pool,
   getId,
+  addLineItem,
+  query,
   firstActiveUserId,
   createProspect,
   createOpenWorkOrder,

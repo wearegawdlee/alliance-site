@@ -1,0 +1,58 @@
+<%- include('../partials-header', { title: workOrder.title }) %>
+
+<section class="page-header tech-page-header"><div><h1><%= workOrder.title %></h1><p><span class="badge"><%= workOrder.status %></span> · <%= workOrder.service_line %></p></div><a class="button secondary" href="<%= routePath('/tech/dashboard') %>">Back</a></section>
+
+<% if(workOrder.isLocked){ %><section class="card"><p class="muted"><strong>Locked:</strong> this work order is immutable because the associated invoice has been paid.</p></section><% } %>
+
+<section class="card tech-job-summary">
+  <h2><%= workOrder.customer %></h2>
+  <p><strong>Address</strong><br><%= [workOrder.address_line_1, workOrder.city, workOrder.state, workOrder.postal_code].filter(Boolean).join(', ') || '—' %></p>
+  <% if(workOrder.description){ %><p><strong>Description</strong><br><%= workOrder.description %></p><% } %>
+  <p class="muted"><%= workOrder.scheduled_start_at ? new Date(workOrder.scheduled_start_at).toLocaleString() : 'Unscheduled' %></p>
+</section>
+
+<section class="card" id="items">
+  <div class="section-title-row"><h2>Service Items</h2><strong><%= formatCurrency(workOrder.lineItemTotal) %></strong></div>
+  <% workOrder.lineItems.forEach(item => { %><div class="tech-line-item"><div><strong><%= item.description %></strong><p class="muted"><%= item.sku ? item.sku + ' · ' : '' %><%= item.catalog_name || 'Custom' %></p></div><div><%= item.quantity %> × <%= formatCurrency(item.unit_price) %></div></div><% }) %>
+  <% if(!workOrder.lineItems.length){ %><p class="muted">No service items yet.</p><% } %>
+  <% if(!workOrder.isLocked){ %>
+  <h3>Add Item</h3>
+  <form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/line-items') %>" class="form-grid tech-form">
+    <label>Category<select id="catalogCategoryFilter"><option value="">All categories</option><% (workOrder.catalogCategories || []).forEach(c=>{ %><option value="<%= c.id %>"><%= c.name %></option><% }) %></select></label>
+    <label>Catalog Item<select name="catalog_item_id" id="catalogItemSelect"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-category-id="<%= i.catalog_category_id || '' %>" data-price="<%= i.unit_price || '' %>" data-description="<%= i.name || '' %>"><%= i.category_name ? i.category_name + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option><% }) %></select></label>
+    <label>Description<input id="descriptionField" name="description" placeholder="What was done?"></label>
+    <div class="grid two"><label>Qty<input type="number" step="0.01" name="quantity" value="1"></label><label>Price<input id="unitPriceField" type="number" step="0.01" name="unit_price" value=""></label></div>
+    <button class="button primary full">Add Item</button>
+  </form>
+  <% } %>
+</section>
+
+<section class="card" id="notes"><h2>Notes</h2>
+  <% if(!workOrder.isLocked){ %><form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/notes') %>" class="note-form tech-form"><textarea name="note_body" placeholder="Field note, customer approval, parts needed, etc."></textarea><button class="button primary full">Add Note</button></form><% } %>
+  <% workOrder.notes.forEach(n=>{ %><div class="note"><%= n.note_body %><small><%= n.author || 'System' %> · <%= formatDate(n.created_at) %></small></div><% }) %>
+</section>
+
+<% if(!workOrder.isLocked && workOrder.status_code !== 'cancelled'){ %>
+<section class="tech-sticky-actions"><a class="button secondary" href="#items">+ Item</a><a class="button secondary" href="#notes">+ Note</a><form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/complete') %>"><button class="button primary">Complete</button></form></section>
+<% } %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const categoryFilter=document.getElementById('catalogCategoryFilter');
+  const catalogSelect=document.getElementById('catalogItemSelect');
+  const unitPriceField=document.getElementById('unitPriceField');
+  const descriptionField=document.getElementById('descriptionField');
+  if(catalogSelect && unitPriceField && descriptionField){
+    function filterCatalogItems(){
+      const categoryId=categoryFilter ? categoryFilter.value : '';
+      Array.from(catalogSelect.options).forEach(option=>{ if(!option.value){ option.hidden=false; return; } option.hidden=!!categoryId && option.dataset.categoryId !== categoryId; });
+      const selectedOption=catalogSelect.options[catalogSelect.selectedIndex];
+      if(selectedOption && selectedOption.hidden){ catalogSelect.value=''; unitPriceField.value=''; }
+    }
+    if(categoryFilter){ categoryFilter.addEventListener('change', filterCatalogItems); filterCatalogItems(); }
+    catalogSelect.addEventListener('change', function(){ const selectedOption=this.options[this.selectedIndex]; if(!selectedOption || !selectedOption.value){ unitPriceField.value=''; return; } const price=selectedOption.dataset.price; if(price !== undefined && price !== null && price !== '') unitPriceField.value=Number(price).toFixed(2); if(!descriptionField.value.trim()) descriptionField.value=selectedOption.dataset.description || selectedOption.text.replace(/\s+\(.*\)\s*$/,'').trim(); });
+  }
+});
+</script>
+
+<%- include('../partials-footer') %>

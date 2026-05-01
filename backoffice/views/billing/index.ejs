@@ -21,7 +21,7 @@
             <% } %>
             <% if(i.status_code === 'submitted'){ %>
               <form method="post" action="<%= routePath('/billing/invoices/' + i.id + '/submit') %>" class="inline-form"><button class="button secondary">Send Reminder</button></form>
-              <form method="post" action="<%= routePath('/billing/invoices/' + i.id + '/payments') %>" class="inline-form"><input type="number" step="0.01" name="amount" value="<%= Math.max(0, Number(i.balance_due || i.total_amount || 0) - Number(i.paid_amount || 0)).toFixed(2) %>"><select name="payment_method_id"><option value="">Method</option><% paymentMethods.forEach(m=>{ %><option value="<%= m.id %>"><%= m.name %></option><% }) %></select><button class="button secondary">Pay</button></form>
+              <form method="post" action="<%= routePath('/billing/invoices/' + i.id + '/payments') %>" class="inline-form payment-form"><input type="number" step="0.01" name="amount" value="<%= Math.max(0, Number(i.balance_due || i.total_amount || 0) - Number(i.paid_amount || 0)).toFixed(2) %>"><select name="payment_method_id"><option value="">Method</option><% paymentMethods.forEach(m=>{ %><option value="<%= m.id %>"><%= m.name %></option><% }) %></select><button class="button secondary">Pay Full / Partial</button></form>
             <% } %>
             <% if(i.status_code === 'paid'){ %>Closed<% } %>
           </div>

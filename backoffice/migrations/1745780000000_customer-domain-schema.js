@@ -2,9 +2,9 @@
 
 exports.up = (pgm) => {
   const tables = [
-    'activity_events','payments','invoice_line_items','invoices','estimate_line_items','estimates',
+    'activity_events','payments','user_roles','roles','invoice_line_items','invoices','estimate_line_items','estimates',
     'work_order_status_history','work_order_assignments','work_order_line_items','work_order_notes','work_orders',
-    'assets','asset_types','catalog_items','inventory_items','customer_notes','customer_service_lines',
+    'assets','asset_types','catalog_items','catalog_categories','inventory_items','customer_notes','customer_service_lines',
     'customer_locations','customer_addresses','customer_contacts','customer_status_history','customers',
     'property_types','tax_rates','payment_methods','invoice_statuses','estimate_statuses','work_order_statuses',
     'work_order_types','service_lines','lead_sources','customer_statuses','client_statuses','clients',
@@ -15,9 +15,35 @@ exports.up = (pgm) => {
   pgm.createTable('users', {
     id: 'id', email: { type: 'varchar(255)', notNull: true, unique: true }, password_hash: { type: 'text', notNull: true },
     display_name: { type: 'varchar(150)', notNull: true }, role: { type: 'varchar(50)', notNull: true, default: 'user' },
+    position: { type: 'varchar(120)' },
     is_active: { type: 'boolean', notNull: true, default: true }, created_at: { type: 'timestamptz', notNull: true, default: pgm.func('current_timestamp') },
     updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('current_timestamp') }
   }, { ifNotExists: true });
+
+  pgm.createTable('roles', {
+    id: 'id',
+    code: { type: 'varchar(80)', notNull: true, unique: true },
+    name: { type: 'varchar(120)', notNull: true },
+    description: { type: 'text' },
+    sort_order: { type: 'integer', notNull: true, default: 100 },
+    is_active: { type: 'boolean', notNull: true, default: true },
+    created_at: { type: 'timestamptz', notNull: true, default: pgm.func('current_timestamp') }
+  });
+  pgm.createTable('user_roles', {
+    user_id: { type: 'integer', notNull: true, references: 'users', onDelete: 'cascade' },
+    role_id: { type: 'integer', notNull: true, references: 'roles', onDelete: 'cascade' },
+    created_at: { type: 'timestamptz', notNull: true, default: pgm.func('current_timestamp') }
+  });
+  pgm.addConstraint('user_roles', 'user_roles_unique', 'UNIQUE(user_id, role_id)');
+  pgm.createIndex('user_roles', 'user_id');
+  pgm.createIndex('user_roles', 'role_id');
+  pgm.sql(`
+    INSERT INTO roles(code,name,description,sort_order) VALUES
+      ('admin','Admin','Full system access including user management.',1),
+      ('finance','Finance','Billing, customers, catalog, tax rates, and work order visibility.',2),
+      ('technician','Technician','Assigned work orders, field notes, service items, and technician dashboard.',3)
+    ON CONFLICT(code) DO NOTHING
+  `);
 
   pgm.createTable('customer_statuses', { id:'id', code:{type:'varchar(80)',notNull:true,unique:true}, name:{type:'varchar(120)',notNull:true}, sort_order:{type:'integer',notNull:true}, is_terminal:{type:'boolean',notNull:true,default:false}, is_active:{type:'boolean',notNull:true,default:true} });
   pgm.createTable('lead_sources', { id:'id', code:{type:'varchar(80)',notNull:true,unique:true}, name:{type:'varchar(120)',notNull:true}, is_active:{type:'boolean',notNull:true,default:true} });
@@ -41,7 +67,9 @@ exports.up = (pgm) => {
   pgm.addConstraint('customer_service_lines','customer_service_lines_customer_service_unique','UNIQUE(customer_id, service_line_id)');
   pgm.createTable('customer_notes', { id:'id', customer_id:{type:'integer',notNull:true,references:'customers',onDelete:'cascade'}, author_user_id:{type:'integer',references:'users',onDelete:'set null'}, note_body:{type:'text',notNull:true}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, updated_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
 
-  pgm.createTable('catalog_items', { id:'id', service_line_id:{type:'integer',references:'service_lines',onDelete:'set null'}, sku:{type:'varchar(100)',unique:true}, name:{type:'varchar(255)',notNull:true}, description:{type:'text'}, item_type:{type:'varchar(40)',notNull:true,default:'service'}, unit_price:{type:'numeric(10,2)',notNull:true,default:0}, cost:{type:'numeric(10,2)'}, is_active:{type:'boolean',notNull:true,default:true}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, updated_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
+  pgm.createTable('catalog_categories', { id:'id', service_line_id:{type:'integer',references:'service_lines',onDelete:'cascade'}, code:{type:'varchar(100)',notNull:true}, name:{type:'varchar(160)',notNull:true}, description:{type:'text'}, sort_order:{type:'integer',notNull:true,default:0}, is_active:{type:'boolean',notNull:true,default:true}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, updated_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
+  pgm.addConstraint('catalog_categories','catalog_categories_service_code_unique','UNIQUE(service_line_id, code)');
+  pgm.createTable('catalog_items', { id:'id', service_line_id:{type:'integer',references:'service_lines',onDelete:'set null'}, catalog_category_id:{type:'integer',references:'catalog_categories',onDelete:'set null'}, sku:{type:'varchar(100)',unique:true}, name:{type:'varchar(255)',notNull:true}, description:{type:'text'}, item_type:{type:'varchar(40)',notNull:true,default:'service'}, unit_price:{type:'numeric(10,2)',notNull:true,default:0}, cost:{type:'numeric(10,2)'}, is_active:{type:'boolean',notNull:true,default:true}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, updated_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
   pgm.createTable('assets', { id:'id', customer_id:{type:'integer',notNull:true,references:'customers',onDelete:'cascade'}, customer_location_id:{type:'integer',notNull:true,references:'customer_locations',onDelete:'cascade'}, service_line_id:{type:'integer',notNull:true,references:'service_lines',onDelete:'restrict'}, asset_type_id:{type:'integer',references:'asset_types',onDelete:'set null'}, name:{type:'varchar(255)',notNull:true}, manufacturer:{type:'varchar(150)'}, model:{type:'varchar(150)'}, serial_number:{type:'varchar(150)'}, installed_at:{type:'date'}, warranty_expires_at:{type:'date'}, notes:{type:'text'}, is_active:{type:'boolean',notNull:true,default:true}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, updated_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
   pgm.createTable('work_orders', { id:'id', customer_id:{type:'integer',notNull:true,references:'customers',onDelete:'cascade'}, customer_location_id:{type:'integer',notNull:true,references:'customer_locations',onDelete:'restrict'}, asset_id:{type:'integer',references:'assets',onDelete:'set null'}, service_line_id:{type:'integer',notNull:true,references:'service_lines',onDelete:'restrict'}, work_order_type_id:{type:'integer',references:'work_order_types',onDelete:'set null'}, work_order_status_id:{type:'integer',notNull:true,references:'work_order_statuses',onDelete:'restrict'}, title:{type:'varchar(255)',notNull:true}, description:{type:'text'}, scheduled_start_at:{type:'timestamptz'}, scheduled_end_at:{type:'timestamptz'}, quoted_price:{type:'numeric(10,2)'}, final_price:{type:'numeric(10,2)'}, discount_type:{type:'varchar(80)'}, discount_value_type:{type:'varchar(20)',notNull:true,default:'flat'}, discount_percent:{type:'numeric(7,4)',notNull:true,default:0}, discount_amount:{type:'numeric(10,2)',notNull:true,default:0}, discount_reason:{type:'text'}, deposit_amount:{type:'numeric(10,2)',notNull:true,default:0}, deposit_note:{type:'text'}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, updated_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
   pgm.createTable('work_order_assignments', { id:'id', work_order_id:{type:'integer',notNull:true,references:'work_orders',onDelete:'cascade'}, user_id:{type:'integer',notNull:true,references:'users',onDelete:'cascade'}, role_on_job:{type:'varchar(80)',notNull:true,default:'technician'}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
@@ -57,12 +85,44 @@ exports.up = (pgm) => {
   pgm.createTable('payments', { id:'id', invoice_id:{type:'integer',notNull:true,references:'invoices',onDelete:'cascade'}, payment_method_id:{type:'integer',references:'payment_methods',onDelete:'set null'}, amount:{type:'numeric(10,2)',notNull:true}, received_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')}, reference_number:{type:'varchar(255)'}, notes:{type:'text'}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
   pgm.createTable('activity_events', { id:'id', entity_type:{type:'varchar(80)',notNull:true}, entity_id:{type:'integer',notNull:true}, actor_user_id:{type:'integer',references:'users',onDelete:'set null'}, event_type:{type:'varchar(100)',notNull:true}, event_body:{type:'text'}, metadata:{type:'jsonb',notNull:true,default:pgm.func("'{}'::jsonb")}, created_at:{type:'timestamptz',notNull:true,default:pgm.func('current_timestamp')} });
 
-  ['customers.customer_status_id','customers.lead_source_id','customers.assigned_user_id','customer_status_history.customer_id','customer_contacts.customer_id','customer_locations.customer_id','customer_service_lines.customer_id','customer_service_lines.service_line_id','customer_notes.customer_id','catalog_items.service_line_id','assets.customer_id','assets.customer_location_id','assets.service_line_id','work_orders.customer_id','work_orders.customer_location_id','work_orders.asset_id','work_orders.service_line_id','work_orders.work_order_status_id','work_order_assignments.work_order_id','work_order_assignments.user_id','work_order_line_items.work_order_id','work_order_line_items.catalog_item_id','estimates.customer_id','estimates.work_order_id','invoices.customer_id','invoices.work_order_id','invoices.estimate_id','invoices.tax_rate_id','invoice_line_items.invoice_id','payments.invoice_id'].forEach((spec)=>{ const [table,col]=spec.split('.'); pgm.createIndex(table,col); });
+  ['customers.customer_status_id','customers.lead_source_id','customers.assigned_user_id','customer_status_history.customer_id','customer_contacts.customer_id','customer_locations.customer_id','customer_service_lines.customer_id','customer_service_lines.service_line_id','customer_notes.customer_id','catalog_categories.service_line_id','catalog_items.service_line_id','catalog_items.catalog_category_id','assets.customer_id','assets.customer_location_id','assets.service_line_id','work_orders.customer_id','work_orders.customer_location_id','work_orders.asset_id','work_orders.service_line_id','work_orders.work_order_status_id','work_order_assignments.work_order_id','work_order_assignments.user_id','work_order_line_items.work_order_id','work_order_line_items.catalog_item_id','estimates.customer_id','estimates.work_order_id','invoices.customer_id','invoices.work_order_id','invoices.estimate_id','invoices.tax_rate_id','invoice_line_items.invoice_id','payments.invoice_id'].forEach((spec)=>{ const [table,col]=spec.split('.'); pgm.createIndex(table,col); });
   pgm.createIndex('work_orders','scheduled_start_at'); pgm.createIndex('tax_rates',['state','county']); pgm.createIndex('activity_events',['entity_type','entity_id']);
 
   pgm.sql(`INSERT INTO customer_statuses(code,name,sort_order,is_terminal) VALUES ('prospect','Prospect',1,false),('qualified_lead','Qualified Lead',2,false),('customer','Customer',3,false),('inactive','Inactive',4,true),('lost','Lost',5,true)`);
   pgm.sql(`INSERT INTO lead_sources(code,name) VALUES ('website','Website'),('phone','Phone'),('google_business','Google Business'),('facebook','Facebook'),('thumbtack','Thumbtack'),('angi','Angi'),('referral','Referral'),('other','Other')`);
   pgm.sql(`INSERT INTO service_lines(code,name,description) VALUES ('garage_doors','Garage Doors','Garage door repair, installation, opener installation, and related services.'),('pools','Pools','Pool maintenance, repair, cleaning, and related services.'),('motorized_screens','Motorized Screens','Motorized screen installation, maintenance, and related services.')`);
+
+  pgm.sql(`
+    INSERT INTO catalog_categories(service_line_id,code,name,sort_order)
+    SELECT sl.id,x.code,x.name,x.sort_order
+    FROM service_lines sl
+    JOIN (VALUES
+      ('garage_doors','service_calls','Service Calls',10),
+      ('garage_doors','springs','Springs',20),
+      ('garage_doors','openers','Openers',30),
+      ('garage_doors','rollers_tracks','Rollers / Tracks',40),
+      ('garage_doors','cables','Cables',50),
+      ('garage_doors','panels','Panels',60),
+      ('garage_doors','weather_seal','Weather Seal',70),
+      ('garage_doors','labor','Labor',80),
+      ('garage_doors','parts_misc','Parts / Misc',90),
+      ('pools','service_calls','Service Calls',10),
+      ('pools','cleaning','Cleaning',20),
+      ('pools','pumps','Pumps',30),
+      ('pools','filters','Filters',40),
+      ('pools','chemicals','Chemicals',50),
+      ('pools','repairs','Repairs',60),
+      ('pools','labor','Labor',70),
+      ('pools','parts_misc','Parts / Misc',80),
+      ('motorized_screens','service_calls','Service Calls',10),
+      ('motorized_screens','motors','Motors',20),
+      ('motorized_screens','screens','Screens',30),
+      ('motorized_screens','tracks','Tracks',40),
+      ('motorized_screens','controls','Controls',50),
+      ('motorized_screens','labor','Labor',60),
+      ('motorized_screens','parts_misc','Parts / Misc',70)
+    ) AS x(service_code,code,name,sort_order) ON x.service_code=sl.code
+  `);
   pgm.sql(`INSERT INTO property_types(code,name) VALUES ('single_family','Single Family Home'),('townhome','Townhome'),('condo','Condo'),('commercial','Commercial'),('hoa','HOA / Community'),('rental','Rental Property')`);
   pgm.sql(`INSERT INTO asset_types(service_line_id,code,name) SELECT id,'garage_door','Garage Door' FROM service_lines WHERE code='garage_doors'; INSERT INTO asset_types(service_line_id,code,name) SELECT id,'garage_opener','Garage Door Opener' FROM service_lines WHERE code='garage_doors'; INSERT INTO asset_types(service_line_id,code,name) SELECT id,'pool_pump','Pool Pump' FROM service_lines WHERE code='pools'; INSERT INTO asset_types(service_line_id,code,name) SELECT id,'pool_filter','Pool Filter' FROM service_lines WHERE code='pools'; INSERT INTO asset_types(service_line_id,code,name) SELECT id,'screen_motor','Motorized Screen Motor' FROM service_lines WHERE code='motorized_screens';`);
   pgm.sql(`INSERT INTO work_order_statuses(code,name,sort_order,is_terminal) VALUES ('open','Open',1,false),('completed','Completed',2,false),('cancelled','Cancelled',3,true)`);
@@ -74,5 +134,5 @@ exports.up = (pgm) => {
 };
 
 exports.down = (pgm) => {
-  ['activity_events','payments','invoice_line_items','invoices','estimate_line_items','estimates','work_order_status_history','work_order_assignments','work_order_line_items','work_order_notes','work_orders','assets','asset_types','catalog_items','customer_notes','customer_service_lines','customer_locations','customer_contacts','customer_status_history','customers','property_types','tax_rates','payment_methods','invoice_statuses','estimate_statuses','work_order_statuses','work_order_types','service_lines','lead_sources','customer_statuses'].forEach((table)=>pgm.dropTable(table,{ifExists:true,cascade:true}));
+  ['activity_events','payments','user_roles','roles','invoice_line_items','invoices','estimate_line_items','estimates','work_order_status_history','work_order_assignments','work_order_line_items','work_order_notes','work_orders','assets','asset_types','catalog_items','customer_notes','customer_service_lines','customer_locations','customer_contacts','customer_status_history','customers','property_types','tax_rates','payment_methods','invoice_statuses','estimate_statuses','work_order_statuses','work_order_types','catalog_categories','service_lines','lead_sources','customer_statuses'].forEach((table)=>pgm.dropTable(table,{ifExists:true,cascade:true}));
 };
