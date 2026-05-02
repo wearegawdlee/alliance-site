@@ -1,7 +1,12 @@
 const pool=require('../../db/pool');
 
-async function listInvoices(){
-  const r=await pool.query(`SELECT i.*,c.id customer_id,c.display_name customer,cc.email customer_email,s.code status_code,s.name status,cl.city,cl.state,COALESCE(SUM(p.amount),0) paid_amount FROM invoices i JOIN customers c ON c.id=i.customer_id JOIN invoice_statuses s ON s.id=i.invoice_status_id LEFT JOIN customer_contacts cc ON cc.customer_id=c.id AND cc.is_primary=true LEFT JOIN customer_locations cl ON cl.id=i.customer_location_id LEFT JOIN payments p ON p.invoice_id=i.id GROUP BY i.id,c.id,c.display_name,cc.email,s.code,s.name,cl.city,cl.state ORDER BY i.created_at DESC`);
+async function listInvoices(filters = {}){
+  const params = [];
+  const where = [];
+  const status = filters.status || 'unpaid';
+  if (status === 'paid') where.push(`s.code = 'paid'`);
+  else if (status !== 'all') where.push(`s.code <> 'paid'`);
+  const r=await pool.query(`SELECT i.*,c.id customer_id,c.display_name customer,cc.email customer_email,s.code status_code,s.name status,cl.city,cl.state,COALESCE(SUM(p.amount),0) paid_amount FROM invoices i JOIN customers c ON c.id=i.customer_id JOIN invoice_statuses s ON s.id=i.invoice_status_id LEFT JOIN customer_contacts cc ON cc.customer_id=c.id AND cc.is_primary=true LEFT JOIN customer_locations cl ON cl.id=i.customer_location_id LEFT JOIN payments p ON p.invoice_id=i.id ${where.length ? `WHERE ${where.join(' AND ')}` : ''} GROUP BY i.id,c.id,c.display_name,cc.email,s.code,s.name,cl.city,cl.state ORDER BY CASE WHEN s.code='created' THEN 1 WHEN s.code='submitted' THEN 2 WHEN s.code='paid' THEN 3 ELSE 4 END, i.created_at DESC`, params);
   return r.rows;
 }
 async function getPaymentMethods(){ const r=await pool.query(`SELECT id,name FROM payment_methods WHERE is_active=true ORDER BY name`); return r.rows; }

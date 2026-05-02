@@ -14,6 +14,7 @@ const taxRateRoutes = require('./modules/taxRates/routes');
 const publicIntakeRoutes = require('./modules/publicIntake/routes');
 const dashboardRoutes = require('./modules/dashboard/routes');
 const userRoutes = require('./modules/users/routes');
+const recurringServiceRoutes = require('./modules/recurringService/routes');
 const techRoutes = require('./modules/tech/routes');
 const accountRoutes = require('./modules/account/routes');
 const { requireAuth, requireRole, requireAnyRole, hasRole, hasAnyRole, redirectForRole } = require('./middleware/auth');
@@ -57,7 +58,7 @@ app.post(`${BASE_PATH}/login`, async (req, res) => {
     if (!user) return renderLoginError(res);
     const ok = await bcrypt.compare(password || '', user.password_hash);
     if (!ok) return renderLoginError(res);
-    req.session.user = { id: user.id, email: user.email, displayName: user.display_name, position: user.position, role: user.role, roles: user.roles || [] };
+    req.session.user = { id: user.id, email: user.email, displayName: user.display_name, position: user.position, role: user.role, roles: user.roles || [], serviceLineIds: user.serviceLineIds || [] };
     req.session.save(err => {
       if (err) { console.error(err); return renderLoginError(res, 'Could not save session. Try again.'); }
       res.redirect(redirectForRole(req.session.user, app.locals.routePath));
@@ -75,6 +76,7 @@ app.use(app.locals.routePath('/work-orders'), requireAuth, requireAnyRole(['admi
 app.use(app.locals.routePath('/billing'), requireAuth, requireAnyRole(['admin','finance']), billingRoutes);
 app.use(app.locals.routePath('/catalog'), requireAuth, requireAnyRole(['admin','finance']), catalogRoutes);
 app.use(app.locals.routePath('/tax-rates'), requireAuth, requireAnyRole(['admin','finance']), taxRateRoutes);
+app.use(app.locals.routePath('/recurring-service'), requireAuth, requireAnyRole(['admin','finance']), recurringServiceRoutes);
 app.use(app.locals.routePath('/users'), requireAuth, requireRole('admin'), userRoutes);
 app.use(app.locals.routePath('/tech'), requireAuth, requireAnyRole(['admin','technician']), techRoutes);
 app.use(app.locals.routePath('/account'), requireAuth, accountRoutes);

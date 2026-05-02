@@ -5,7 +5,7 @@
 </section>
 <section class="card">
   <table class="data-table">
-    <thead><tr><th>Name</th><th>Email</th><th>Position</th><th>Roles</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th>Email</th><th>Position</th><th>Roles</th><th>Service Lines</th><th>Status</th><th></th></tr></thead>
     <tbody>
       <% users.forEach(user=>{ %>
       <tr>
@@ -13,11 +13,12 @@
         <td><%= user.email %></td>
         <td><%= user.position || '—' %></td>
         <td><%= user.role_names || '—' %></td>
+        <td><%= user.service_line_names || '—' %></td>
         <td><span class="badge"><%= user.is_active ? 'Active' : 'Inactive' %></span></td>
         <td><a class="button secondary" href="<%= routePath('/users/' + user.id + '/edit') %>">Edit</a></td>
       </tr>
       <% }) %>
-      <% if(!users.length){ %><tr><td colspan="6">No users yet.</td></tr><% } %>
+      <% if(!users.length){ %><tr><td colspan="7">No users yet.</td></tr><% } %>
     </tbody>
   </table>
 </section>

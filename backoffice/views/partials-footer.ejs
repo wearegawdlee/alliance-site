@@ -1,1 +1,18 @@
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  if (typeof flatpickr === 'undefined') return;
+  flatpickr('.js-date-picker', {
+    dateFormat: 'Y-m-d',
+    allowInput: true
+  });
+  flatpickr('.js-datetime-picker', {
+    enableTime: true,
+    time_24hr: false,
+    dateFormat: 'Y-m-d H:i',
+    allowInput: true
+  });
+});
+</script>
 </main></div></body></html>
