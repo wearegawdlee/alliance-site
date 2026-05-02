@@ -1,6 +1,17 @@
 const pool = require('../../db/pool');
 
+async function getTechnicianServiceLineIds(userId) {
+  const result = await pool.query('SELECT service_line_id FROM user_service_lines WHERE user_id=$1 ORDER BY service_line_id', [userId]);
+  return result.rows.map((r) => Number(r.service_line_id));
+}
+
+function serviceLineFilter(serviceLineIds) {
+  return serviceLineIds && serviceLineIds.length ? 'AND wo.service_line_id = ANY($2::int[])' : '';
+}
+
 async function getTechnicianDashboard(userId) {
+  const serviceLineIds = await getTechnicianServiceLineIds(userId);
+  const params = serviceLineIds.length ? [userId, serviceLineIds] : [userId];
   const result = await pool.query(`
     SELECT wo.id, wo.title, wo.description, wo.scheduled_start_at, wo.scheduled_end_at,
            c.display_name customer, cc.phone customer_phone,
@@ -17,14 +28,24 @@ async function getTechnicianDashboard(userId) {
     JOIN service_lines sl ON sl.id=wo.service_line_id
     LEFT JOIN (SELECT work_order_id, COUNT(*)::int item_count, SUM(line_total)::numeric(10,2) item_total FROM work_order_line_items GROUP BY work_order_id) li ON li.work_order_id=wo.id
     WHERE wos.code <> 'cancelled'
+      ${serviceLineFilter(serviceLineIds)}
     ORDER BY CASE WHEN wo.scheduled_start_at::date=current_date THEN 0 WHEN wo.scheduled_start_at IS NULL THEN 2 WHEN wo.scheduled_start_at > current_timestamp THEN 1 ELSE 3 END, wo.scheduled_start_at ASC NULLS LAST, wo.created_at DESC
-  `, [userId]);
-  return { jobs: result.rows };
+  `, params);
+  return { jobs: result.rows, serviceLineIds };
 }
 
 async function isAssignedToWorkOrder(workOrderId, userId) {
-  const result = await pool.query('SELECT 1 FROM work_order_assignments WHERE work_order_id=$1 AND user_id=$2 LIMIT 1', [workOrderId, userId]);
+  const serviceLineIds = await getTechnicianServiceLineIds(userId);
+  const params = serviceLineIds.length ? [workOrderId, userId, serviceLineIds] : [workOrderId, userId];
+  const result = await pool.query(`
+    SELECT 1
+    FROM work_orders wo
+    JOIN work_order_assignments woa ON woa.work_order_id=wo.id AND woa.user_id=$2
+    WHERE wo.id=$1
+      ${serviceLineIds.length ? 'AND wo.service_line_id = ANY($3::int[])' : ''}
+    LIMIT 1
+  `, params);
   return !!result.rows[0];
 }
 
-module.exports = { getTechnicianDashboard, isAssignedToWorkOrder };
+module.exports = { getTechnicianDashboard, isAssignedToWorkOrder, getTechnicianServiceLineIds };

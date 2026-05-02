@@ -42,13 +42,13 @@
 
       <label>
         Effective Start
-        <input type="date" name="effective_start_date" value="<%= taxRate?.effective_start_date ? new Date(taxRate.effective_start_date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10) %>" required>
+        <input type="text" class="js-date-picker" name="effective_start_date" value="<%= taxRate?.effective_start_date ? new Date(taxRate.effective_start_date).toISOString().slice(0,10) : new Date().toISOString().slice(0,10) %>" placeholder="YYYY-MM-DD" required>
       </label>
     </div>
 
     <label>
       Effective End
-      <input type="date" name="effective_end_date" value="<%= taxRate?.effective_end_date ? new Date(taxRate.effective_end_date).toISOString().slice(0,10) : '' %>">
+      <input type="text" class="js-date-picker" name="effective_end_date" value="<%= taxRate?.effective_end_date ? new Date(taxRate.effective_end_date).toISOString().slice(0,10) : '' %>" placeholder="YYYY-MM-DD">
     </label>
 
     <label class="check">

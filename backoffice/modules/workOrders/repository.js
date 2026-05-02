@@ -24,6 +24,7 @@ async function listWorkOrders(filters = {}) {
   }
   if (filters.status_id) { params.push(Number(filters.status_id)); where.push(`wo.work_order_status_id = $${params.length}`); }
   if (filters.service_line_id) { params.push(Number(filters.service_line_id)); where.push(`wo.service_line_id = $${params.length}`); }
+  if (filters.service_line_ids && filters.service_line_ids.length) { params.push(filters.service_line_ids.map(Number)); where.push(`wo.service_line_id = ANY($${params.length}::int[])`); }
   if (filters.assigned_user_id) {
     if (filters.assigned_user_id === 'unassigned') where.push(`NOT EXISTS (SELECT 1 FROM work_order_assignments ax WHERE ax.work_order_id = wo.id)`);
     else { params.push(Number(filters.assigned_user_id)); where.push(`EXISTS (SELECT 1 FROM work_order_assignments ax WHERE ax.work_order_id = wo.id AND ax.user_id = $${params.length})`); }
@@ -81,7 +82,7 @@ async function getWorkOrderDetail(id) {
   const serviceLineId = wr.rows[0].service_line_id;
   const [statuses, users, assignments, notes, history, invoices, lineItems, catalogItems, catalogCategories] = await Promise.all([
     pool.query(`SELECT id,code,name FROM work_order_statuses WHERE is_active=true ORDER BY sort_order`),
-    pool.query(`SELECT id,display_name FROM users WHERE is_active=true ORDER BY display_name`),
+    pool.query(`SELECT DISTINCT u.id,u.display_name FROM users u JOIN user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id LEFT JOIN user_service_lines usl ON usl.user_id=u.id WHERE u.is_active=true AND r.code IN ('technician','garage_technician','pool_technician','screen_technician') AND (usl.service_line_id=$1 OR NOT EXISTS (SELECT 1 FROM user_service_lines x WHERE x.user_id=u.id)) ORDER BY u.display_name`, [serviceLineId]),
     pool.query(`SELECT woa.*,u.display_name FROM work_order_assignments woa JOIN users u ON u.id=woa.user_id WHERE woa.work_order_id=$1 ORDER BY woa.id`, [id]),
     pool.query(`SELECT won.*,u.display_name author FROM work_order_notes won LEFT JOIN users u ON u.id=won.author_user_id WHERE won.work_order_id=$1 ORDER BY won.created_at DESC`, [id]),
     pool.query(`SELECT h.*,fs.name from_status,ts.name to_status,u.display_name changed_by FROM work_order_status_history h LEFT JOIN work_order_statuses fs ON fs.id=h.from_status_id JOIN work_order_statuses ts ON ts.id=h.to_status_id LEFT JOIN users u ON u.id=h.changed_by_user_id WHERE h.work_order_id=$1 ORDER BY h.created_at DESC`, [id]),

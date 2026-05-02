@@ -1,6 +1,6 @@
 <%- include('../partials-header', { title }) %>
 <section class="page-header">
-  <div><h1><%= user ? 'Edit User' : 'New User' %></h1><p>Positions describe job titles. Roles control access.</p></div>
+  <div><h1><%= user ? 'Edit User' : 'New User' %></h1><p>Positions describe job titles. Roles control access. Service lines control technician work visibility.</p></div>
   <a class="button secondary" href="<%= routePath('/users') %>">Back</a>
 </section>
 <section class="card">
@@ -10,17 +10,29 @@
       <label>Email<input type="email" name="email" value="<%= user?.email || '' %>" required></label>
     </div>
     <div class="grid two">
-      <label>Position<input name="position" value="<%= user?.position || '' %>" placeholder="Owner, Admin, Technician, Bookkeeper, etc."></label>
+      <label>Position<input name="position" value="<%= user?.position || '' %>" placeholder="Owner, Admin, Garage Technician, Pool Technician, etc."></label>
       <label>Password<input type="password" name="password" placeholder="<%= user ? 'Leave blank to keep current password' : 'Temporary password' %>"></label>
     </div>
     <section class="card subtle-card">
       <h3>Roles</h3>
-      <p class="muted">A user can have multiple roles. Admin has full access.</p>
+      <p class="muted">A user can have multiple roles. Service-specific technician roles help keep field work focused.</p>
       <div class="check-grid">
         <% roles.forEach(role=>{ %>
         <label class="check">
           <input type="checkbox" name="role_ids" value="<%= role.id %>" <%= user && user.role_ids.includes(Number(role.id)) ? 'checked' : '' %>>
           <span><strong><%= role.name %></strong><br><span class="muted"><%= role.description || role.code %></span></span>
+        </label>
+        <% }) %>
+      </div>
+    </section>
+    <section class="card subtle-card">
+      <h3>Technician Service Lines</h3>
+      <p class="muted">Used to filter technician dashboards and catalog choices. Leave empty for non-technicians.</p>
+      <div class="check-grid">
+        <% serviceLines.forEach(line=>{ %>
+        <label class="check">
+          <input type="checkbox" name="service_line_ids" value="<%= line.id %>" <%= user && user.service_line_ids.includes(Number(line.id)) ? 'checked' : '' %>>
+          <span><strong><%= line.name %></strong><br><span class="muted"><%= line.code %></span></span>
         </label>
         <% }) %>
       </div>

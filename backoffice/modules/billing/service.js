@@ -1,7 +1,7 @@
 const repo=require('./repository');
 const notifications=require('../notifications/service');
 function clean(v){ const s=String(v||'').trim(); return s||null; }
-async function listInvoices(){return repo.listInvoices();}
+async function listInvoices(filters){return repo.listInvoices(filters || {});}
 async function getPaymentMethods(){return repo.getPaymentMethods();}
 async function getInvoiceDetail(id){return repo.getInvoiceDetail(id);}
 async function submitInvoice(id){ const invoice=await repo.submitInvoice(id); if(invoice) notifications.notifyInvoiceSubmitted(invoice); return invoice; }
@@ -10,4 +10,12 @@ async function recordPayment(id,body){
   if (invoice) { notifications.notifyPaymentRecorded(invoice); notifications.notifyReceipt(invoice); }
   return invoice;
 }
-module.exports={listInvoices,getPaymentMethods,getInvoiceDetail,submitInvoice,recordPayment};
+async function batchSubmitInvoices(invoiceIds){
+  const ids = Array.isArray(invoiceIds) ? invoiceIds : [invoiceIds].filter(Boolean);
+  const submitted = [];
+  for (const id of ids) {
+    submitted.push(await submitInvoice(id));
+  }
+  return submitted;
+}
+module.exports={listInvoices,getPaymentMethods,getInvoiceDetail,submitInvoice,batchSubmitInvoices,recordPayment};

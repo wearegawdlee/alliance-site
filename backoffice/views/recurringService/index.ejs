@@ -1,0 +1,20 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header">
+  <div><h1>Recurring Service</h1><p>Service-line agnostic maintenance plans that generate normal work orders.</p></div>
+  <a class="button primary" href="<%= routePath('/recurring-service/new') %>">New Plan</a>
+</section>
+<section class="card">
+  <form method="get" action="<%= routePath('/recurring-service') %>" class="filters">
+    <input name="search" value="<%= query.search || '' %>" placeholder="Search plan/customer/city">
+    <select name="service_line_id"><option value="">All service lines</option><% options.serviceLines.forEach(sl=>{ %><option value="<%= sl.id %>" <%= String(query.service_line_id||'')===String(sl.id) ? 'selected' : '' %>><%= sl.name %></option><% }) %></select>
+    <select name="active"><option value="active" <%= (query.active||'active')==='active'?'selected':'' %>>Active</option><option value="all" <%= query.active==='all'?'selected':'' %>>All</option><option value="inactive" <%= query.active==='inactive'?'selected':'' %>>Inactive</option></select>
+    <button class="button secondary">Filter</button>
+  </form>
+</section>
+<section class="card">
+  <table class="data-table"><thead><tr><th>Plan</th><th>Customer</th><th>Service</th><th>Next Run</th><th>Assigned</th><th>Runs</th><th>Status</th><th></th></tr></thead><tbody>
+    <% plans.forEach(plan=>{ %><tr><td><a href="<%= routePath('/recurring-service/' + plan.id) %>"><%= plan.title %></a></td><td><%= plan.customer %></td><td><%= plan.service_line %></td><td><%= plan.next_run_date ? new Date(plan.next_run_date).toLocaleDateString() : '—' %></td><td><%= plan.assigned_to || '—' %></td><td><%= plan.run_count %></td><td><span class="badge"><%= plan.is_active ? 'Active' : 'Inactive' %></span></td><td><a class="button secondary" href="<%= routePath('/recurring-service/' + plan.id + '/edit') %>">Edit</a></td></tr><% }) %>
+    <% if(!plans.length){ %><tr><td colspan="8">No recurring service plans yet.</td></tr><% } %>
+  </tbody></table>
+</section>
+<%- include('../partials-footer') %>

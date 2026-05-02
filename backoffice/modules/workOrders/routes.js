@@ -1,5 +1,6 @@
-const express=require('express');const service=require('./service');const router=express.Router();
-router.get('/',async(req,res,next)=>{try{const [workOrders,filters]=await Promise.all([service.listWorkOrders(req.query),service.getWorkOrderFilters()]);res.render('workOrders/index',{title:'Work Orders',workOrders,filters,query:req.query});}catch(e){next(e);}});
+const express=require('express');const service=require('./service');const { hasRole, hasAnyRole } = require('../../middleware/auth');const router=express.Router();
+function scopedQuery(req){ const q={...req.query}; if(hasRole(req.session.user,'technician') && !hasAnyRole(req.session.user,['admin','finance'])){ q.assigned_user_id=String(req.session.user.id); q.service_line_ids=req.session.user.serviceLineIds||[]; } return q; }
+router.get('/',async(req,res,next)=>{try{const query=scopedQuery(req);const [workOrders,filters]=await Promise.all([service.listWorkOrders(query),service.getWorkOrderFilters()]);res.render('workOrders/index',{title:'Work Orders',workOrders,filters,query:req.query});}catch(e){next(e);}});
 router.get('/:id',async(req,res,next)=>{try{const workOrder=await service.getWorkOrderDetail(req.params.id);if(!workOrder)return res.status(404).send('Work order not found');res.render('workOrders/detail',{title:workOrder.title,workOrder});}catch(e){next(e);}});
 router.post('/:id',async(req,res,next)=>{try{await service.updateWorkOrder(req.params.id,req.body,req.session.user);res.redirect(req.app.locals.routePath(`/work-orders/${req.params.id}`));}catch(e){next(e);}});
 router.post('/:id/transition',async(req,res,next)=>{try{await service.transition(req.params.id,req.body,req.session.user);res.redirect(req.app.locals.routePath(`/work-orders/${req.params.id}`));}catch(e){next(e);}});

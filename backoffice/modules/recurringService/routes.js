@@ -1,0 +1,10 @@
+const express=require('express');const service=require('./service');const router=express.Router();
+router.get('/',async(req,res,next)=>{try{res.render('recurringService/index',{title:'Recurring Service',plans:await service.listPlans(req.query),options:await service.getOptions(),query:req.query});}catch(e){next(e);}});
+router.get('/new',async(req,res,next)=>{try{res.render('recurringService/form',{title:'New Recurring Service Plan',plan:null,options:await service.getOptions(),locations:[]});}catch(e){next(e);}});
+router.get('/customers/:customerId/locations',async(req,res,next)=>{try{res.json(await service.getCustomerLocations(req.params.customerId));}catch(e){next(e);}});
+router.post('/',async(req,res,next)=>{try{const id=await service.createPlan(req.body);res.redirect(req.app.locals.routePath('/recurring-service/'+id));}catch(e){next(e);}});
+router.get('/:id',async(req,res,next)=>{try{const plan=await service.getPlan(req.params.id);if(!plan)return res.status(404).send('Recurring service plan not found');res.render('recurringService/detail',{title:plan.title,plan});}catch(e){next(e);}});
+router.post('/:id/generate',async(req,res,next)=>{try{const workOrderId=await service.generateNextWorkOrder(req.params.id,req.session.user);res.redirect(req.app.locals.routePath('/work-orders/'+workOrderId));}catch(e){next(e);}});
+router.get('/:id/edit',async(req,res,next)=>{try{const plan=await service.getPlan(req.params.id);if(!plan)return res.status(404).send('Recurring service plan not found');res.render('recurringService/form',{title:'Edit Recurring Service Plan',plan,options:await service.getOptions(),locations:await service.getCustomerLocations(plan.customer_id)});}catch(e){next(e);}});
+router.post('/:id',async(req,res,next)=>{try{await service.updatePlan(req.params.id,req.body);res.redirect(req.app.locals.routePath('/recurring-service/'+req.params.id));}catch(e){next(e);}});
+module.exports=router;
