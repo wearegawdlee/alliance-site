@@ -88,7 +88,7 @@ async function getWorkOrderDetail(id) {
     pool.query(`SELECT h.*,fs.name from_status,ts.name to_status,u.display_name changed_by FROM work_order_status_history h LEFT JOIN work_order_statuses fs ON fs.id=h.from_status_id JOIN work_order_statuses ts ON ts.id=h.to_status_id LEFT JOIN users u ON u.id=h.changed_by_user_id WHERE h.work_order_id=$1 ORDER BY h.created_at DESC`, [id]),
     pool.query(`SELECT i.*,s.code status_code,s.name status FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.work_order_id=$1 ORDER BY i.created_at DESC`, [id]),
     pool.query(`SELECT woli.*, ci.sku, ci.name catalog_name, ci.item_type, cc.name category_name FROM work_order_line_items woli LEFT JOIN catalog_items ci ON ci.id=woli.catalog_item_id LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id WHERE woli.work_order_id=$1 ORDER BY woli.sort_order, woli.id`, [id]),
-    pool.query(`SELECT ci.id, ci.sku, ci.name, ci.item_type, ci.unit_price, ci.catalog_category_id, cc.name category_name, sl.name service_line FROM catalog_items ci LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id LEFT JOIN service_lines sl ON sl.id=ci.service_line_id WHERE ci.is_active=true AND (ci.service_line_id=$1 OR ci.service_line_id IS NULL) AND (ci.catalog_category_id IS NULL OR cc.is_active=true) ORDER BY cc.sort_order NULLS LAST, cc.name NULLS LAST, ci.name`, [serviceLineId]),
+    pool.query(`SELECT ci.id, ci.sku, ci.name, ci.item_type, ci.unit_price, COALESCE(cp.override_unit_price, ci.unit_price) effective_unit_price, (cp.id IS NOT NULL) has_customer_price, cp.reason customer_price_reason, ci.catalog_category_id, cc.name category_name, sl.name service_line FROM catalog_items ci LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id LEFT JOIN service_lines sl ON sl.id=ci.service_line_id LEFT JOIN customer_pricing cp ON cp.catalog_item_id=ci.id AND cp.customer_id=$2 AND cp.is_active=true WHERE ci.is_active=true AND (ci.service_line_id=$1 OR ci.service_line_id IS NULL) AND (ci.catalog_category_id IS NULL OR cc.is_active=true) ORDER BY cc.sort_order NULLS LAST, cc.name NULLS LAST, ci.name`, [serviceLineId, wr.rows[0].customer_id]),
     pool.query(`SELECT id, service_line_id, code, name FROM catalog_categories WHERE is_active=true AND service_line_id=$1 ORDER BY sort_order, name`, [serviceLineId])
   ]);
   const lineItemTotal = lineItems.rows.reduce((sum, item) => sum + Number(item.line_total || 0), 0);
@@ -174,7 +174,35 @@ async function addLineItem(id, data) {
   try {
     await client.query('BEGIN');
     await assertWorkOrderMutable(client, id);
-    await client.query(`INSERT INTO work_order_line_items(work_order_id,catalog_item_id,description,quantity,unit_price,line_total,sort_order) VALUES($1,$2,COALESCE($3,(SELECT name FROM catalog_items WHERE id=$2),'Custom item'),$4,COALESCE($5,(SELECT unit_price FROM catalog_items WHERE id=$2),0),$4*COALESCE($5,(SELECT unit_price FROM catalog_items WHERE id=$2),0),COALESCE((SELECT MAX(sort_order)+1 FROM work_order_line_items WHERE work_order_id=$1),0))`, [id, data.catalog_item_id || null, data.description, data.quantity, data.unit_price]);
+    const qty = Number(data.quantity || 1);
+    let description = data.description || null;
+    let unitPrice = data.unit_price === undefined || data.unit_price === null || data.unit_price === '' ? null : Number(data.unit_price);
+    const catalogItemId = data.catalog_item_id || null;
+
+    if (catalogItemId) {
+      const item = (await client.query(`
+        SELECT ci.name, ci.unit_price, COALESCE(cp.override_unit_price, ci.unit_price) effective_unit_price
+        FROM catalog_items ci
+        JOIN work_orders wo ON wo.id=$1
+        LEFT JOIN customer_pricing cp
+          ON cp.catalog_item_id=ci.id
+         AND cp.customer_id=wo.customer_id
+         AND cp.is_active=true
+        WHERE ci.id=$2
+      `, [id, catalogItemId])).rows[0];
+      if (!item) throw new Error('Catalog item not found.');
+      description = description || item.name;
+      if (unitPrice === null) unitPrice = Number(item.effective_unit_price || 0);
+    }
+
+    description = description || 'Custom item';
+    unitPrice = unitPrice === null ? 0 : unitPrice;
+    const lineTotal = Number((qty * unitPrice).toFixed(2));
+
+    await client.query(`
+      INSERT INTO work_order_line_items(work_order_id,catalog_item_id,description,quantity,unit_price,line_total,sort_order)
+      VALUES($1,$2,$3,$4,$5,$6,COALESCE((SELECT MAX(sort_order)+1 FROM work_order_line_items WHERE work_order_id=$1),0))
+    `, [id, catalogItemId, description, qty, unitPrice, lineTotal]);
     await client.query('COMMIT');
   } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
 }
@@ -335,4 +363,22 @@ async function syncInvoiceForWorkOrder(client, id, userId, notes) {
   return inv.id;
 }
 
-module.exports = { listWorkOrders, getWorkOrderFilters, getWorkOrderDetail, updateWorkOrder, transition, addNote, addLineItem, deleteLineItem };
+
+async function ensureInvoiceForWorkOrder(id, userId, notes) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await assertWorkOrderMutable(client, id);
+    const invoiceId = await syncInvoiceForWorkOrder(client, id, userId || null, notes || 'Invoice prepared for field payment collection');
+    await client.query('COMMIT');
+    return invoiceId;
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { listWorkOrders, getWorkOrderFilters, getWorkOrderDetail, updateWorkOrder, transition, addNote, addLineItem, deleteLineItem, ensureInvoiceForWorkOrder };
+

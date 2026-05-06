@@ -1,9 +1,30 @@
 <% const isAuthLayout = typeof hideSidebar !== 'undefined' ? hideSidebar : false; %>
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title><%= title || appConfig.brand.backofficeName %> | <%= appConfig.brand.shortName %></title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"><link rel="stylesheet" href="<%= assetPath('/styles.css') %>"></head><body class="<%= isTechnicianOnly ? 'tech-mode' : '' %>"><div class="app-shell <%= isAuthLayout ? 'auth-shell' : '' %>">
-<% if(!isAuthLayout){ %><aside class="sidebar"><div class="brand"><div class="brand-mark">A</div><div><strong><%= appConfig.brand.shortName %></strong><span><%= appConfig.brand.backofficeName %></span></div></div><nav class="nav">
-<% if(hasAnyRole(['admin','finance'])){ %><a href="<%= routePath('/dashboard') %>">Dashboard</a><% } %>
-<% if(hasAnyRole(['admin','technician'])){ %><a href="<%= routePath('/tech/dashboard') %>">Tech Dashboard</a><% } %>
-<a href="<%= routePath('/work-orders') %>">Work Orders</a>
-<% if(hasAnyRole(['admin','finance'])){ %><a href="<%= routePath('/customers') %>">Customers</a><a href="<%= routePath('/recurring-service') %>">Recurring</a><a href="<%= routePath('/billing') %>">Billing</a><a href="<%= routePath('/catalog') %>">Catalog</a><a href="<%= routePath('/tax-rates') %>">Tax Rates</a><% } %>
-<% if(hasRole('admin')){ %><a href="<%= routePath('/users') %>">Users</a><% } %>
-<a href="<%= routePath('/account') %>">My Account</a></nav><div class="sidebar-footer"><div class="user"><%= currentUser && currentUser.email %></div><form method="post" action="<%= routePath('/logout') %>"><button class="button secondary full">Log Out</button></form></div></aside><% } %><main class="main">
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title || appConfig.brand.backofficeName %> | <%= appConfig.brand.shortName %></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="<%= assetPath('/styles.css') %>">
+  </head>
+  <body class="<%= isTechnicianOnly ? 'tech-mode' : '' %>">
+    <div class="app-shell <%= isAuthLayout ? 'auth-shell' : '' %>"><% if(!isAuthLayout){ %><aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">A</div>
+          <div><strong><%= appConfig.brand.shortName %></strong><span><%= appConfig.brand.backofficeName %></span></div>
+        </div>
+        <nav class="nav grouped-nav">
+          <% if(hasAnyRole(['admin','finance'])){ %>
+            <div class="nav-group"><div class="nav-group-title">Operations</div><a href="<%= routePath('/dashboard') %>">Dashboard</a><a href="<%= routePath('/work-orders') %>">Work Orders</a><a href="<%= routePath('/recurring-service') %>">Recurring</a></div>
+            <div class="nav-group"><div class="nav-group-title">Customers</div><a href="<%= routePath('/customers') %>">Customers</a><a href="<%= routePath('/prospects') %>">Prospects</a></div>
+            <div class="nav-group"><div class="nav-group-title">Billing</div><a href="<%= routePath('/billing') %>">Work Invoicing</a><a href="<%= routePath('/catalog') %>">Catalog</a><a href="<%= routePath('/tax-rates') %>">Tax Rates</a></div>
+          <% } %>
+          <% if(hasAnyRole(['admin','technician'])){ %><div class="nav-group"><div class="nav-group-title">Technician</div><a href="<%= routePath('/tech/dashboard') %>">Tech Dashboard</a></div><% } %>
+          <div class="nav-group"><div class="nav-group-title">Account</div><a href="<%= routePath('/account') %>">My Account</a><% if(hasRole('admin')){ %><a href="<%= routePath('/users') %>">User Management</a><% } %></div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="user"><%= currentUser && currentUser.email %></div>
+          <form method="post" action="<%= routePath('/logout') %>"><button class="button secondary full">Log Out</button></form>
+        </div>
+      </aside><% } %><main class="main">

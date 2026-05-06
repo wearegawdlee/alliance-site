@@ -1,3 +1,10 @@
-<%- include('partials-header', { title: 'Login', hideSidebar: true }) %>
-<section class="login-card"><h1><%= appConfig.brand.backofficeName %></h1><p>Sign in to access internal operations.</p><% if(error){ %><div class="alert"><%= error %></div><% } %><form method="post" action="<%= routePath('/login') %>"><label>Email<input name="email" type="email" required placeholder="you@example.com"></label><label>Password<input name="password" type="password" required></label><button class="button primary full">Log In</button></form></section>
-<%- include('partials-footer') %>
+<%- include('partials-header', { title: 'Login', hideSidebar: true }) %> <section class="login-card">
+  <h1><%= appConfig.brand.backofficeName %> </h1>
+  <p>Sign in to access internal operations.</p><% if(error){ %> <div class="alert"><%= error %> </div><% } %> <form method="post" action="<%= routePath('/login') %>">
+    <label>Email <input name="email" type="email" required placeholder="you@example.com">
+    </label>
+    <label>Password <input name="password" type="password" required>
+    </label>
+    <button class="button primary full">Log In</button>
+  </form>
+</section><%- include('partials-footer') %>

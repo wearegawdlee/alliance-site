@@ -1,0 +1,37 @@
+<%- include('../partials-header', { title, hideSidebar: true }) %>
+<% const invoices = results.invoices || []; %>
+
+<section class="public-pay-hero compact">
+  <div class="brand public-brand"><div class="brand-mark">A</div><div><strong><%= appConfig.brand.name %></strong><span>Secure payment portal</span></div></div>
+  <h1>Unpaid invoices</h1>
+  <p>Select the invoice you’d like to pay.</p>
+</section>
+
+<section class="card public-results-card">
+  <% if(!invoices.length){ %>
+    <h2>No unpaid invoices found</h2>
+    <p class="muted">We couldn’t find any unpaid invoices for that email or phone number. Try another lookup or contact Alliance Home Services if this seems incorrect.</p>
+    <a class="button primary" href="/pay">Try Again</a>
+  <% } else { %>
+    <div class="invoice-result-list">
+      <% invoices.forEach(invoice => { const amountDue = Number(invoice.computed_amount_due || 0); const serviceAddress = [invoice.address_line_1, invoice.city, invoice.state].filter(Boolean).join(', '); %>
+        <article class="invoice-result-card">
+          <div>
+            <h2><%= invoice.invoice_number || ('Invoice #' + invoice.id) %></h2>
+            <p class="muted"><%= invoice.customer_name %></p>
+            <% if(invoice.work_order_title){ %><p><strong>Service:</strong> <%= invoice.work_order_title %></p><% } %>
+            <% if(serviceAddress){ %><p><strong>Service Area:</strong> <%= serviceAddress %></p><% } %>
+            <% if(invoice.due_date){ %><p><strong>Due:</strong> <%= new Date(invoice.due_date).toLocaleDateString() %></p><% } %>
+          </div>
+          <div class="invoice-result-action">
+            <strong><%= formatCurrency(amountDue) %></strong>
+            <a class="button primary" href="/pay/i/<%= invoice.public_payment_token %>">Pay Invoice</a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+    <p class="muted public-help">Only unpaid invoices are shown here.</p>
+  <% } %>
+</section>
+
+<%- include('../partials-footer') %>

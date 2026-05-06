@@ -22,7 +22,8 @@
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "pg": "^8.13.1",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "stripe": "^17.5.0"
   },
   "devDependencies": {
     "dotenv-cli": "^7.4.4",
