@@ -51,4 +51,8 @@ async function addLineItem(id,body){
   return repo.addLineItem(id,{catalog_item_id,description,quantity,unit_price});
 }
 async function deleteLineItem(id,lineItemId){return repo.deleteLineItem(id,lineItemId);}
-module.exports={listWorkOrders,getWorkOrderFilters,getWorkOrderDetail,updateWorkOrder,transition,addNote,addLineItem,deleteLineItem};
+async function ensureInvoiceForWorkOrder(id,user){
+  return repo.ensureInvoiceForWorkOrder(id, user?.id, 'Invoice prepared for field payment collection');
+}
+module.exports={listWorkOrders,getWorkOrderFilters,getWorkOrderDetail,updateWorkOrder,transition,addNote,addLineItem,deleteLineItem,ensureInvoiceForWorkOrder};
+

@@ -1,0 +1,7 @@
+<%- include('../partials-header', { title, hideSidebar: true }) %>
+<section class="login-card public-pay-card">
+  <h1>Payment submitted</h1>
+  <p>Your payment was submitted securely. If the payment requires processing time, your invoice may show as pending until confirmation is received.</p>
+  <% if(detail && detail.invoice){ %><a class="button primary full" href="/pay/i/<%= token %>">View Invoice</a><% } else { %><a class="button primary full" href="/pay">Back to Payment Portal</a><% } %>
+</section>
+<%- include('../partials-footer') %>

@@ -10,5 +10,7 @@ router.post('/:id', async (req,res,next)=>{try{await service.updateCustomer(req.
 router.post('/:id/delete', async (req,res,next)=>{try{await service.deleteCustomer(req.params.id,req.session.user);res.redirect(req.app.locals.routePath('/customers'));}catch(e){next(e);}});
 router.post('/:id/transition', async (req,res,next)=>{try{await service.transitionCustomer(req.params.id,req.body,req.session.user);res.redirect(req.app.locals.routePath(`/customers/${req.params.id}`));}catch(e){next(e);}});
 router.post('/:id/work-orders', async (req,res,next)=>{try{const id=await service.createWorkOrderFromCustomer(req.params.id,req.body,req.session.user);res.redirect(req.app.locals.routePath(`/work-orders/${id}`));}catch(e){next(e);}});
+router.post('/:id/pricing', async (req,res,next)=>{try{await service.upsertCustomerPricing(req.params.id,req.body,req.session.user);res.redirect(req.app.locals.routePath(`/customers/${req.params.id}`));}catch(e){next(e);}});
+router.post('/:id/pricing/:pricingId/delete', async (req,res,next)=>{try{await service.deleteCustomerPricing(req.params.id,req.params.pricingId,req.session.user);res.redirect(req.app.locals.routePath(`/customers/${req.params.id}`));}catch(e){next(e);}});
 router.post('/:id/notes', async (req,res,next)=>{try{await service.addNote(req.params.id,req.session.user?.id,req.body.note_body);res.redirect(req.app.locals.routePath(`/customers/${req.params.id}`));}catch(e){next(e);}});
 module.exports = router;

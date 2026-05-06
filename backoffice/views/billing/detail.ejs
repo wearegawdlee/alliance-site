@@ -1,4 +1,5 @@
 <%- include('../partials-header', { title: invoice.invoice.invoice_number || 'Invoice' }) %>
+<% const paidTotal = invoice.payments.reduce((s,p)=>s+Number(p.amount||0),0); const storedBalance = Number(invoice.invoice.balance_due || 0); const computedBalance = Math.max(0, Number(invoice.invoice.total_amount || 0) - Number(invoice.invoice.deposit_amount || 0)); const payableBase = invoice.invoice.status_code === 'paid' ? 0 : Math.max(storedBalance, computedBalance); const amountDue = Math.max(0, payableBase - paidTotal); %>
 
 <section class="page-header">
   <div><h1><%= invoice.invoice.invoice_number || ('Invoice #' + invoice.invoice.id) %></h1><p>Invoice detail and itemized charges.</p></div>
@@ -7,10 +8,14 @@
     <% if(invoice.invoice.status_code === 'created'){ %>
       <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><button class="button primary">Submit</button></form>
     <% } %>
-    <% if(invoice.invoice.status_code === 'submitted'){ %>
+    <% if(['submitted','payment_failed'].includes(invoice.invoice.status_code)){ %>
       <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><button class="button secondary">Send Reminder</button></form>
-      <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/payments') %>" class="inline-form payment-form"><span class="muted">Balance: <strong><%= formatCurrency(Math.max(0, Number(invoice.invoice.balance_due || invoice.invoice.total_amount || 0) - invoice.payments.reduce((s,p)=>s+Number(p.amount||0),0))) %></strong></span><input type="number" step="0.01" name="amount" value="<%= Math.max(0, Number(invoice.invoice.balance_due || invoice.invoice.total_amount || 0) - invoice.payments.reduce((s,p)=>s+Number(p.amount||0),0)).toFixed(2) %>" class="short-input"><select name="payment_method_id"><option value="">Method</option><% paymentMethods.forEach(method => { %><option value="<%= method.id %>"><%= method.name %></option><% }) %></select><button class="button primary" type="submit">Pay Full / Partial</button></form>
+      <form method="POST" action="<%= routePath('/payments/invoices/' + invoice.invoice.id + '/card-checkout') %>" class="inline-form"><button class="button primary">Send / Open Card Checkout</button></form>
+      <form method="POST" action="<%= routePath('/payments/invoices/' + invoice.invoice.id + '/autopay-charge') %>" class="inline-form"><button class="button secondary">Charge Saved Autopay</button></form>
+      <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/payments') %>" class="inline-form payment-form"><span class="muted">Balance: <strong><%= formatCurrency(amountDue) %></strong></span><input type="number" step="0.01" name="amount" value="<%= amountDue.toFixed(2) %>" class="short-input"><select name="payment_method_id"><option value="">Method</option><% paymentMethods.forEach(method => { %><option value="<%= method.id %>"><%= method.name %></option><% }) %></select><button class="button secondary" type="submit">Record Manual Payment</button></form>
     <% } %>
+    <% if(invoice.invoice.status_code === 'payment_pending'){ %><span class="badge">Payment Pending</span><% } %>
+    <% if(invoice.invoice.status_code === 'payment_failed'){ %><span class="badge danger">Payment Failed</span><% } %>
     <% if(invoice.invoice.status_code === 'paid'){ %><span class="badge success">Paid</span><% } %>
     <% if(invoice.invoice.customer_id){ %><a class="button secondary" href="<%= routePath('/customers/' + invoice.invoice.customer_id) %>">View Customer</a><% } %>
     <% if(invoice.invoice.work_order_id){ %><a class="button secondary" href="<%= routePath('/work-orders/' + invoice.invoice.work_order_id) %>">View Work Order</a><% } %>
@@ -23,6 +28,14 @@
     <div><h2>Status</h2><p><span class="badge"><%= invoice.invoice.status_name || 'Created' %></span></p></div>
   </div>
   <% if(invoice.invoice.work_order_id){ %><p class="muted">Generated from <a href="<%= routePath('/work-orders/' + invoice.invoice.work_order_id) %>"><%= invoice.invoice.work_order_title || ('Work Order #' + invoice.invoice.work_order_id) %></a></p><% } %>
+  <% if(invoice.invoice.public_payment_token){ %>
+    <div class="notice">
+      <strong>Customer payment link:</strong>
+      <a href="/pay/i/<%= invoice.invoice.public_payment_token %>" target="_blank">/pay/i/<%= invoice.invoice.public_payment_token %></a>
+    </div>
+  <% } else if(['submitted','payment_failed','payment_pending'].includes(invoice.invoice.status_code)){ %>
+    <p class="muted">A public payment link will be generated when the invoice is submitted.</p>
+  <% } %>
 </section>
 
 <section class="card">
@@ -68,7 +81,7 @@
           </td>
         </tr>
       <% } %>
-      <tr><th>Balance Due</th><td><strong><%= formatCurrency(invoice.invoice.balance_due || invoice.invoice.total_amount || 0) %></strong></td></tr>
+      <tr><th>Balance Due</th><td><strong><%= formatCurrency(amountDue) %></strong></td></tr>
     </tbody>
   </table>
 </section>
@@ -79,6 +92,11 @@
     <% invoice.lineItems.forEach(item => { %><tr><td><%= item.description %></td><td><%= item.quantity %></td><td><%= formatCurrency(item.unit_price || 0) %></td><td><%= formatCurrency(item.line_total || 0) %></td></tr><% }) %>
     <% if(!invoice.lineItems.length){ %><tr><td colspan="4">No line items.</td></tr><% } %>
   </tbody></table>
+</section>
+
+
+<section class="card"><h2>Online Payment Attempts</h2>
+  <% if(invoice.paymentAttempts && invoice.paymentAttempts.length){ %><table class="data-table"><thead><tr><th>Status</th><th>Type</th><th>Amount</th><th>Created</th><th>Failure</th></tr></thead><tbody><% invoice.paymentAttempts.forEach(attempt => { %><tr><td><span class="badge"><%= attempt.status %></span></td><td><%= attempt.payment_type === 'ach' ? 'ACH' : 'Card' %></td><td><%= formatCurrency(attempt.amount) %></td><td><%= formatDate(attempt.created_at) %></td><td><%= attempt.failure_message || '—' %></td></tr><% }) %></tbody></table><% } else { %><p class="muted">No online payment attempts yet.</p><% } %>
 </section>
 
 <section class="card"><h2>Payments</h2>

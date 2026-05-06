@@ -1,3 +1,4 @@
+const { payableBase } = require('../payments/amounts');
 function clean(value) {
   const trimmed = String(value || '').trim();
   return trimmed || null;
@@ -209,7 +210,36 @@ function notifyInvoiceSubmitted(invoice) {
       `Customer: ${invoice.customer || 'Unknown'}`,
       `Total: ${invoice.total_amount || '0.00'}`,
       '',
+      invoice.public_payment_url ? `Customer payment link: ${invoice.public_payment_url}` : null,
+      '',
       `Open invoice: ${url}`
+    ].filter(Boolean).join('\n')
+  }));
+}
+
+
+function notifyCustomerInvoiceSubmitted(invoice) {
+  if (!invoice.customer_email || !invoice.public_payment_url) {
+    console.log(`[invoice email skipped] no customer email or payment link for invoice ${invoice.id}`);
+    return;
+  }
+  fireAndForget(notify({
+    eventType: 'customer_invoice.submitted',
+    to: invoice.customer_email,
+    subject: `Your invoice from Alliance Home Services: ${invoice.invoice_number || `Invoice #${invoice.id}`}`,
+    metadata: { invoiceId: invoice.id, workOrderId: invoice.work_order_id },
+    text: [
+      `Hi ${invoice.customer || 'there'},`,
+      '',
+      'Your invoice is ready.',
+      '',
+      `Invoice: ${invoice.invoice_number || invoice.id}`,
+      `Amount Due: $${payableBase(invoice).toFixed(2)}`,
+      '',
+      `Pay securely here: ${invoice.public_payment_url}`,
+      '',
+      'Thank you,',
+      'Alliance Home Services'
     ].filter(Boolean).join('\n')
   }));
 }
@@ -236,3 +266,4 @@ function notifyReceipt(invoice) {
 
 module.exports.notifyInvoiceSubmitted = notifyInvoiceSubmitted;
 module.exports.notifyReceipt = notifyReceipt;
+module.exports.notifyCustomerInvoiceSubmitted = notifyCustomerInvoiceSubmitted;

@@ -1,0 +1,46 @@
+<%- include('../partials-header', { title }) %>
+
+<section class="page-header">
+  <div><h1>Payment Settings</h1><p><%= overview.customer.display_name %></p></div>
+  <div class="button-row"><a class="button secondary" href="<%= routePath('/customers/' + overview.customer.id) %>">← Customer</a></div>
+</section>
+
+<% if(query.setup === 'success'){ %><section class="notice success">Payment method setup completed. It will appear after Stripe sends the setup webhook.</section><% } %>
+<% if(query.setup === 'cancelled'){ %><section class="notice warning">Payment method setup was cancelled.</section><% } %>
+
+<section class="card">
+  <div class="section-title-row"><div><h2>Stored Payment Methods</h2><p class="muted">Card and bank details are stored in Stripe. This app only stores safe descriptors and provider IDs.</p></div></div>
+  <% if(!overview.stripe.configured){ %>
+    <p class="muted">Stripe is not configured yet. Add STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, and APP_PUBLIC_URL to enable hosted setup links.</p>
+  <% } %>
+  <div class="button-row">
+    <form method="post" action="<%= routePath('/payments/customers/' + overview.customer.id + '/setup/card') %>"><button class="button primary" <%= !overview.stripe.configured ? 'disabled' : '' %>>Add Card</button></form>
+    <form method="post" action="<%= routePath('/payments/customers/' + overview.customer.id + '/setup/ach') %>"><button class="button secondary" <%= !overview.stripe.configured ? 'disabled' : '' %>>Add Bank Account / ACH</button></form>
+  </div>
+  <table class="data-table"><thead><tr><th>Type</th><th>Details</th><th>Default</th><th></th></tr></thead><tbody>
+    <% overview.methods.forEach(method => { %>
+      <tr>
+        <td><%= method.payment_type === 'ach' ? 'Bank Transfer / ACH' : 'Card' %></td>
+        <td><% if(method.payment_type === 'ach'){ %><%= method.bank_name || 'Bank account' %> ending <%= method.last4 || '—' %><% } else { %><%= method.brand || 'Card' %> ending <%= method.last4 || '—' %><% if(method.expiration_month){ %> · exp <%= method.expiration_month %>/<%= method.expiration_year %><% } %><% } %></td>
+        <td><%= method.is_default ? 'Yes' : 'No' %></td>
+        <td class="button-row"><% if(!method.is_default){ %><form method="post" action="<%= routePath('/payments/customers/' + overview.customer.id + '/methods/' + method.id + '/default') %>"><button class="button secondary">Set Default</button></form><% } %><form method="post" action="<%= routePath('/payments/customers/' + overview.customer.id + '/methods/' + method.id + '/delete') %>" onsubmit="return confirm('Remove this saved payment method?');"><button class="button danger">Remove</button></form></td>
+      </tr>
+    <% }) %>
+    <% if(!overview.methods.length){ %><tr><td colspan="4">No saved payment methods.</td></tr><% } %>
+  </tbody></table>
+</section>
+
+<section class="card">
+  <h2>Autopay for Recurring Services</h2>
+  <p class="muted">Use this for recurring maintenance/service plans only. One-time non-recurring jobs stay card-only from invoice checkout.</p>
+  <form method="post" action="<%= routePath('/payments/customers/' + overview.customer.id + '/autopay') %>" class="form-grid">
+    <label class="check"><input type="checkbox" name="is_enabled" value="1" <%= overview.autopay && overview.autopay.is_enabled ? 'checked' : '' %>> Enable autopay</label>
+    <div class="grid two">
+      <label>Payment Method<select name="payment_method_id"><option value="">Select method</option><% overview.methods.forEach(method => { %><option value="<%= method.id %>" <%= overview.autopay && Number(overview.autopay.payment_method_id) === Number(method.id) ? 'selected' : '' %>><%= method.payment_type === 'ach' ? 'ACH' : 'Card' %> ending <%= method.last4 || '—' %></option><% }) %></select></label>
+      <label>Max Charge Amount<input type="number" step="0.01" name="max_charge_amount" value="<%= overview.autopay && overview.autopay.max_charge_amount ? overview.autopay.max_charge_amount : '' %>" placeholder="Optional safety cap"></label>
+    </div>
+    <button class="button primary">Save Autopay Settings</button>
+  </form>
+</section>
+
+<%- include('../partials-footer') %>

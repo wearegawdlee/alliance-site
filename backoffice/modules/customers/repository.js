@@ -4,6 +4,10 @@ async function listCustomers(filters = {}){
   const values = [];
   const where = [];
 
+  if(filters.include_prospects !== 'true') {
+    where.push(`cs.code <> 'prospect'`);
+  }
+
   if(filters.q){
     values.push(`%${String(filters.q).trim()}%`);
     const idx = values.length;
@@ -80,7 +84,7 @@ async function listCustomers(filters = {}){
 async function getCustomerDetail(id){
   const cr=await pool.query(`SELECT c.*,cs.code status_code,cs.name status,ls.name lead_source,u.display_name assigned_to FROM customers c JOIN customer_statuses cs ON cs.id=c.customer_status_id LEFT JOIN lead_sources ls ON ls.id=c.lead_source_id LEFT JOIN users u ON u.id=c.assigned_user_id WHERE c.id=$1`,[id]);
   if(!cr.rows[0]) return null;
-  const [contacts,locations,services,assets,notes,workOrders,estimates,invoices,statusHistory,activity]=await Promise.all([
+  const [contacts,locations,services,assets,notes,workOrders,estimates,invoices,statusHistory,activity,pricing]=await Promise.all([
     pool.query(`SELECT * FROM customer_contacts WHERE customer_id=$1 ORDER BY is_primary DESC,id`,[id]),
     pool.query(`SELECT cl.*,pt.name property_type FROM customer_locations cl LEFT JOIN property_types pt ON pt.id=cl.property_type_id WHERE cl.customer_id=$1 ORDER BY cl.is_primary DESC,cl.id`,[id]),
     pool.query(`SELECT sl.* FROM customer_service_lines csl JOIN service_lines sl ON sl.id=csl.service_line_id WHERE csl.customer_id=$1 AND csl.is_active=true ORDER BY sl.name`,[id]),
@@ -90,9 +94,18 @@ async function getCustomerDetail(id){
     pool.query(`SELECT e.*,s.name status FROM estimates e JOIN estimate_statuses s ON s.id=e.estimate_status_id WHERE e.customer_id=$1 ORDER BY e.created_at DESC`,[id]),
     pool.query(`SELECT i.*,s.code status_code,s.name status FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.customer_id=$1 ORDER BY i.created_at DESC`,[id]),
     pool.query(`SELECT h.*,fs.name from_status,ts.name to_status,u.display_name changed_by FROM customer_status_history h LEFT JOIN customer_statuses fs ON fs.id=h.from_status_id JOIN customer_statuses ts ON ts.id=h.to_status_id LEFT JOIN users u ON u.id=h.changed_by_user_id WHERE h.customer_id=$1 ORDER BY h.created_at DESC`,[id]),
-    pool.query(`SELECT ae.*,u.display_name actor FROM activity_events ae LEFT JOIN users u ON u.id=ae.actor_user_id WHERE ae.entity_type='customer' AND ae.entity_id=$1 ORDER BY ae.created_at DESC LIMIT 20`,[id])
+    pool.query(`SELECT ae.*,u.display_name actor FROM activity_events ae LEFT JOIN users u ON u.id=ae.actor_user_id WHERE ae.entity_type='customer' AND ae.entity_id=$1 ORDER BY ae.created_at DESC LIMIT 20`,[id]),
+    pool.query(`
+      SELECT cp.*, ci.name catalog_item_name, ci.sku, ci.unit_price catalog_unit_price, sl.name service_line, cc.name category_name
+      FROM customer_pricing cp
+      JOIN catalog_items ci ON ci.id=cp.catalog_item_id
+      LEFT JOIN service_lines sl ON sl.id=ci.service_line_id
+      LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id
+      WHERE cp.customer_id=$1 AND cp.is_active=true
+      ORDER BY sl.name NULLS LAST, cc.sort_order NULLS LAST, cc.name NULLS LAST, ci.name
+    `,[id])
   ]);
-  return {...cr.rows[0],contacts:contacts.rows,locations:locations.rows,services:services.rows,assets:assets.rows,notes:notes.rows,workOrders:workOrders.rows,estimates:estimates.rows,invoices:invoices.rows,statusHistory:statusHistory.rows,activity:activity.rows};
+  return {...cr.rows[0],contacts:contacts.rows,locations:locations.rows,services:services.rows,assets:assets.rows,notes:notes.rows,workOrders:workOrders.rows,estimates:estimates.rows,invoices:invoices.rows,statusHistory:statusHistory.rows,activity:activity.rows,pricing:pricing.rows};
 }
 
 async function getFormOptions(){
@@ -104,7 +117,7 @@ async function getFormOptions(){
     pool.query(`SELECT id,name FROM property_types WHERE is_active=true ORDER BY name`),
     pool.query(`SELECT wot.id,wot.name,wot.service_line_id,sl.name service_line FROM work_order_types wot JOIN service_lines sl ON sl.id=wot.service_line_id WHERE wot.is_active=true ORDER BY sl.name,wot.name`),
     pool.query(`SELECT id,code,name FROM work_order_statuses WHERE is_active=true ORDER BY sort_order`),
-    pool.query(`SELECT id,name,unit_price FROM catalog_items WHERE is_active=true ORDER BY name`)
+    pool.query(`SELECT ci.id,ci.name,ci.sku,ci.unit_price,sl.name service_line,cc.name category_name FROM catalog_items ci LEFT JOIN service_lines sl ON sl.id=ci.service_line_id LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id WHERE ci.is_active=true ORDER BY sl.name NULLS LAST, cc.sort_order NULLS LAST, cc.name NULLS LAST, ci.name`)
   ]);
   return {statuses:statuses.rows,sources:sources.rows,services:services.rows,users:users.rows,propertyTypes:propertyTypes.rows,workOrderTypes:workOrderTypes.rows,workOrderStatuses:workOrderStatuses.rows,catalogItems:catalogItems.rows};
 }
@@ -116,9 +129,10 @@ async function createCustomer(data){
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
-    const c=await client.query(`INSERT INTO customers(display_name,customer_status_id,lead_source_id,assigned_user_id,company_name,notes_summary) VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,[data.display_name,data.customer_status_id,data.lead_source_id||null,data.assigned_user_id||null,data.company_name||null,data.notes_summary||null]);
+    const statusId = data.customer_status_id || await getStatusId(client, 'customer');
+    const c=await client.query(`INSERT INTO customers(display_name,customer_status_id,lead_source_id,assigned_user_id,company_name,notes_summary) VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,[data.display_name,statusId,data.lead_source_id||null,data.assigned_user_id||null,data.company_name||null,data.notes_summary||null]);
     const id=c.rows[0].id;
-    await client.query(`INSERT INTO customer_status_history(customer_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,'Initial customer creation')`,[id,data.customer_status_id,data.author_user_id||null]);
+    await client.query(`INSERT INTO customer_status_history(customer_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,'Initial customer creation')`,[id,statusId,data.author_user_id||null]);
     await client.query(`INSERT INTO customer_contacts(customer_id,first_name,last_name,phone,email,preferred_contact_method,is_primary) VALUES($1,$2,$3,$4,$5,$6,true)`,[id,data.first_name||null,data.last_name||null,data.phone||null,data.email||null,data.preferred_contact_method||null]);
     await client.query(`INSERT INTO customer_locations(customer_id,property_type_id,label,address_line_1,city,state,postal_code,county,gate_code,access_notes,is_primary) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true)`,[id,data.property_type_id||null,data.location_label||'Service Location',data.address_line_1||null,data.city||null,data.state||null,data.postal_code||null,data.county||null,data.gate_code||null,data.access_notes||null]);
     for(const serviceId of (data.service_line_ids||[])){ await client.query(`INSERT INTO customer_service_lines(customer_id,service_line_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[id,serviceId]); }
@@ -134,10 +148,7 @@ async function updateCustomer(id,data){
     await client.query('BEGIN');
     const existing = await client.query(`SELECT customer_status_id FROM customers WHERE id=$1`,[id]);
     if(!existing.rows[0]) throw new Error('Customer not found');
-    await client.query(`UPDATE customers SET display_name=$1,customer_status_id=$2,lead_source_id=$3,assigned_user_id=$4,company_name=$5,notes_summary=$6,updated_at=current_timestamp WHERE id=$7`,[data.display_name,data.customer_status_id,data.lead_source_id||null,data.assigned_user_id||null,data.company_name||null,data.notes_summary||null,id]);
-    if(Number(existing.rows[0].customer_status_id)!==Number(data.customer_status_id)){
-      await client.query(`INSERT INTO customer_status_history(customer_id,from_status_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,$4,$5)`,[id,existing.rows[0].customer_status_id,data.customer_status_id,data.author_user_id||null,'Manual customer edit']);
-    }
+    await client.query(`UPDATE customers SET display_name=$1,lead_source_id=$2,assigned_user_id=$3,company_name=$4,notes_summary=$5,updated_at=current_timestamp WHERE id=$6`,[data.display_name,data.lead_source_id||null,data.assigned_user_id||null,data.company_name||null,data.notes_summary||null,id]);
     const contact=await client.query(`SELECT id FROM customer_contacts WHERE customer_id=$1 AND is_primary=true ORDER BY id LIMIT 1`,[id]);
     if(contact.rows[0]) await client.query(`UPDATE customer_contacts SET first_name=$1,last_name=$2,phone=$3,email=$4,preferred_contact_method=$5,updated_at=current_timestamp WHERE id=$6`,[data.first_name||null,data.last_name||null,data.phone||null,data.email||null,data.preferred_contact_method||null,contact.rows[0].id]);
     else await client.query(`INSERT INTO customer_contacts(customer_id,first_name,last_name,phone,email,preferred_contact_method,is_primary) VALUES($1,$2,$3,$4,$5,$6,true)`,[id,data.first_name||null,data.last_name||null,data.phone||null,data.email||null,data.preferred_contact_method||null]);
@@ -157,20 +168,10 @@ async function transitionCustomer(id, action, userId, reason){
     await client.query('BEGIN');
     const current=await client.query(`SELECT customer_status_id FROM customers WHERE id=$1`,[id]);
     if(!current.rows[0]) throw new Error('Customer not found');
-    let toCode=null, eventType=null, eventBody=null;
-    if(action==='contacted'){
-      await client.query(`UPDATE customers SET assigned_user_id=COALESCE(assigned_user_id,$1),updated_at=current_timestamp WHERE id=$2`,[userId||null,id]);
-      await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'lead.contacted',$3)`,[id,userId||null,reason||'Lead picked up / contact made']);
-      await client.query('COMMIT');
-      return;
-    }
-    if(action==='lost'){ toCode='lost'; eventType='lead.lost'; eventBody='Lead marked lost'; }
-    if(action==='customer'){ toCode='customer'; eventType='customer.activated'; eventBody='Lead converted to customer'; }
-    if(!toCode) throw new Error('Unknown transition');
-    const toId=await getStatusId(client,toCode);
-    await client.query(`UPDATE customers SET customer_status_id=$1,assigned_user_id=COALESCE(assigned_user_id,$2),updated_at=current_timestamp WHERE id=$3`,[toId,userId||null,id]);
-    await client.query(`INSERT INTO customer_status_history(customer_id,from_status_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,$4,$5)`,[id,current.rows[0].customer_status_id,toId,userId||null,reason||eventBody]);
-    await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,$3,$4)`,[id,userId||null,eventType,eventBody]);
+    if(action !== 'contacted') throw new Error('Unknown transition');
+    await client.query(`UPDATE customers SET assigned_user_id=COALESCE(assigned_user_id,$1),updated_at=current_timestamp WHERE id=$2`,[userId||null,id]);
+    await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'lead.contacted',$3)`,[id,userId||null,reason||'Prospect contacted']);
+    if(reason){ await client.query(`INSERT INTO customer_notes(customer_id,author_user_id,note_body) VALUES($1,$2,$3)`,[id,userId||null,reason]); }
     await client.query('COMMIT');
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
@@ -213,7 +214,7 @@ async function deleteCustomer(id, userId){
     `,[id]);
     const d = deps.rows[0];
     if(d.work_order_count || d.estimate_count || d.invoice_count){
-      throw new Error('Customer has work orders, estimates, or invoices. Mark inactive/lost instead of deleting operational history.');
+      throw new Error('Customer has operational history and cannot be deleted.');
     }
 
     await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'customer.deleted',$3)`,[id,userId||null,`Customer deleted: ${customer.rows[0].display_name}`]);
@@ -222,8 +223,29 @@ async function deleteCustomer(id, userId){
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
 
+async function upsertCustomerPricing(customerId, data, userId){
+  const catalogItemId = Number(data.catalog_item_id);
+  const price = Number(data.override_unit_price);
+  if(!catalogItemId) throw new Error('Catalog item is required.');
+  if(!Number.isFinite(price) || price < 0) throw new Error('Valid customer price is required.');
+  const r = await pool.query(`
+    INSERT INTO customer_pricing(customer_id,catalog_item_id,override_unit_price,reason,is_active)
+    VALUES($1,$2,$3,$4,true)
+    ON CONFLICT(customer_id,catalog_item_id)
+    DO UPDATE SET override_unit_price=EXCLUDED.override_unit_price, reason=EXCLUDED.reason, is_active=true, updated_at=current_timestamp
+    RETURNING id
+  `,[customerId,catalogItemId,price,data.reason||null]);
+  await pool.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body,metadata) VALUES('customer',$1,$2,'customer_pricing.updated','Customer-specific catalog price updated',$3)`,[customerId,userId||null,JSON.stringify({ catalogItemId, overrideUnitPrice: price })]);
+  return r.rows[0].id;
+}
+
+async function deleteCustomerPricing(customerId, pricingId, userId){
+  await pool.query(`UPDATE customer_pricing SET is_active=false,updated_at=current_timestamp WHERE id=$1 AND customer_id=$2`,[pricingId,customerId]);
+  await pool.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'customer_pricing.deleted','Customer-specific catalog price removed')`,[customerId,userId||null]);
+}
+
 async function addNote(customerId,userId,note){
   await pool.query(`INSERT INTO customer_notes(customer_id,author_user_id,note_body) VALUES($1,$2,$3)`,[customerId,userId||null,note]);
   await pool.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'note.added',$3)`,[customerId,userId||null,note]);
 }
-module.exports={listCustomers,getCustomerDetail,getFormOptions,createCustomer,updateCustomer,deleteCustomer,transitionCustomer,createWorkOrderFromCustomer,addNote};
+module.exports={listCustomers,getCustomerDetail,getFormOptions,createCustomer,updateCustomer,deleteCustomer,transitionCustomer,createWorkOrderFromCustomer,addNote,upsertCustomerPricing,deleteCustomerPricing};

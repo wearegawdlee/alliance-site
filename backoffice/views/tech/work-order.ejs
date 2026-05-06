@@ -4,6 +4,16 @@
 
 <% if(workOrder.isLocked){ %><section class="card"><p class="muted"><strong>Locked:</strong> this work order is immutable because the associated invoice has been paid.</p></section><% } %>
 
+<% if(query && query.payment === 'success'){ %>
+<section class="card success-card"><p><strong>Payment started.</strong> Stripe will confirm the payment shortly. If the customer completed checkout, this invoice will update automatically.</p></section>
+<% } %>
+<% if(query && query.payment === 'cancelled'){ %>
+<section class="card warning-card"><p><strong>Payment cancelled.</strong> No payment was collected.</p></section>
+<% } %>
+<% if(query && query.payment === 'missing_items'){ %>
+<section class="card warning-card"><p><strong>Add service items first.</strong> The system needs at least one billable item before it can collect payment.</p></section>
+<% } %>
+
 <section class="card tech-job-summary">
   <h2><%= workOrder.customer %></h2>
   <p><strong>Address</strong><br><%= [workOrder.address_line_1, workOrder.city, workOrder.state, workOrder.postal_code].filter(Boolean).join(', ') || '—' %></p>
@@ -19,11 +29,41 @@
   <h3>Add Item</h3>
   <form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/line-items') %>" class="form-grid tech-form">
     <label>Category<select id="catalogCategoryFilter"><option value="">All categories</option><% (workOrder.catalogCategories || []).forEach(c=>{ %><option value="<%= c.id %>"><%= c.name %></option><% }) %></select></label>
-    <label>Catalog Item<select name="catalog_item_id" id="catalogItemSelect"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-category-id="<%= i.catalog_category_id || '' %>" data-price="<%= i.unit_price || '' %>" data-description="<%= i.name || '' %>"><%= i.category_name ? i.category_name + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.unit_price) %>)</option><% }) %></select></label>
+    <label>Catalog Item<select name="catalog_item_id" id="catalogItemSelect"><option value="">Custom / not in catalog</option><% workOrder.catalogItems.forEach(i=>{ %><option value="<%= i.id %>" data-category-id="<%= i.catalog_category_id || '' %>" data-price="<%= i.effective_unit_price || i.unit_price || '' %>" data-description="<%= i.name || '' %>"><%= i.category_name ? i.category_name + ' · ' : '' %><%= i.sku ? i.sku + ' · ' : '' %><%= i.name %> (<%= formatCurrency(i.effective_unit_price || i.unit_price) %><%= i.has_customer_price ? ' customer rate' : '' %>)</option><% }) %></select></label>
     <label>Description<input id="descriptionField" name="description" placeholder="What was done?"></label>
     <div class="grid two"><label>Qty<input type="number" step="0.01" name="quantity" value="1"></label><label>Price<input id="unitPriceField" type="number" step="0.01" name="unit_price" value=""></label></div>
     <button class="button primary full">Add Item</button>
   </form>
+  <% } %>
+</section>
+
+
+
+<% const activeInvoice = (workOrder.invoices || []).find(i => i.status_code !== 'paid') || (workOrder.invoices || [])[0]; %>
+<section class="card tech-payment-card" id="payment">
+  <div class="section-title-row"><h2>Collect Payment</h2><strong><%= formatCurrency(workOrder.lineItemTotal) %></strong></div>
+  <% if(activeInvoice){ %>
+    <p class="muted">Invoice <strong><%= activeInvoice.invoice_number || ('#' + activeInvoice.id) %></strong> · <%= activeInvoice.status %></p>
+  <% } else { %>
+    <p class="muted">No invoice exists yet. Collecting payment will prepare the invoice from the current service items.</p>
+  <% } %>
+  <% if(workOrder.invoice_status_code === 'paid' || (activeInvoice && activeInvoice.status_code === 'paid')){ %>
+    <p><strong>Paid.</strong> This job is locked because the invoice has been paid.</p>
+  <% } else if(!workOrder.lineItems.length){ %>
+    <p class="muted">Add at least one service item before collecting payment.</p>
+  <% } else { %>
+    <div class="tech-payment-actions">
+      <form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/collect-payment') %>">
+        <button class="button primary full">Collect Card Payment Now</button>
+      </form>
+      <form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/customer-payment-page') %>">
+        <button class="button secondary full">Open Customer Pay Page</button>
+      </form>
+    </div>
+    <p class="muted">Use “Collect Card Payment Now” when the customer is ready to pay on the spot. Use “Open Customer Pay Page” if you want to show the customer the invoice first or let them use their own phone.</p>
+    <% if(customerPaymentLink){ %>
+      <label>Customer payment link<input readonly value="<%= customerPaymentLink %>" onclick="this.select()"></label>
+    <% } %>
   <% } %>
 </section>
 
@@ -33,7 +73,7 @@
 </section>
 
 <% if(!workOrder.isLocked && workOrder.status_code !== 'cancelled'){ %>
-<section class="tech-sticky-actions"><a class="button secondary" href="#items">+ Item</a><a class="button secondary" href="#notes">+ Note</a><form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/complete') %>"><button class="button primary">Complete</button></form></section>
+<section class="tech-sticky-actions"><a class="button secondary" href="#items">+ Item</a><a class="button secondary" href="#notes">+ Note</a><a class="button secondary" href="#payment">Pay</a><form method="post" action="<%= routePath('/tech/work-orders/' + workOrder.id + '/complete') %>"><button class="button primary">Complete</button></form></section>
 <% } %>
 
 <script>

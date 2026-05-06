@@ -1,0 +1,51 @@
+<%- include('../partials-header', { title, hideSidebar: true }) %>
+<% const invoice = detail.invoice; const methods = overview.methods || []; const autopay = overview.autopay || {}; %>
+
+<section class="public-pay-hero compact">
+  <div class="brand public-brand"><div class="brand-mark">A</div><div><strong><%= appConfig.brand.name %></strong><span>Autopay setup</span></div></div>
+</section>
+
+<% if(query.setup === 'success'){ %><div class="notice success">Payment method saved. Choose it below and enable autopay.</div><% } %>
+<% if(query.setup === 'cancelled'){ %><div class="notice warning">Setup was cancelled. No payment method was saved.</div><% } %>
+<% if(query.autopay === 'updated'){ %><div class="notice success">Autopay settings updated.</div><% } %>
+
+<section class="card">
+  <h1>Set up automatic payments</h1>
+  <p class="muted">For <strong><%= invoice.customer_name %></strong>. Autopay can be used for recurring services only. One-time invoices remain card-only.</p>
+
+  <div class="button-row">
+    <form method="POST" action="/pay/autopay/<%= token %>/setup/card"><button class="button primary" type="submit">Add Card</button></form>
+    <form method="POST" action="/pay/autopay/<%= token %>/setup/ach"><button class="button secondary" type="submit">Add Bank Account / ACH</button></form>
+    <a class="button secondary" href="/pay/i/<%= token %>">Back to Invoice</a>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Saved Payment Methods</h2>
+  <% if(methods.length){ %>
+    <form method="POST" action="/pay/autopay/<%= token %>/settings" class="form-grid">
+      <label>Autopay Method
+        <select name="payment_method_id" required>
+          <option value="">Choose a saved method</option>
+          <% methods.forEach(method => { %>
+            <option value="<%= method.id %>" <%= Number(autopay.payment_method_id) === Number(method.id) ? 'selected' : '' %>>
+              <%= method.payment_type === 'ach' ? 'ACH' : 'Card' %>
+              <% if(method.brand){ %> · <%= method.brand %><% } %>
+              <% if(method.bank_name){ %> · <%= method.bank_name %><% } %>
+              <% if(method.last4){ %> ending <%= method.last4 %><% } %>
+            </option>
+          <% }) %>
+        </select>
+      </label>
+      <label>Optional Maximum Charge Amount
+        <input type="number" step="0.01" name="max_charge_amount" value="<%= autopay.max_charge_amount || '' %>" placeholder="Leave blank for no max">
+      </label>
+      <label class="check"><input type="checkbox" name="is_enabled" <%= autopay.is_enabled ? 'checked' : '' %>> Enable autopay for recurring services</label>
+      <button class="button primary" type="submit">Save Autopay Settings</button>
+    </form>
+  <% } else { %>
+    <p class="muted">No saved payment methods yet. Add a card or bank account above first.</p>
+  <% } %>
+</section>
+
+<%- include('../partials-footer') %>

@@ -1,0 +1,23 @@
+<%- include('../partials-header', { title, hideSidebar: true }) %>
+
+<section class="public-pay-hero">
+  <div class="brand public-brand"><div class="brand-mark">A</div><div><strong><%= appConfig.brand.name %></strong><span>Secure online payments</span></div></div>
+  <h1>Pay your invoice online</h1>
+  <p>Enter the email address or phone number associated with your account. We’ll show any unpaid invoices we find.</p>
+</section>
+
+<section class="login-card public-pay-card">
+  <% if(error){ %><div class="alert"><%= error %></div><% } %>
+  <form method="POST" action="/pay/lookup" class="form-grid">
+    <label>Email or Phone Number
+      <input name="identity" value="<%= values.identity || '' %>" placeholder="name@email.com or 404-555-1234" required autofocus>
+    </label>
+    <label>Invoice Number <span class="muted">optional shortcut</span>
+      <input name="invoice_number" value="<%= values.invoice_number || '' %>" placeholder="Example: INV-1001">
+    </label>
+    <button class="button primary full" type="submit">Find My Invoice</button>
+  </form>
+  <p class="muted public-help">For privacy, we only show unpaid invoices associated with the email or phone number on file.</p>
+</section>
+
+<%- include('../partials-footer') %>

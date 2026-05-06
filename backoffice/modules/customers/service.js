@@ -2,7 +2,7 @@ const repo = require('./repository');
 const recurringService = require('../recurringService/service');
 function toArray(value){ if(!value) return []; return Array.isArray(value)?value:[value]; }
 function clean(value){ const v=String(value||'').trim(); return v || null; }
-function normalizeCustomer(body,user){return {display_name: clean(body.display_name),customer_status_id: Number(body.customer_status_id),lead_source_id: body.lead_source_id?Number(body.lead_source_id):null,assigned_user_id: body.assigned_user_id?Number(body.assigned_user_id):null,company_name: clean(body.company_name),notes_summary: clean(body.notes_summary),first_name: clean(body.first_name),last_name: clean(body.last_name),phone: clean(body.phone),email: clean(body.email),preferred_contact_method: clean(body.preferred_contact_method),property_type_id: body.property_type_id?Number(body.property_type_id):null,location_label: clean(body.location_label)||'Service Location',address_line_1: clean(body.address_line_1),gate_code: clean(body.gate_code),access_notes: clean(body.access_notes),city: clean(body.city),state: clean(body.state)||'GA',postal_code: clean(body.postal_code),county: clean(body.county),service_line_ids: toArray(body.service_line_ids).map(Number).filter(Boolean),initial_note: clean(body.initial_note),author_user_id: user && user.id};}
+function normalizeCustomer(body,user){return {display_name: clean(body.display_name),customer_status_id: body.customer_status_id ? Number(body.customer_status_id) : null,lead_source_id: body.lead_source_id?Number(body.lead_source_id):null,assigned_user_id: body.assigned_user_id?Number(body.assigned_user_id):null,company_name: clean(body.company_name),notes_summary: clean(body.notes_summary),first_name: clean(body.first_name),last_name: clean(body.last_name),phone: clean(body.phone),email: clean(body.email),preferred_contact_method: clean(body.preferred_contact_method),property_type_id: body.property_type_id?Number(body.property_type_id):null,location_label: clean(body.location_label)||'Service Location',address_line_1: clean(body.address_line_1),gate_code: clean(body.gate_code),access_notes: clean(body.access_notes),city: clean(body.city),state: clean(body.state)||'GA',postal_code: clean(body.postal_code),county: clean(body.county),service_line_ids: toArray(body.service_line_ids).map(Number).filter(Boolean),initial_note: clean(body.initial_note),author_user_id: user && user.id};}
 async function listCustomers(filters){return repo.listCustomers(filters || {});}
 async function getCustomerDetail(id){return repo.getCustomerDetail(id);}
 async function getFormOptions(){return repo.getFormOptions();}
@@ -78,5 +78,9 @@ async function createWorkOrderFromCustomer(customerId,body,user){
   await recurringService.recordExistingWorkOrderRun(planId, workOrderId, firstRunDate, user);
   return workOrderId;
 }
+async function upsertCustomerPricing(customerId,body,user){
+  return repo.upsertCustomerPricing(customerId,{ catalog_item_id: body.catalog_item_id, override_unit_price: body.override_unit_price, reason: clean(body.reason) },user?.id);
+}
+async function deleteCustomerPricing(customerId,pricingId,user){return repo.deleteCustomerPricing(customerId,pricingId,user?.id);}
 async function addNote(customerId,userId,note){note=String(note||'').trim(); if(note) await repo.addNote(customerId,userId,note);}
-module.exports={listCustomers,getCustomerDetail,getFormOptions,createCustomer,updateCustomer,deleteCustomer,transitionCustomer,createWorkOrderFromCustomer,addNote};
+module.exports={listCustomers,getCustomerDetail,getFormOptions,createCustomer,updateCustomer,deleteCustomer,transitionCustomer,createWorkOrderFromCustomer,addNote,upsertCustomerPricing,deleteCustomerPricing};

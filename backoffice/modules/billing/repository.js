@@ -1,4 +1,5 @@
 const pool=require('../../db/pool');
+const { payableBase } = require('../payments/amounts');
 
 async function listInvoices(filters = {}){
   const params = [];
@@ -53,8 +54,8 @@ async function recordPayment(invoiceId,data){
     await client.query('BEGIN');
     const invoice=(await client.query(`SELECT i.*,s.code status_code FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.id=$1`,[invoiceId])).rows[0];
     if(!invoice) throw new Error('Invoice not found');
-    if(invoice.status_code !== 'submitted') throw new Error('Invoice must be submitted before payment can be recorded.');
-    const balanceDue = Number(invoice.balance_due || invoice.total_amount || 0);
+    if(!['submitted','payment_failed','payment_pending'].includes(invoice.status_code)) throw new Error('Invoice must be submitted before payment can be recorded.');
+    const balanceDue = payableBase(invoice);
     const priorPaid = Number((await client.query(`SELECT COALESCE(SUM(amount),0) paid FROM payments WHERE invoice_id=$1`,[invoiceId])).rows[0].paid || 0);
     const remaining = Math.max(0, balanceDue - priorPaid);
 

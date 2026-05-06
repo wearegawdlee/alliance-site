@@ -2,7 +2,7 @@
 <section class="page-header">
   <div>
     <h1>Customers</h1>
-    <p>Prospects and customers across all service lines.</p>
+    <p>Active and historical customer accounts. New leads live in Prospects until a work order is created.</p>
   </div>
   <a class="button primary" href="<%= routePath('/customers/new') %>">New Customer</a>
 </section>
@@ -17,15 +17,6 @@
         value="<%= filters.q || '' %>"
         placeholder="Name, phone, email, address, city..."
       >
-    </label>
-    <label>
-      Status
-      <select name="status_code">
-        <option value="">All statuses</option>
-        <% options.statuses.forEach(s=>{ %>
-          <option value="<%= s.code %>" <%= filters.status_code === s.code ? 'selected' : '' %>><%= s.name %></option>
-        <% }) %>
-      </select>
     </label>
     <label>
       Service
@@ -70,7 +61,6 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>Status</th>
         <th>Services</th>
         <th>Location</th>
         <th>Phone</th>
@@ -89,7 +79,6 @@
             <a href="<%= routePath('/customers/' + c.id) %>"><%= c.display_name %></a>
             <% if(c.company_name){ %><br><small><%= c.company_name %></small><% } %>
           </td>
-          <td><span class="badge"><%= c.status %></span></td>
           <td><%= c.services || '—' %></td>
           <td><%= [c.address_line_1,c.city,c.state].filter(Boolean).join(', ') || '—' %></td>
           <td><%= c.phone || '—' %></td>
