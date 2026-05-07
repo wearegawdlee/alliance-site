@@ -2,21 +2,26 @@ const pool = require('../../db/pool');
 
 async function getDashboard(){
   const [newLeads, uncontacted, attentionWorkOrders, today, upcoming, unpaidInvoices, recentActivity, counts] = await Promise.all([
-    pool.query(`SELECT c.id,c.display_name,c.created_at,ls.name lead_source,cc.phone,cc.email,cl.city,cl.state
-      FROM customers c
-      JOIN customer_statuses cs ON cs.id=c.customer_status_id
-      LEFT JOIN lead_sources ls ON ls.id=c.lead_source_id
+    pool.query(`SELECT c.id,c.display_name,l.id lead_id,l.created_at,ls.name lead_source,
+        COALESCE(l.submitted_phone,cc.phone) phone,
+        COALESCE(l.submitted_email,cc.email) email,
+        COALESCE(l.submitted_city,cl.city) city,
+        COALESCE(l.submitted_state,cl.state) state
+      FROM leads l
+      JOIN customers c ON c.id=l.customer_id
+      LEFT JOIN lead_sources ls ON ls.id=l.lead_source_id
       LEFT JOIN customer_contacts cc ON cc.customer_id=c.id AND cc.is_primary=true
       LEFT JOIN customer_locations cl ON cl.customer_id=c.id AND cl.is_primary=true
-      WHERE cs.code='prospect'
-      ORDER BY c.created_at DESC LIMIT 8`),
-    pool.query(`SELECT c.id,c.display_name,c.created_at,cc.phone,cc.email
-      FROM customers c
-      JOIN customer_statuses cs ON cs.id=c.customer_status_id
+      WHERE l.status IN ('new','contacted')
+      ORDER BY l.created_at DESC LIMIT 8`),
+    pool.query(`SELECT c.id,c.display_name,l.id lead_id,l.created_at,
+        COALESCE(l.submitted_phone,cc.phone) phone,
+        COALESCE(l.submitted_email,cc.email) email
+      FROM leads l
+      JOIN customers c ON c.id=l.customer_id
       LEFT JOIN customer_contacts cc ON cc.customer_id=c.id AND cc.is_primary=true
-      WHERE cs.code='prospect'
-        AND NOT EXISTS (SELECT 1 FROM customer_status_history h WHERE h.customer_id=c.id AND h.reason ILIKE '%contact%')
-      ORDER BY c.created_at DESC LIMIT 8`),
+      WHERE l.status='new' AND l.contacted_at IS NULL
+      ORDER BY l.created_at DESC LIMIT 8`),
     pool.query(`SELECT wo.id,wo.title,wo.scheduled_start_at,c.display_name customer,wos.code status_code,wos.name status,sl.name service_line,
         string_agg(DISTINCT u.display_name, ', ' ORDER BY u.display_name) assigned_to,
         COUNT(woa.id)::int assignment_count,
@@ -63,7 +68,7 @@ async function getDashboard(){
       ORDER BY i.due_date ASC NULLS LAST, i.created_at DESC LIMIT 8`),
     pool.query(`SELECT * FROM activity_events ORDER BY created_at DESC LIMIT 10`),
     pool.query(`SELECT
-      (SELECT count(*) FROM customers c JOIN customer_statuses cs ON cs.id=c.customer_status_id WHERE cs.code='prospect')::int AS prospect_count,
+      (SELECT count(*) FROM leads WHERE status IN ('new','contacted'))::int AS prospect_count,
       (SELECT count(*) FROM work_orders wo JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id WHERE wos.code='open')::int AS open_work_order_count,
       (SELECT count(*) FROM work_orders wo LEFT JOIN work_order_assignments woa ON woa.work_order_id=wo.id JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id WHERE woa.id IS NULL AND wos.code='open')::int AS unassigned_work_order_count,
       (SELECT count(*) FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE s.code NOT IN ('paid','void'))::int AS unpaid_invoice_count`)
