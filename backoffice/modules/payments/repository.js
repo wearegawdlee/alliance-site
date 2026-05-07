@@ -94,8 +94,47 @@ async function getInvoiceForOnlinePayment(invoiceId) {
 
 async function createPaymentAttempt(data) {
   const providerId = await getStripeProviderId();
-  const r = await pool.query(`INSERT INTO payment_attempts(invoice_id,customer_id,payment_provider_id,customer_payment_method_id,payment_type,status,amount,provider_payment_intent_id,provider_checkout_session_id,metadata) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`, [data.invoice_id, data.customer_id, providerId, data.customer_payment_method_id || null, data.payment_type, data.status, data.amount, data.provider_payment_intent_id || null, data.provider_checkout_session_id || null, data.metadata || {}]);
-  return r.rows[0];
+  const values = [
+    data.invoice_id,
+    data.customer_id,
+    providerId,
+    data.customer_payment_method_id || null,
+    data.payment_type,
+    data.status,
+    data.amount,
+    data.provider_payment_intent_id || null,
+    data.provider_checkout_session_id || null,
+    data.metadata || {}
+  ];
+
+  try {
+    const r = await pool.query(
+      `INSERT INTO payment_attempts(invoice_id,customer_id,payment_provider_id,customer_payment_method_id,payment_type,status,amount,provider_payment_intent_id,provider_checkout_session_id,metadata)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       RETURNING *`,
+      values
+    );
+    return r.rows[0];
+  } catch (e) {
+    // Stripe redirects/webhooks and browser double-clicks can race. The DB unique
+    // indexes are the final guardrail; if one wins, return the existing attempt.
+    if (e.code === '23505') {
+      if (data.provider_checkout_session_id) {
+        const existing = await getAttemptByCheckoutSession(data.provider_checkout_session_id);
+        if (existing) return existing;
+      }
+      if (data.provider_payment_intent_id) {
+        const existing = await getAttemptByPaymentIntent(data.provider_payment_intent_id);
+        if (existing) return existing;
+      }
+    }
+    throw e;
+  }
+}
+
+async function getAttemptByCheckoutSession(sessionId) {
+  const r = await pool.query(`SELECT * FROM payment_attempts WHERE provider_checkout_session_id=$1`, [sessionId]);
+  return r.rows[0] || null;
 }
 
 async function updateAttemptByCheckoutSession(sessionId, patch) {
@@ -213,5 +252,5 @@ module.exports = {
   getCustomerPaymentOverview, getCustomerProfile, upsertCustomerProfile, upsertPaymentMethod, setDefaultPaymentMethod,
   deactivatePaymentMethod, updateAutopay, getInvoiceForOnlinePayment, createPaymentAttempt, updateAttemptByCheckoutSession,
   updateAttemptByPaymentIntent, listInvoiceAttempts, recordProviderEvent, markProviderEventProcessed,
-  applySucceededPaymentFromAttempt, markAttemptFailed, setInvoicePaymentPending, getAttemptByPaymentIntent, getInvoicePaidAmount
+  applySucceededPaymentFromAttempt, markAttemptFailed, setInvoicePaymentPending, getAttemptByPaymentIntent, getAttemptByCheckoutSession, getInvoicePaidAmount
 };

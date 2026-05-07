@@ -15,4 +15,28 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 </script>
+<script>
+document.addEventListener('submit', function(event) {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement)) return;
+  const method = (form.getAttribute('method') || 'get').toLowerCase();
+  if (method === 'get') return;
+  if (form.dataset.allowDoubleSubmit === 'true') return;
+
+  const submitter = event.submitter || form.querySelector('button[type="submit"], button:not([type]), input[type="submit"]');
+  if (!submitter || submitter.disabled) return;
+
+  const label = submitter.dataset.loadingText || 'Working...';
+  if (submitter.tagName === 'INPUT') {
+    submitter.dataset.originalValue = submitter.value;
+    submitter.value = label;
+  } else {
+    submitter.dataset.originalText = submitter.textContent;
+    submitter.textContent = label;
+  }
+  submitter.disabled = true;
+  form.classList.add('is-submitting');
+});
+</script>
+
 </main></div></body></html>

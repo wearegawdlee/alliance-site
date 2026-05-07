@@ -23,9 +23,11 @@ async function getInvoicePdfBuffer(id, publicPaymentUrl){
   const content = await generateInvoicePdf(detail, { publicPaymentUrl });
   return { content, filename: invoicePdfFilename(detail), detail };
 }
-async function submitInvoice(id){
-  const invoice=await repo.submitInvoice(id);
-  if(invoice){
+async function submitInvoice(id, options = {}){
+  const result = await repo.submitInvoice(id, options);
+  const invoice = result?.invoice || result;
+
+  if(invoice && result?.emailSent !== false){
     const token = await publicPayments.ensureInvoicePaymentToken(invoice.id);
     const publicPaymentUrl = publicPayments.publicPayUrl(token);
     const invoiceWithLink = { ...invoice, public_payment_url: publicPaymentUrl };
@@ -33,7 +35,8 @@ async function submitInvoice(id){
     const pdfAttachment = await buildInvoicePdfAttachment(invoice.id, publicPaymentUrl);
     notifications.notifyCustomerInvoiceSubmitted(invoiceWithLink, pdfAttachment ? [pdfAttachment] : []);
   }
-  return invoice;
+
+  return result;
 }
 async function recordPayment(id,body){
   const invoice = await repo.recordPayment(id,{payment_method_id:body.payment_method_id?Number(body.payment_method_id):null,amount:body.amount?Number(body.amount):null,reference_number:clean(body.reference_number),notes:clean(body.notes)});

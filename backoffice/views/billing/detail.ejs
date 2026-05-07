@@ -7,12 +7,12 @@
     <a class="button secondary" href="<%= routePath('/billing') %>">← Back to Billing</a>
     <a class="button secondary" href="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/pdf') %>" target="_blank">Download PDF</a>
     <% if(invoice.invoice.status_code === 'created'){ %>
-      <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><button class="button primary">Submit</button></form>
+      <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><button class="button primary" data-loading-text="Sending...">Submit</button></form>
     <% } %>
     <% if(['submitted','payment_failed'].includes(invoice.invoice.status_code)){ %>
-      <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><button class="button secondary">Send Reminder</button></form>
-      <form method="POST" action="<%= routePath('/payments/invoices/' + invoice.invoice.id + '/card-checkout') %>" class="inline-form"><button class="button primary">Send / Open Card Checkout</button></form>
-      <form method="POST" action="<%= routePath('/payments/invoices/' + invoice.invoice.id + '/autopay-charge') %>" class="inline-form"><button class="button secondary">Charge Saved Autopay</button></form>
+      <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><input type="hidden" name="resend" value="1"><button class="button secondary" data-loading-text="Sending...">Send Reminder</button></form>
+      <form method="POST" action="<%= routePath('/payments/invoices/' + invoice.invoice.id + '/card-checkout') %>" class="inline-form"><button class="button primary" data-loading-text="Opening...">Send / Open Card Checkout</button></form>
+      <form method="POST" action="<%= routePath('/payments/invoices/' + invoice.invoice.id + '/autopay-charge') %>" class="inline-form"><button class="button secondary" data-loading-text="Charging...">Charge Saved Autopay</button></form>
       <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/payments') %>" class="inline-form payment-form"><span class="muted">Balance: <strong><%= formatCurrency(amountDue) %></strong></span><input type="number" step="0.01" name="amount" value="<%= amountDue.toFixed(2) %>" class="short-input"><select name="payment_method_id"><option value="">Method</option><% paymentMethods.forEach(method => { %><option value="<%= method.id %>"><%= method.name %></option><% }) %></select><button class="button secondary" type="submit">Record Manual Payment</button></form>
     <% } %>
     <% if(invoice.invoice.status_code === 'payment_pending'){ %><span class="badge">Payment Pending</span><% } %>
