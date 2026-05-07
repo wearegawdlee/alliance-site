@@ -66,7 +66,8 @@ async function sendEmail(event) {
     to: splitRecipients(event.to || process.env.NOTIFICATION_EMAIL_TO),
     subject: event.subject,
     text: event.text,
-    html: event.html || textToHtml(event.text)
+    html: event.html || textToHtml(event.text),
+    attachments: event.attachments || undefined
   });
 }
 
@@ -218,27 +219,32 @@ function notifyInvoiceSubmitted(invoice) {
 }
 
 
-function notifyCustomerInvoiceSubmitted(invoice) {
+function notifyCustomerInvoiceSubmitted(invoice, attachments = []) {
   if (!invoice.customer_email || !invoice.public_payment_url) {
     console.log(`[invoice email skipped] no customer email or payment link for invoice ${invoice.id}`);
     return;
   }
+  const amountDue = `$${payableBase(invoice).toFixed(2)}`;
   fireAndForget(notify({
     eventType: 'customer_invoice.submitted',
     to: invoice.customer_email,
     subject: `Your invoice from Alliance Home Services: ${invoice.invoice_number || `Invoice #${invoice.id}`}`,
     metadata: { invoiceId: invoice.id, workOrderId: invoice.work_order_id },
+    attachments,
     text: [
       `Hi ${invoice.customer || 'there'},`,
       '',
-      'Your invoice is ready.',
+      'Your invoice is ready. A PDF copy is attached for your records.',
       '',
       `Invoice: ${invoice.invoice_number || invoice.id}`,
-      `Amount Due: $${payableBase(invoice).toFixed(2)}`,
+      `Amount Due: ${amountDue}`,
+      invoice.work_order_title ? `Service: ${invoice.work_order_title}` : null,
       '',
-      `Pay securely here: ${invoice.public_payment_url}`,
+      `You can pay your invoice securely here: ${invoice.public_payment_url}`,
       '',
-      'Thank you,',
+      'If you have any questions concerning your invoice, please contact Adriana at 770-557-8616.',
+      '',
+      'Thank you for your business,',
       'Alliance Home Services'
     ].filter(Boolean).join('\n')
   }));

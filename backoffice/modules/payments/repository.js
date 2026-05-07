@@ -152,14 +152,37 @@ async function applySucceededPaymentFromAttempt(attemptId, providerReference) {
     if (!invoice) throw new Error('Invoice not found.');
     const methodCode = attempt.payment_type === 'ach' ? 'stripe_ach' : 'stripe_card';
     const paymentMethodId = await getPaymentMethodCodeId(client, methodCode);
-    await client.query(`INSERT INTO payments(invoice_id,payment_method_id,amount,reference_number,notes) VALUES($1,$2,$3,$4,$5)`, [attempt.invoice_id, paymentMethodId, attempt.amount, providerReference || attempt.provider_payment_intent_id, 'Online payment via Stripe']);
+    const reference = providerReference || attempt.provider_payment_intent_id;
+
+    const existingPayment = reference
+      ? (await client.query(`SELECT id FROM payments WHERE invoice_id=$1 AND reference_number=$2 LIMIT 1`, [attempt.invoice_id, reference])).rows[0]
+      : null;
+
+    if (!existingPayment) {
+      await client.query(
+        `INSERT INTO payments(invoice_id,payment_method_id,amount,reference_number,notes) VALUES($1,$2,$3,$4,$5)`,
+        [attempt.invoice_id, paymentMethodId, attempt.amount, reference, 'Online payment via Stripe']
+      );
+    }
+
     await client.query(`UPDATE payment_attempts SET status='succeeded', updated_at=current_timestamp WHERE id=$1`, [attempt.id]);
     const paid = Number((await client.query(`SELECT COALESCE(SUM(amount),0) paid FROM payments WHERE invoice_id=$1`, [attempt.invoice_id])).rows[0].paid || 0);
-    const balanceDue = payableBase(invoice);
-    if (paid >= balanceDue) {
+    const payable = payableBase(invoice);
+    const remaining = Math.max(0, Number((payable - paid).toFixed(2)));
+
+    if (remaining <= 0) {
       const paidStatus = await getInvoiceStatusId(client, 'paid');
-      await client.query(`UPDATE invoices SET invoice_status_id=$1, paid_at=current_timestamp, updated_at=current_timestamp WHERE id=$2`, [paidStatus, attempt.invoice_id]);
+      await client.query(
+        `UPDATE invoices SET invoice_status_id=$1, balance_due=0, paid_at=COALESCE(paid_at, current_timestamp), updated_at=current_timestamp WHERE id=$2`,
+        [paidStatus, attempt.invoice_id]
+      );
+    } else {
+      await client.query(
+        `UPDATE invoices SET balance_due=$1, updated_at=current_timestamp WHERE id=$2`,
+        [remaining, attempt.invoice_id]
+      );
     }
+
     await client.query('COMMIT');
     return attempt;
   } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }

@@ -20,6 +20,7 @@ const techRoutes = require('./modules/tech/routes');
 const accountRoutes = require('./modules/account/routes');
 const paymentRoutes = require('./modules/payments/routes');
 const publicPaymentRoutes = require('./modules/publicPayments/routes');
+const stripeSandboxRoutes = require('./modules/stripeSandbox/routes');
 const paymentService = require('./modules/payments/service');
 const { requireAuth, requireRole, requireAnyRole, hasRole, hasAnyRole, redirectForRole } = require('./middleware/auth');
 
@@ -56,6 +57,29 @@ app.use((req, res, next) => {
   res.locals.hasRole = (role) => hasRole(req.session.user, role);
   res.locals.hasAnyRole = (roles) => hasAnyRole(req.session.user, roles);
   res.locals.isTechnicianOnly = hasRole(req.session.user, 'technician') && !hasAnyRole(req.session.user, ['admin', 'finance']);
+
+  const queuedFlash = req.session.flash;
+  const flashMessages = Array.isArray(queuedFlash)
+    ? queuedFlash
+    : queuedFlash
+      ? [queuedFlash]
+      : [];
+
+  res.locals.flashMessages = flashMessages;
+  res.locals.flash = flashMessages[0] || null;
+  delete req.session.flash;
+
+  req.flash = (type, message) => {
+    if (!req.session.flash) req.session.flash = [];
+    if (!Array.isArray(req.session.flash)) req.session.flash = [req.session.flash];
+    req.session.flash.push({ type, message });
+  };
+
+  req.redirectWithFlash = (target, type, message) => {
+    req.flash(type, message);
+    return res.redirect(req.app.locals.routePath(target));
+  };
+
   next();
 });
 
@@ -94,6 +118,7 @@ app.use(app.locals.routePath('/catalog'), requireAuth, requireAnyRole(['admin','
 app.use(app.locals.routePath('/tax-rates'), requireAuth, requireAnyRole(['admin','finance']), taxRateRoutes);
 app.use(app.locals.routePath('/recurring-service'), requireAuth, requireAnyRole(['admin','finance']), recurringServiceRoutes);
 app.use(app.locals.routePath('/users'), requireAuth, requireRole('admin'), userRoutes);
+app.use(app.locals.routePath('/admin/stripe-sandbox'), requireAuth, requireRole('admin'), stripeSandboxRoutes);
 app.use(app.locals.routePath('/tech'), requireAuth, requireAnyRole(['admin','technician']), techRoutes);
 app.use(app.locals.routePath('/payments'), paymentRoutes);
 app.use(app.locals.routePath('/account'), requireAuth, accountRoutes);

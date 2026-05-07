@@ -22,6 +22,8 @@ function invoiceSelect() {
       cl.state,
       cl.postal_code,
       wo.title work_order_title,
+      sl.code service_line_code,
+      sl.name service_line_name,
       COALESCE(SUM(p.amount),0) paid_amount,
       GREATEST(
         0,
@@ -41,6 +43,7 @@ function invoiceJoins() {
     LEFT JOIN customer_contacts cc ON cc.customer_id = c.id AND cc.is_primary = true
     LEFT JOIN customer_locations cl ON cl.id = i.customer_location_id
     LEFT JOIN work_orders wo ON wo.id = i.work_order_id
+    LEFT JOIN service_lines sl ON sl.id = wo.service_line_id
     LEFT JOIN payments p ON p.invoice_id = i.id
   `;
 }
@@ -48,7 +51,7 @@ function invoiceJoins() {
 function invoiceGroupBy() {
   return `
     GROUP BY i.id, s.code, s.name, c.id, c.display_name, cc.email, cc.phone,
-      cl.address_line_1, cl.address_line_2, cl.city, cl.state, cl.postal_code, wo.title
+      cl.address_line_1, cl.address_line_2, cl.city, cl.state, cl.postal_code, wo.title, sl.code, sl.name
   `;
 }
 

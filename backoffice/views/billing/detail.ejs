@@ -5,6 +5,7 @@
   <div><h1><%= invoice.invoice.invoice_number || ('Invoice #' + invoice.invoice.id) %></h1><p>Invoice detail and itemized charges.</p></div>
   <div class="button-row">
     <a class="button secondary" href="<%= routePath('/billing') %>">← Back to Billing</a>
+    <a class="button secondary" href="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/pdf') %>" target="_blank">Download PDF</a>
     <% if(invoice.invoice.status_code === 'created'){ %>
       <form method="POST" action="<%= routePath('/billing/invoices/' + invoice.invoice.id + '/submit') %>" class="inline-form"><button class="button primary">Submit</button></form>
     <% } %>

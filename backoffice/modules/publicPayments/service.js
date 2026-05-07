@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const repo = require('./repository');
 const paymentsService = require('../payments/service');
+const { generateInvoicePdf, invoicePdfFilename } = require('../invoices/pdf');
 
 function newToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -58,11 +59,19 @@ async function getLookupResults(token) {
   return results;
 }
 
+
+async function getInvoicePdfByToken(token) {
+  const detail = await repo.getInvoiceByToken(token);
+  if (!detail) return null;
+  const content = await generateInvoicePdf(detail, { publicPaymentUrl: publicPayUrl(token) });
+  return { content, filename: invoicePdfFilename(detail), detail };
+}
+
 async function createPublicInvoiceCardCheckoutSession(req, token) {
   const invoiceId = await repo.getInvoiceIdByToken(token);
   if (!invoiceId) throw new Error('Payment link not found.');
   return paymentsService.createInvoiceCardCheckoutSession(req, invoiceId, {
-    successPath: `/pay/success?token=${encodeURIComponent(token)}`,
+    successPath: `/pay/success?token=${encodeURIComponent(token)}&session_id={CHECKOUT_SESSION_ID}`,
     cancelPath: `/pay/i/${encodeURIComponent(token)}?payment=cancelled`,
     metadata: { public_payment: 'true' }
   });
@@ -85,6 +94,10 @@ async function enableAutopayFromPublicToken(token, body) {
   return paymentsService.updateAutopay(detail.invoice.customer_id, body);
 }
 
+async function reconcileCheckoutSession(sessionId) {
+  return paymentsService.reconcileCheckoutSession(sessionId);
+}
+
 async function getAutopayOverview(token) {
   const detail = await repo.getInvoiceByToken(token);
   if (!detail) return null;
@@ -102,5 +115,7 @@ module.exports = {
   createPublicAutopaySetupSession,
   enableAutopayFromPublicToken,
   getAutopayOverview,
+  reconcileCheckoutSession,
+  getInvoicePdfByToken,
   publicPayUrl
 };

@@ -15,13 +15,14 @@ async function getInvoiceStatusId(client, code){ const r=await client.query(`SEL
 
 async function getInvoiceDetail(id){
   const invoiceResult = await pool.query(`
-    SELECT i.*,s.code status_code,s.name status_name,c.id customer_id,c.display_name customer_name,cc.email customer_email,wo.id work_order_id,wo.title work_order_title,wos.code work_order_status_code,wos.name work_order_status,tr.county tax_county,tr.city tax_city,tr.postal_code tax_postal_code
+    SELECT i.*,s.code status_code,s.name status_name,c.id customer_id,c.display_name customer_name,cc.email customer_email,wo.id work_order_id,wo.title work_order_title,wos.code work_order_status_code,wos.name work_order_status,sl.code service_line_code,sl.name service_line_name,tr.county tax_county,tr.city tax_city,tr.postal_code tax_postal_code
     FROM invoices i
     JOIN invoice_statuses s ON s.id=i.invoice_status_id
     JOIN customers c ON c.id=i.customer_id
     LEFT JOIN customer_contacts cc ON cc.customer_id=c.id AND cc.is_primary=true
     LEFT JOIN work_orders wo ON wo.id=i.work_order_id
     LEFT JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id
+    LEFT JOIN service_lines sl ON sl.id=wo.service_line_id
     LEFT JOIN tax_rates tr ON tr.id=i.tax_rate_id
     WHERE i.id=$1`, [id]);
   const lineItems = await pool.query(`SELECT * FROM invoice_line_items WHERE invoice_id=$1 ORDER BY id`, [id]);

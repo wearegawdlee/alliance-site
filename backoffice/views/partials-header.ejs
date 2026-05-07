@@ -21,10 +21,10 @@
             <div class="nav-group"><div class="nav-group-title">Billing</div><a href="<%= routePath('/billing') %>">Work Invoicing</a><a href="<%= routePath('/catalog') %>">Catalog</a><a href="<%= routePath('/tax-rates') %>">Tax Rates</a></div>
           <% } %>
           <% if(hasAnyRole(['admin','technician'])){ %><div class="nav-group"><div class="nav-group-title">Technician</div><a href="<%= routePath('/tech/dashboard') %>">Tech Dashboard</a></div><% } %>
-          <div class="nav-group"><div class="nav-group-title">Account</div><a href="<%= routePath('/account') %>">My Account</a><% if(hasRole('admin')){ %><a href="<%= routePath('/users') %>">User Management</a><% } %></div>
+          <div class="nav-group"><div class="nav-group-title">Account</div><a href="<%= routePath('/account') %>">My Account</a><% if(hasRole('admin')){ %><a href="<%= routePath('/users') %>">User Management</a><a href="<%= routePath('/admin/stripe-sandbox') %>">Stripe Sandbox</a><% } %></div>
         </nav>
         <div class="sidebar-footer">
           <div class="user"><%= currentUser && currentUser.email %></div>
           <form method="post" action="<%= routePath('/logout') %>"><button class="button secondary full">Log Out</button></form>
         </div>
-      </aside><% } %><main class="main">
+      </aside><% } %><main class="main"><% const activeFlashMessages = typeof flashMessages !== 'undefined' && flashMessages ? flashMessages : (flash && flash.message ? [flash] : []); %><% activeFlashMessages.forEach((message) => { %><section class="notice <%= message.type === 'error' ? 'danger' : message.type %>" role="status"><%= message.message %></section><% }) %>
