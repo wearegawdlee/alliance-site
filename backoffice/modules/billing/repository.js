@@ -35,17 +35,31 @@ async function getInvoiceSummary(invoiceId){
   return r.rows[0] || null;
 }
 
-async function submitInvoice(invoiceId){
+async function submitInvoice(invoiceId, options = {}){
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
-    const invoice=(await client.query(`SELECT i.*,s.code status_code FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.id=$1`,[invoiceId])).rows[0];
+    const invoice=(await client.query(`SELECT i.*,s.code status_code FROM invoices i JOIN invoice_statuses s ON s.id=i.invoice_status_id WHERE i.id=$1 FOR UPDATE`,[invoiceId])).rows[0];
     if(!invoice) throw new Error('Invoice not found');
     if(invoice.status_code==='paid') throw new Error('Paid invoices cannot be submitted again.');
-    const submitted=await getInvoiceStatusId(client,'submitted');
-    await client.query(`UPDATE invoices SET invoice_status_id=$1,submitted_at=current_timestamp,updated_at=current_timestamp WHERE id=$2`,[submitted,invoiceId]);
+
+    const alreadySubmitted = ['submitted','payment_pending','payment_failed'].includes(invoice.status_code);
+    const shouldResend = options.resend === true || options.resend === '1' || options.resend === 'on';
+
+    if (alreadySubmitted && !shouldResend) {
+      await client.query('COMMIT');
+      const summary = await getInvoiceSummary(invoiceId);
+      return { invoice: summary, alreadySubmitted: true, emailSent: false };
+    }
+
+    if (!alreadySubmitted) {
+      const submitted=await getInvoiceStatusId(client,'submitted');
+      await client.query(`UPDATE invoices SET invoice_status_id=$1,submitted_at=COALESCE(submitted_at,current_timestamp),updated_at=current_timestamp WHERE id=$2`,[submitted,invoiceId]);
+    }
+
     await client.query('COMMIT');
-    return getInvoiceSummary(invoiceId);
+    const summary = await getInvoiceSummary(invoiceId);
+    return { invoice: summary, alreadySubmitted, emailSent: true, resent: alreadySubmitted && shouldResend };
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
 

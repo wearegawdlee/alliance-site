@@ -279,6 +279,10 @@ async function findTaxRateForWorkOrder(client, workOrderId) {
 }
 
 async function syncInvoiceForWorkOrder(client, id, userId, notes) {
+  // Serialize invoice generation per work order. This protects against browser
+  // double-clicks, technician/mobile retries, and concurrent completion attempts.
+  await client.query('SELECT pg_advisory_xact_lock($1)', [Number(id)]);
+
   const wo = (await client.query(`SELECT * FROM work_orders WHERE id=$1`, [id])).rows[0];
   const lineItems = (await client.query(`SELECT * FROM work_order_line_items WHERE work_order_id=$1 ORDER BY sort_order, id`, [id])).rows;
   if (!lineItems.length) return null;

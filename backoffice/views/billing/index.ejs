@@ -23,7 +23,7 @@
   <form method="post" action="<%= routePath('/billing/invoices/batch-submit') %>">
     <input type="hidden" name="status_filter" value="<%= statusFilter || 'unpaid' %>">
     <div class="button-row" style="margin-bottom: 1rem;">
-      <button class="button primary" type="submit">Send Selected Invoices</button>
+      <button class="button primary" type="submit" data-loading-text="Sending...">Send Selected Invoices</button>
     </div>
 
     <table class="data-table">

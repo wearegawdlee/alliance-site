@@ -76,15 +76,18 @@ async function createInvoiceCardCheckoutSession(req, invoiceId, options = {}) {
   if (!amount || amount <= 0) throw new Error('Invoice has no balance due.');
   const stripe = getStripe();
   const providerCustomerId = await ensureStripeCustomer(invoice.customer_id);
+  const amountCents = Math.round(amount * 100);
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     customer: providerCustomerId,
     payment_method_types: ['card'],
-    line_items: [{ price_data: { currency: 'usd', product_data: { name: invoice.invoice_number || `Invoice #${invoice.id}` }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
+    line_items: [{ price_data: { currency: 'usd', product_data: { name: invoice.invoice_number || `Invoice #${invoice.id}` }, unit_amount: amountCents }, quantity: 1 }],
     success_url: checkoutUrl(req, options.successPath || `/billing/invoices/${invoice.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`),
     cancel_url: checkoutUrl(req, options.cancelPath || `/billing/invoices/${invoice.id}?payment=cancelled`),
     payment_intent_data: { metadata: { internal_invoice_id: String(invoice.id), internal_customer_id: String(invoice.customer_id), payment_type: 'card', ...(options.metadata || {}) } },
     metadata: { internal_invoice_id: String(invoice.id), internal_customer_id: String(invoice.customer_id), payment_type: 'card', ...(options.metadata || {}) }
+  }, {
+    idempotencyKey: options.idempotencyKey || `invoice_${invoice.id}_card_checkout_${amountCents}`
   });
   await repo.createPaymentAttempt({ invoice_id: invoice.id, customer_id: invoice.customer_id, payment_type: 'card', status: 'checkout_created', amount, provider_checkout_session_id: session.id, metadata: { online: true, ...(options.metadata || {}) } });
   return session.url;
@@ -106,10 +109,13 @@ async function chargeInvoiceWithSavedMethod(invoiceId) {
   if (overview.autopay.max_charge_amount && amount > Number(overview.autopay.max_charge_amount)) throw new Error('Invoice exceeds customer autopay max charge amount.');
   const stripe = getStripe();
   const profile = await repo.getCustomerProfile(overviewInvoice.customer_id);
+  const amountCents = Math.round(amount * 100);
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(amount * 100), currency: 'usd', customer: profile.provider_customer_id,
+    amount: amountCents, currency: 'usd', customer: profile.provider_customer_id,
     payment_method: method.provider_payment_method_id, off_session: true, confirm: true,
     metadata: { internal_invoice_id: String(invoiceId), internal_customer_id: String(overviewInvoice.customer_id), payment_type: method.payment_type }
+  }, {
+    idempotencyKey: `invoice_${invoiceId}_autopay_${method.id}_${amountCents}`
   });
   const attempt = await repo.createPaymentAttempt({ invoice_id: invoiceId, customer_id: overviewInvoice.customer_id, customer_payment_method_id: method.id, payment_type: method.payment_type, status: 'processing', amount, provider_payment_intent_id: paymentIntent.id, metadata: { autopay: true } });
   if (paymentIntent.status === 'succeeded') {

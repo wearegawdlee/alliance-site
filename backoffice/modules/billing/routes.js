@@ -52,9 +52,17 @@ router.get('/invoices/:id', async (req, res, next) => {
 
 router.post('/invoices/:id/submit', async (req, res) => {
   try {
-    const invoice = await service.submitInvoice(req.params.id);
+    const result = await service.submitInvoice(req.params.id, { resend: req.body.resend });
+    const invoice = result?.invoice || result;
     const label = invoice?.invoice_number || `#${req.params.id}`;
-    req.flash('success', `Invoice ${label} was sent successfully.`);
+
+    if (result?.alreadySubmitted && !result?.emailSent) {
+      req.flash('success', `Invoice ${label} had already been submitted. No duplicate email was sent.`);
+    } else if (result?.resent) {
+      req.flash('success', `Invoice ${label} reminder was sent successfully.`);
+    } else {
+      req.flash('success', `Invoice ${label} was sent successfully.`);
+    }
   } catch (e) {
     req.flash('error', `Invoice could not be sent: ${e.message}`);
   }
@@ -67,8 +75,13 @@ router.post('/invoices/batch-submit', async (req, res) => {
   const statusFilter = encodeURIComponent(req.body.status_filter || 'unpaid');
 
   try {
-    await service.batchSubmitInvoices(ids);
-    req.flash('success', ids.length === 1 ? 'Invoice was sent successfully.' : `${ids.length} invoices were sent successfully.`);
+    const results = await service.batchSubmitInvoices(ids);
+    const sentCount = results.filter(r => r && r.emailSent !== false).length;
+    const skippedCount = results.length - sentCount;
+    const parts = [];
+    if (sentCount) parts.push(sentCount === 1 ? '1 invoice was sent' : `${sentCount} invoices were sent`);
+    if (skippedCount) parts.push(skippedCount === 1 ? '1 already-submitted invoice was skipped' : `${skippedCount} already-submitted invoices were skipped`);
+    req.flash('success', parts.length ? `${parts.join('; ')}.` : 'No invoices were selected.');
   } catch (e) {
     req.flash('error', `Invoices could not be sent: ${e.message}`);
   }
