@@ -81,7 +81,7 @@ async function createInvoiceCardCheckoutSession(req, invoiceId, options = {}) {
     customer: providerCustomerId,
     payment_method_types: ['card'],
     line_items: [{ price_data: { currency: 'usd', product_data: { name: invoice.invoice_number || `Invoice #${invoice.id}` }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
-    success_url: checkoutUrl(req, options.successPath || `/billing/invoices/${invoice.id}?payment=success`),
+    success_url: checkoutUrl(req, options.successPath || `/billing/invoices/${invoice.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`),
     cancel_url: checkoutUrl(req, options.cancelPath || `/billing/invoices/${invoice.id}?payment=cancelled`),
     payment_intent_data: { metadata: { internal_invoice_id: String(invoice.id), internal_customer_id: String(invoice.customer_id), payment_type: 'card', ...(options.metadata || {}) } },
     metadata: { internal_invoice_id: String(invoice.id), internal_customer_id: String(invoice.customer_id), payment_type: 'card', ...(options.metadata || {}) }
@@ -122,6 +122,64 @@ async function chargeInvoiceWithSavedMethod(invoiceId) {
   return attempt;
 }
 
+
+async function applySucceededPaymentIntent(paymentIntent, extraMetadata = {}) {
+  const pi = typeof paymentIntent === 'string'
+    ? await getStripe().paymentIntents.retrieve(paymentIntent)
+    : paymentIntent;
+
+  if (!pi || pi.status !== 'succeeded') return null;
+
+  let attempt = await repo.getAttemptByPaymentIntent(pi.id);
+  const invoiceId = pi.metadata?.internal_invoice_id || extraMetadata.internal_invoice_id;
+
+  if (!attempt && invoiceId) {
+    const invoice = await repo.getInvoiceForOnlinePayment(invoiceId);
+    if (invoice) {
+      attempt = await repo.createPaymentAttempt({
+        invoice_id: invoice.id,
+        customer_id: invoice.customer_id,
+        payment_type: pi.metadata?.payment_type || extraMetadata.payment_type || 'card',
+        status: 'processing',
+        amount: Number(pi.amount_received || pi.amount) / 100,
+        provider_payment_intent_id: pi.id,
+        metadata: { reconcile_created: true, ...extraMetadata }
+      });
+    }
+  }
+
+  if (!attempt) return null;
+
+  await repo.applySucceededPaymentFromAttempt(attempt.id, pi.id);
+  const invoice = await billingRepo.getInvoiceSummary(attempt.invoice_id);
+  if (invoice) notifications.notifyReceipt(invoice);
+  return attempt;
+}
+
+async function reconcileCheckoutSession(sessionId) {
+  if (!sessionId) return null;
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['payment_intent'] });
+
+  if (session.mode !== 'payment') return { session, attempt: null };
+
+  const attempt = await repo.updateAttemptByCheckoutSession(session.id, {
+    status: session.payment_status === 'paid' ? 'processing' : 'checkout_completed',
+    provider_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null
+  });
+
+  if (session.payment_status === 'paid' && session.payment_intent) {
+    const paymentIntent = typeof session.payment_intent === 'string'
+      ? await stripe.paymentIntents.retrieve(session.payment_intent)
+      : session.payment_intent;
+    const applied = await applySucceededPaymentIntent(paymentIntent, session.metadata || {});
+    return { session, attempt: applied || attempt };
+  }
+
+  if (attempt) await repo.setInvoicePaymentPending(attempt.invoice_id);
+  return { session, attempt };
+}
+
 async function handleStripeWebhook(rawBody, signature) {
   const stripe = getStripe();
   const event = process.env.STRIPE_WEBHOOK_SECRET ? stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET) : JSON.parse(rawBody.toString('utf8'));
@@ -157,17 +215,7 @@ async function handleStripeWebhook(rawBody, signature) {
   }
 
   if (event.type === 'payment_intent.succeeded') {
-    const pi = event.data.object;
-    let attempt = await repo.getAttemptByPaymentIntent(pi.id);
-    if (!attempt && pi.metadata?.internal_invoice_id) {
-      const invoice = await repo.getInvoiceForOnlinePayment(pi.metadata.internal_invoice_id);
-      if (invoice) attempt = await repo.createPaymentAttempt({ invoice_id: invoice.id, customer_id: invoice.customer_id, payment_type: pi.metadata.payment_type || 'card', status: 'processing', amount: Number(pi.amount_received || pi.amount) / 100, provider_payment_intent_id: pi.id, metadata: { webhook_created: true } });
-    }
-    if (attempt) {
-      await repo.applySucceededPaymentFromAttempt(attempt.id, pi.id);
-      const invoice = await billingRepo.getInvoiceSummary(attempt.invoice_id);
-      if (invoice) notifications.notifyReceipt(invoice);
-    }
+    await applySucceededPaymentIntent(event.data.object, { webhook_created: true });
   }
 
   if (event.type === 'payment_intent.payment_failed') {
@@ -181,4 +229,4 @@ async function handleStripeWebhook(rawBody, signature) {
 
 async function listInvoiceAttempts(invoiceId) { return repo.listInvoiceAttempts(invoiceId); }
 
-module.exports = { getCustomerPaymentOverview, createSetupCheckoutSession, createInvoiceCardCheckoutSession, setDefaultPaymentMethod, deactivatePaymentMethod, updateAutopay, chargeInvoiceWithSavedMethod, handleStripeWebhook, listInvoiceAttempts };
+module.exports = { getCustomerPaymentOverview, createSetupCheckoutSession, createInvoiceCardCheckoutSession, setDefaultPaymentMethod, deactivatePaymentMethod, updateAutopay, chargeInvoiceWithSavedMethod, handleStripeWebhook, reconcileCheckoutSession, listInvoiceAttempts };

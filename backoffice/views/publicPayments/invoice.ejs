@@ -1,58 +1,130 @@
 <%- include('../partials-header', { title, hideSidebar: true }) %>
-<% const invoice = detail.invoice; const paid = Number(detail.paidAmount || 0); const storedBalance = Number(invoice.balance_due || 0); const computedBalance = Math.max(0, Number(invoice.total_amount || 0) - Number(invoice.deposit_amount || 0)); const payableBase = invoice.status_code === 'paid' ? 0 : Math.max(storedBalance, computedBalance); const amountDue = Math.max(0, payableBase - paid); const serviceAddress = [invoice.address_line_1, invoice.address_line_2, invoice.city, invoice.state, invoice.postal_code].filter(Boolean).join(', '); %>
+<%
+  const invoice = detail.invoice;
+  const paid = Number(detail.paidAmount || 0);
+  const storedBalance = Number(invoice.balance_due || 0);
+  const computedBalance = Math.max(0, Number(invoice.total_amount || 0) - Number(invoice.deposit_amount || 0));
+  const payableBase = invoice.status_code === 'paid' ? 0 : Math.max(storedBalance, computedBalance);
+  const amountDue = Math.max(0, payableBase - paid);
+  const serviceAddress = [invoice.address_line_1, invoice.address_line_2, invoice.city, invoice.state, invoice.postal_code].filter(Boolean).join(', ');
+  const isPoolInvoice = invoice.service_line_code === 'pools' || /pool/i.test(invoice.service_line_name || invoice.work_order_title || '');
+  const isGarageInvoice = invoice.service_line_code === 'garage_doors' || /garage/i.test(invoice.service_line_name || invoice.work_order_title || '');
+  const invoiceDate = invoice.issue_date || invoice.submitted_at || invoice.created_at;
+  const statusLabel = invoice.status_code === 'paid' ? 'Paid' : invoice.status_code === 'payment_pending' ? 'Payment Pending' : invoice.status_code === 'payment_failed' ? 'Payment Failed' : (invoice.status_name || 'Created');
+%>
 
-<section class="public-pay-hero compact">
-  <div class="brand public-brand"><div class="brand-mark">A</div><div><strong><%= appConfig.brand.name %></strong><span>Secure payment portal</span></div></div>
-</section>
+<section class="invoice-public-shell <%= isPoolInvoice ? 'invoice-public-pool' : 'invoice-public-garage' %>">
+  <% if(isPoolInvoice){ %>
+    <div class="pool-invoice-paper">
+      <header class="pool-invoice-header">
+        <div>
+          <div class="pool-service-label"><%= (invoice.work_order_title || invoice.service_line_name || 'Pool Service').toUpperCase() %></div>
+          <h1>INVOICE: <%= invoice.invoice_number || invoice.id %></h1>
+          <p><strong>INVOICE DATE:</strong> <%= invoiceDate ? new Date(invoiceDate).toLocaleDateString() : '—' %></p>
+          <p><strong>Account#</strong> <%= String(invoice.customer_id || '').padStart(5,'0') %><% if(invoice.address_line_1){ %>-<%= String(invoice.address_line_1).replace(/\D/g,'').slice(-4) || invoice.id %><% } %></p>
+        </div>
+        <div class="pool-company-block">
+          <h2>Spring Water Pool Services</h2>
+          <p>P.O. Box 234<br>Roswell, GA 30077-0234</p>
+          <p>springwaterpoolservices@gmail.com</p>
+        </div>
+      </header>
 
-<% if(query.payment === 'cancelled'){ %><div class="notice warning">Payment was cancelled. No charge was made.</div><% } %>
+      <section class="pool-bill-row">
+        <div>
+          <span>BILL TO:</span>
+          <strong><%= invoice.customer_name %></strong>
+          <% if(serviceAddress){ %><p><%= serviceAddress %></p><% } %>
+          <% if(invoice.customer_email){ %><p><%= invoice.customer_email %></p><% } %>
+        </div>
+        <div class="pool-status-box">
+          <span>Status</span>
+          <strong><%= statusLabel %></strong>
+          <span>Amount Due</span>
+          <strong><%= formatCurrency(amountDue) %></strong>
+        </div>
+      </section>
 
-<section class="card public-invoice-card">
-  <div class="section-title-row">
-    <div>
-      <h1><%= invoice.invoice_number || ('Invoice #' + invoice.id) %></h1>
-      <p class="muted"><%= invoice.customer_name %></p>
+      <table class="pool-invoice-table">
+        <thead><tr><th>Qty</th><th>Description</th><th>Price</th><th>Amount</th></tr></thead>
+        <tbody>
+          <% detail.lineItems.forEach(item => { %>
+            <tr><td><%= Number(item.quantity || 0) %></td><td><%= item.description %></td><td><%= formatCurrency(item.unit_price || 0).replace('$','') %></td><td><%= formatCurrency(item.line_total || 0).replace('$','') %></td></tr>
+          <% }) %>
+          <% if(!detail.lineItems.length){ %><tr><td colspan="4">No line items available.</td></tr><% } %>
+        </tbody>
+      </table>
+
+      <section class="pool-totals-row">
+        <div class="pool-thanks">
+          <strong>THANK YOU FOR YOUR BUSINESS!</strong>
+          <p>If you have any questions concerning your invoice, please let us know.</p>
+          <p><strong>SERVICE:</strong> <%= invoice.work_order_title || invoice.service_line_name || 'Pool Service' %></p>
+        </div>
+        <table class="pool-totals-table">
+          <tr><th>SUBTOTAL</th><td><%= formatCurrency(invoice.subtotal || 0) %></td></tr>
+          <% if(Number(invoice.discount_amount || 0) > 0){ %><tr><th>DISCOUNT</th><td>-<%= formatCurrency(invoice.discount_amount || 0) %></td></tr><% } %>
+          <tr><th>TAX</th><td><%= formatCurrency(invoice.tax_amount || 0) %></td></tr>
+          <tr><th>TOTAL</th><td><%= formatCurrency(invoice.total_amount || 0) %></td></tr>
+          <tr><th>PAID</th><td><%= formatCurrency(paid) %></td></tr>
+          <tr class="balance"><th>BALANCE DUE</th><td><%= formatCurrency(amountDue) %></td></tr>
+        </table>
+      </section>
     </div>
-    <% if(invoice.status_code === 'paid'){ %><span class="badge success">Paid</span><% } else if(invoice.status_code === 'payment_pending'){ %><span class="badge attention">Payment Pending</span><% } else if(invoice.status_code === 'payment_failed'){ %><span class="badge danger">Payment Failed</span><% } else { %><span class="badge"><%= invoice.status_name %></span><% } %>
-  </div>
-
-  <div class="grid three payment-totals">
-    <div><span class="muted">Invoice Total</span><strong><%= formatCurrency(invoice.total_amount || 0) %></strong></div>
-    <div><span class="muted">Paid</span><strong><%= formatCurrency(paid) %></strong></div>
-    <div><span class="muted">Amount Due</span><strong><%= formatCurrency(amountDue) %></strong></div>
-  </div>
-
-  <% if(serviceAddress){ %><p><strong>Service Address:</strong> <%= serviceAddress %></p><% } %>
-  <% if(invoice.work_order_title){ %><p><strong>Service:</strong> <%= invoice.work_order_title %></p><% } %>
-  <% if(invoice.due_date){ %><p><strong>Due Date:</strong> <%= new Date(invoice.due_date).toLocaleDateString() %></p><% } %>
-</section>
-
-<section class="card">
-  <div class="section-title-row"><h2>Invoice Items</h2><strong><%= formatCurrency(invoice.subtotal || 0) %></strong></div>
-  <table class="data-table"><thead><tr><th>Description</th><th>Qty</th><th>Amount</th></tr></thead><tbody>
-    <% detail.lineItems.forEach(item => { %><tr><td><%= item.description %></td><td><%= item.quantity %></td><td><%= formatCurrency(item.line_total || 0) %></td></tr><% }) %>
-    <% if(!detail.lineItems.length){ %><tr><td colspan="3">No line items available.</td></tr><% } %>
-  </tbody></table>
-</section>
-
-<section class="card public-payment-actions">
-  <h2>Payment Options</h2>
-  <% if(invoice.status_code === 'paid'){ %>
-    <p class="notice success">This invoice is already paid. Thank you.</p>
-  <% } else if(amountDue <= 0){ %>
-    <p class="notice warning">This invoice does not currently show a payable balance. Please contact Alliance Home Services if this looks wrong.</p>
-  <% } else if(invoice.status_code === 'payment_pending'){ %>
-    <p class="notice warning">A payment is currently processing. If you recently paid, no further action is needed.</p>
   <% } else { %>
-    <form method="POST" action="/pay/i/<%= token %>/card-checkout">
-      <button class="button primary full" type="submit">Pay <%= formatCurrency(amountDue) %> by Card</button>
-    </form>
-    <p class="muted">One-time online invoice payments are card-only.</p>
+    <div class="garage-invoice-page">
+      <header class="garage-invoice-hero">
+        <div>
+          <div class="garage-brand-lockup"><span class="garage-logo-mark">▣</span><div><strong>Alliance Garage Doors of Roswell</strong><small>Opening Doors to Your Peace of Mind</small></div></div>
+          <h1><%= invoice.invoice_number || ('Invoice #' + invoice.id) %></h1>
+          <p>Trusted garage door service. Every time.</p>
+        </div>
+        <div class="garage-invoice-status"><span><%= statusLabel %></span><strong><%= formatCurrency(amountDue) %></strong><small>Amount Due</small></div>
+      </header>
+
+      <section class="garage-invoice-summary">
+        <div><span>Bill To</span><strong><%= invoice.customer_name %></strong><% if(invoice.customer_email){ %><p><%= invoice.customer_email %></p><% } %></div>
+        <div><span>Service Address</span><strong><%= serviceAddress || '—' %></strong></div>
+        <div><span>Invoice Date</span><strong><%= invoiceDate ? new Date(invoiceDate).toLocaleDateString() : '—' %></strong></div>
+        <div><span>Service</span><strong><%= invoice.work_order_title || invoice.service_line_name || 'Garage Door Service' %></strong></div>
+      </section>
+
+      <section class="garage-line-card">
+        <div class="section-title-row"><h2>Service Details</h2><strong><%= formatCurrency(invoice.subtotal || 0) %></strong></div>
+        <table class="garage-invoice-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr></thead><tbody>
+          <% detail.lineItems.forEach(item => { %><tr><td><%= item.description %></td><td><%= item.quantity %></td><td><%= formatCurrency(item.unit_price || 0) %></td><td><%= formatCurrency(item.line_total || 0) %></td></tr><% }) %>
+          <% if(!detail.lineItems.length){ %><tr><td colspan="4">No line items available.</td></tr><% } %>
+        </tbody></table>
+      </section>
+
+      <section class="garage-totals-card">
+        <div><span>Invoice Total</span><strong><%= formatCurrency(invoice.total_amount || 0) %></strong></div>
+        <div><span>Paid</span><strong><%= formatCurrency(paid) %></strong></div>
+        <div class="due"><span>Balance Due</span><strong><%= formatCurrency(amountDue) %></strong></div>
+      </section>
+    </div>
   <% } %>
-  <hr>
-  <h3>Recurring service?</h3>
-  <p class="muted">Set up automatic payments for future recurring services by card or ACH bank transfer.</p>
-  <a class="button secondary" href="/pay/autopay/<%= token %>">Set Up Autopay</a>
+
+  <section class="public-payment-actions invoice-payment-panel">
+    <a class="button secondary full" href="/pay/i/<%= token %>/pdf" target="_blank">Download Invoice PDF</a>
+    <h2>Payment Options</h2>
+    <% if(invoice.status_code === 'paid'){ %>
+      <p class="notice success">This invoice is already paid. Thank you.</p>
+    <% } else if(amountDue <= 0){ %>
+      <p class="notice warning">This invoice does not currently show a payable balance. Please contact Alliance Home Services if this looks wrong.</p>
+    <% } else if(invoice.status_code === 'payment_pending'){ %>
+      <p class="notice warning">A payment is currently processing. If you recently paid, no further action is needed.</p>
+    <% } else { %>
+      <form method="POST" action="/pay/i/<%= token %>/card-checkout">
+        <button class="button primary full" type="submit">Pay <%= formatCurrency(amountDue) %> by Card</button>
+      </form>
+      <p class="muted">One-time online invoice payments are card-only.</p>
+    <% } %>
+    <hr>
+    <h3>Recurring service?</h3>
+    <p class="muted">Set up automatic payments for future recurring services by card or ACH bank transfer.</p>
+    <a class="button secondary" href="/pay/autopay/<%= token %>">Set Up Autopay</a>
+  </section>
 </section>
 
 <%- include('../partials-footer') %>

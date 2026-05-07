@@ -7,7 +7,8 @@ const users = [
   { email: 'zundra.daniel@agdofroswell.com', name: 'Zundra', position: 'Admin', roles: ['admin', 'finance'], serviceLines: ['garage_doors', 'pools', 'motorized_screens'] },
   { email: 'adriana.daniel@agdofroswell.com', name: 'Adriana', position: 'Office / Finance', roles: ['finance'], serviceLines: [] },
   { email: 'denise.lee@agdofroswell.com', name: 'Denise', position: 'Marketing', roles: ['finance'], serviceLines: [] },
-  { email: 'deji.lee@agdofroswell.com', name: 'Deji', position: 'Admin', roles: ['admin'], serviceLines: ['garage_doors', 'pools', 'motorized_screens'] }
+  { email: 'deji.lee@agdofroswell.com', name: 'Deji', position: 'Admin', roles: ['admin'], serviceLines: ['garage_doors', 'pools', 'motorized_screens'] },
+  { email: 'zundra.daniel@gmail.com', name: 'Pool Guy', position: 'Pool Technician', roles: ['technician', 'pool_technician'], serviceLines: ['pools'] }
 ];
 async function roleId(code) { const result = await pool.query('SELECT id FROM roles WHERE code=$1', [code]); if (!result.rows[0]) throw new Error(`Missing role: ${code}`); return result.rows[0].id; }
 async function serviceLineId(code) { const result = await pool.query('SELECT id FROM service_lines WHERE code=$1', [code]); if (!result.rows[0]) throw new Error(`Missing service line: ${code}`); return result.rows[0].id; }

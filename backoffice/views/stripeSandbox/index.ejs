@@ -1,0 +1,78 @@
+<%- include('../partials-header', { title }) %>
+<div class="page-header">
+  <div>
+    <h1>Stripe Sandbox</h1>
+    <p>Admin-only test bench for learning Stripe behavior from inside the backoffice architecture.</p>
+  </div>
+</div>
+
+<div class="notice warning">
+  This page is for test-mode learning only. Do not enter real card data here. Keep Stripe secret keys server-side in environment variables.
+</div>
+
+<% if (error) { %><div class="alert"><%= error %></div><% } %>
+
+<div class="card">
+  <h2>Configuration</h2>
+  <div class="chip-row">
+    <span class="chip">Sandbox: <%= status.enabled ? 'Enabled' : 'Disabled' %></span>
+    <span class="chip">NODE_ENV: <%= status.nodeEnv %></span>
+    <span class="chip">Secret key: <%= status.stripe.configured ? 'Configured' : 'Missing' %></span>
+    <span class="chip">Publishable key: <%= status.stripe.publishableKeyConfigured ? 'Configured' : 'Missing' %></span>
+    <span class="chip">Webhook secret: <%= status.stripe.webhookConfigured ? 'Configured' : 'Missing' %></span>
+  </div>
+  <% if (!status.enabled) { %>
+    <p class="muted">Set <code>STRIPE_SANDBOX_ENABLED=true</code> to use this page in production-like environments.</p>
+  <% } %>
+</div>
+
+<div class="sandbox-grid">
+  <div class="card">
+    <h2>Read-only calls</h2>
+    <form method="post" action="<%= routePath('/admin/stripe-sandbox/balance') %>" class="button-row sandbox-form">
+      <button class="button primary" type="submit">Retrieve Balance</button>
+    </form>
+    <hr class="soft-rule">
+    <form method="post" action="<%= routePath('/admin/stripe-sandbox/charges') %>" class="form-grid sandbox-form">
+      <label>Charge limit<input name="limit" type="number" min="1" max="25" value="3"></label>
+      <button class="button secondary" type="submit">List Charges</button>
+    </form>
+    <hr class="soft-rule">
+    <form method="post" action="<%= routePath('/admin/stripe-sandbox/customers') %>" class="form-grid sandbox-form">
+      <label>Customer limit<input name="limit" type="number" min="1" max="25" value="5"></label>
+      <button class="button secondary" type="submit">List Customers</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Create test objects</h2>
+    <form method="post" action="<%= routePath('/admin/stripe-sandbox/customers/create') %>" class="form-grid sandbox-form">
+      <label>Name<input name="name" value="Backoffice Sandbox Customer"></label>
+      <label>Email<input name="email" type="email" placeholder="sandbox@example.com"></label>
+      <button class="button primary" type="submit">Create Customer</button>
+    </form>
+    <hr class="soft-rule">
+    <form method="post" action="<%= routePath('/admin/stripe-sandbox/payment-intents/create') %>" class="form-grid sandbox-form">
+      <label>Amount in dollars<input name="amount" type="number" step="0.01" min="0.50" value="1.00"></label>
+      <label>Currency<input name="currency" value="usd"></label>
+      <label>Description<input name="description" value="Backoffice sandbox PaymentIntent"></label>
+      <button class="button primary" type="submit">Create Payment Intent</button>
+    </form>
+    <hr class="soft-rule">
+    <form method="post" action="<%= routePath('/admin/stripe-sandbox/payment-intents/retrieve') %>" class="form-grid sandbox-form">
+      <label>Payment Intent ID<input name="paymentIntentId" placeholder="pi_..."></label>
+      <button class="button secondary" type="submit">Retrieve Payment Intent</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Result</h2>
+  <% if (result) { %>
+    <p class="muted"><strong><%= result.action %></strong></p>
+    <pre class="json-output"><%= JSON.stringify(result.data, null, 2) %></pre>
+  <% } else { %>
+    <p class="muted">Run a sandbox action to see the raw Stripe response here.</p>
+  <% } %>
+</div>
+<%- include('../partials-footer') %>

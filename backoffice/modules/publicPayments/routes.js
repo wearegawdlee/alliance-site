@@ -46,6 +46,17 @@ router.get('/results/:lookupToken', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+
+router.get('/i/:token/pdf', async (req, res, next) => {
+  try {
+    const pdf = await service.getInvoicePdfByToken(req.params.token);
+    if (!pdf) return renderPortal(res.status(404), 'not-found', { title: 'Payment Link Not Found' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${pdf.filename}"`);
+    res.send(pdf.content);
+  } catch (e) { next(e); }
+});
+
 router.get('/i/:token', async (req, res, next) => {
   try {
     const detail = await service.getInvoiceByToken(req.params.token);
@@ -87,6 +98,9 @@ router.get('/success', async (req, res, next) => {
   try {
     const token = req.query.token;
     if (!token) return res.redirect('/pay');
+    if (req.query.session_id) {
+      await service.reconcileCheckoutSession(req.query.session_id);
+    }
     const detail = await service.getInvoiceByToken(token);
     renderPortal(res, 'success', { title: 'Payment Received', detail, token });
   } catch (e) { next(e); }

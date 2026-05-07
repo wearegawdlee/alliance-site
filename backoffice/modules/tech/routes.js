@@ -18,6 +18,9 @@ router.get('/dashboard', async (req, res, next) => {
 
 router.get('/work-orders/:id', async (req, res, next) => {
   try {
+    if (req.query.session_id) {
+      await paymentsService.reconcileCheckoutSession(req.query.session_id);
+    }
     const workOrder = await techService.getAssignedWorkOrderDetail(req.params.id, req.session.user);
     if (!workOrder) return res.status(404).send('Work order not found');
 
@@ -73,7 +76,7 @@ router.post('/work-orders/:id/collect-payment', async (req, res, next) => {
     if (!invoiceId) return res.redirect(req.app.locals.routePath(`/tech/work-orders/${req.params.id}?payment=missing_items`));
 
     const url = await paymentsService.createInvoiceCardCheckoutSession(req, invoiceId, {
-      successPath: `/tech/work-orders/${req.params.id}?payment=success`,
+      successPath: `/tech/work-orders/${req.params.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancelPath: `/tech/work-orders/${req.params.id}?payment=cancelled`,
       metadata: {
         mobile_field_collection: 'true',
