@@ -84,7 +84,7 @@ async function listCustomers(filters = {}){
 async function getCustomerDetail(id){
   const cr=await pool.query(`SELECT c.*,cs.code status_code,cs.name status,ls.name lead_source,u.display_name assigned_to FROM customers c JOIN customer_statuses cs ON cs.id=c.customer_status_id LEFT JOIN lead_sources ls ON ls.id=c.lead_source_id LEFT JOIN users u ON u.id=c.assigned_user_id WHERE c.id=$1`,[id]);
   if(!cr.rows[0]) return null;
-  const [contacts,locations,services,assets,notes,workOrders,estimates,invoices,statusHistory,activity,pricing]=await Promise.all([
+  const [contacts,locations,services,assets,notes,workOrders,estimates,invoices,statusHistory,activity,pricing,leads]=await Promise.all([
     pool.query(`SELECT * FROM customer_contacts WHERE customer_id=$1 ORDER BY is_primary DESC,id`,[id]),
     pool.query(`SELECT cl.*,pt.name property_type FROM customer_locations cl LEFT JOIN property_types pt ON pt.id=cl.property_type_id WHERE cl.customer_id=$1 ORDER BY cl.is_primary DESC,cl.id`,[id]),
     pool.query(`SELECT sl.* FROM customer_service_lines csl JOIN service_lines sl ON sl.id=csl.service_line_id WHERE csl.customer_id=$1 AND csl.is_active=true ORDER BY sl.name`,[id]),
@@ -103,9 +103,19 @@ async function getCustomerDetail(id){
       LEFT JOIN catalog_categories cc ON cc.id=ci.catalog_category_id
       WHERE cp.customer_id=$1 AND cp.is_active=true
       ORDER BY sl.name NULLS LAST, cc.sort_order NULLS LAST, cc.name NULLS LAST, ci.name
+    `,[id]),
+    pool.query(`
+      SELECT l.*, sl.name service_line, ls.name lead_source, u.display_name assigned_to, cu.display_name contacted_by
+      FROM leads l
+      LEFT JOIN service_lines sl ON sl.id=l.service_line_id
+      LEFT JOIN lead_sources ls ON ls.id=l.lead_source_id
+      LEFT JOIN users u ON u.id=l.assigned_user_id
+      LEFT JOIN users cu ON cu.id=l.contacted_by_user_id
+      WHERE l.customer_id=$1
+      ORDER BY l.created_at DESC, l.id DESC
     `,[id])
   ]);
-  return {...cr.rows[0],contacts:contacts.rows,locations:locations.rows,services:services.rows,assets:assets.rows,notes:notes.rows,workOrders:workOrders.rows,estimates:estimates.rows,invoices:invoices.rows,statusHistory:statusHistory.rows,activity:activity.rows,pricing:pricing.rows};
+  return {...cr.rows[0],contacts:contacts.rows,locations:locations.rows,services:services.rows,assets:assets.rows,notes:notes.rows,workOrders:workOrders.rows,estimates:estimates.rows,invoices:invoices.rows,statusHistory:statusHistory.rows,activity:activity.rows,pricing:pricing.rows,leads:leads.rows};
 }
 
 async function getFormOptions(){
@@ -122,6 +132,7 @@ async function getFormOptions(){
   return {statuses:statuses.rows,sources:sources.rows,services:services.rows,users:users.rows,propertyTypes:propertyTypes.rows,workOrderTypes:workOrderTypes.rows,workOrderStatuses:workOrderStatuses.rows,catalogItems:catalogItems.rows};
 }
 
+function normalizeStreetAddress(value){ return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '') || null; }
 async function getStatusId(client, code){ const r=await client.query(`SELECT id FROM customer_statuses WHERE code=$1`,[code]); return r.rows[0]?.id; }
 async function getWorkOrderStatusId(client, code){ const r=await client.query(`SELECT id FROM work_order_statuses WHERE code=$1`,[code]); return r.rows[0]?.id; }
 
@@ -134,7 +145,7 @@ async function createCustomer(data){
     const id=c.rows[0].id;
     await client.query(`INSERT INTO customer_status_history(customer_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,'Initial customer creation')`,[id,statusId,data.author_user_id||null]);
     await client.query(`INSERT INTO customer_contacts(customer_id,first_name,last_name,phone,email,preferred_contact_method,is_primary) VALUES($1,$2,$3,$4,$5,$6,true)`,[id,data.first_name||null,data.last_name||null,data.phone||null,data.email||null,data.preferred_contact_method||null]);
-    await client.query(`INSERT INTO customer_locations(customer_id,property_type_id,label,address_line_1,city,state,postal_code,county,gate_code,access_notes,is_primary) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true)`,[id,data.property_type_id||null,data.location_label||'Service Location',data.address_line_1||null,data.city||null,data.state||null,data.postal_code||null,data.county||null,data.gate_code||null,data.access_notes||null]);
+    await client.query(`INSERT INTO customer_locations(customer_id,property_type_id,label,address_line_1,city,state,postal_code,county,gate_code,access_notes,normalized_street_address,is_primary) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true)`,[id,data.property_type_id||null,data.location_label||'Service Location',data.address_line_1||null,data.city||null,data.state||null,data.postal_code||null,data.county||null,data.gate_code||null,data.access_notes||null,normalizeStreetAddress(data.address_line_1)]);
     for(const serviceId of (data.service_line_ids||[])){ await client.query(`INSERT INTO customer_service_lines(customer_id,service_line_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[id,serviceId]); }
     if(data.initial_note){ await client.query(`INSERT INTO customer_notes(customer_id,author_user_id,note_body) VALUES($1,$2,$3)`,[id,data.author_user_id||null,data.initial_note]); }
     await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'customer.created','Customer record created')`,[id,data.author_user_id||null]);
@@ -154,7 +165,7 @@ async function updateCustomer(id,data){
     else await client.query(`INSERT INTO customer_contacts(customer_id,first_name,last_name,phone,email,preferred_contact_method,is_primary) VALUES($1,$2,$3,$4,$5,$6,true)`,[id,data.first_name||null,data.last_name||null,data.phone||null,data.email||null,data.preferred_contact_method||null]);
     const loc=await client.query(`SELECT id FROM customer_locations WHERE customer_id=$1 AND is_primary=true ORDER BY id LIMIT 1`,[id]);
     if(loc.rows[0]) await client.query(`UPDATE customer_locations SET property_type_id=$1,label=$2,address_line_1=$3,city=$4,state=$5,postal_code=$6,county=$7,gate_code=$8,access_notes=$9,updated_at=current_timestamp WHERE id=$10`,[data.property_type_id||null,data.location_label||'Service Location',data.address_line_1||null,data.city||null,data.state||null,data.postal_code||null,data.county||null,data.gate_code||null,data.access_notes||null,loc.rows[0].id]);
-    else await client.query(`INSERT INTO customer_locations(customer_id,property_type_id,label,address_line_1,city,state,postal_code,county,gate_code,access_notes,is_primary) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true)`,[id,data.property_type_id||null,data.location_label||'Service Location',data.address_line_1||null,data.city||null,data.state||null,data.postal_code||null,data.county||null,data.gate_code||null,data.access_notes||null]);
+    else await client.query(`INSERT INTO customer_locations(customer_id,property_type_id,label,address_line_1,city,state,postal_code,county,gate_code,access_notes,normalized_street_address,is_primary) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true)`,[id,data.property_type_id||null,data.location_label||'Service Location',data.address_line_1||null,data.city||null,data.state||null,data.postal_code||null,data.county||null,data.gate_code||null,data.access_notes||null,normalizeStreetAddress(data.address_line_1)]);
     await client.query(`DELETE FROM customer_service_lines WHERE customer_id=$1`,[id]);
     for(const serviceId of (data.service_line_ids||[])){ await client.query(`INSERT INTO customer_service_lines(customer_id,service_line_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[id,serviceId]); }
     await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'customer.updated','Customer record updated')`,[id,data.author_user_id||null]);
@@ -192,6 +203,17 @@ async function createWorkOrderFromCustomer(customerId,data,userId){
     if(customerStatus && customer.rows[0] && Number(customer.rows[0].customer_status_id)!==Number(customerStatus)){
       await client.query(`UPDATE customers SET customer_status_id=$1,updated_at=current_timestamp WHERE id=$2`,[customerStatus,customerId]);
       await client.query(`INSERT INTO customer_status_history(customer_id,from_status_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,$4,'Customer requested service visit')`,[customerId,customer.rows[0].customer_status_id,customerStatus,userId||null]);
+    }
+    const closedLeads = await client.query(`
+      UPDATE leads
+      SET status='closed', updated_at=current_timestamp
+      WHERE customer_id=$1
+        AND status IN ('new','contacted')
+        AND (service_line_id=$2 OR service_line_id IS NULL)
+      RETURNING id
+    `,[customerId,data.service_line_id]);
+    for(const lead of closedLeads.rows){
+      await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body,metadata) VALUES('lead',$1,$2,'lead.closed','Lead closed by work order creation',$3::jsonb)`,[lead.id,userId||null,JSON.stringify({ workOrderId })]);
     }
     await client.query(`INSERT INTO activity_events(entity_type,entity_id,actor_user_id,event_type,event_body) VALUES('customer',$1,$2,'work_order.created',$3)`,[customerId,userId||null,`Work order created: ${data.title}`]);
     await client.query('COMMIT'); return workOrderId;

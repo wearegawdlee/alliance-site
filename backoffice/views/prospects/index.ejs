@@ -2,7 +2,7 @@
 <section class="page-header">
   <div>
     <h1>Prospects</h1>
-    <p>New leads that need ownership, contact, and notes before they either become customers through work or get deleted.</p>
+    <p>Inbound service requests. Customers are created once; each new request becomes a lead attached to that customer.</p>
   </div>
 </section>
 
@@ -19,13 +19,13 @@
 
 <section class="card">
   <table class="data-table">
-    <thead><tr><th>Prospect</th><th>Contact</th><th>Address</th><th>Owner</th><th>Status</th><th>Latest note</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Lead / Customer</th><th>Contact</th><th>Address</th><th>Owner</th><th>Status</th><th>Latest note</th><th>Actions</th></tr></thead>
     <tbody>
       <% prospects.forEach(p=>{ %>
         <tr>
-          <td><a href="<%= routePath('/customers/' + p.id) %>"><strong><%= p.display_name %></strong></a><br><span class="muted"><%= p.lead_source || 'Unknown source' %> · <%= formatDate(p.created_at) %></span></td>
-          <td><%= p.phone || '—' %><br><span class="muted"><%= p.email || '' %></span></td>
-          <td><%= p.address_line_1 || '—' %><% if(p.city){ %><br><span class="muted"><%= p.city %>, <%= p.state || 'GA' %></span><% } %></td>
+          <td><a href="<%= routePath('/customers/' + p.customer_id) %>"><strong><%= p.submitted_name || p.display_name %></strong></a><br><span class="muted"><%= p.requested_service_type || p.service_line || 'Service request' %> · <%= p.lead_source || 'Unknown source' %> · <%= formatDate(p.lead_created_at) %></span><br><span class="muted">Customer: <%= p.display_name %></span></td>
+          <td><%= p.submitted_phone || p.phone || '—' %><br><span class="muted"><%= p.submitted_email || p.email || '' %></span></td>
+          <td><%= p.submitted_address_line_1 || p.address_line_1 || '—' %><% if(p.submitted_city || p.city){ %><br><span class="muted"><%= p.submitted_city || p.city %>, <%= p.submitted_state || p.state || 'GA' %></span><% } %></td>
           <td><%= p.assigned_to || 'Unclaimed' %></td>
           <td>
             <% if(p.contacted_at){ %>
@@ -33,16 +33,17 @@
             <% } else { %>
               <span class="badge attention">Needs contact</span>
             <% } %>
+            <% if(p.has_completed_work || p.has_paid_invoice){ %><br><span class="muted">Existing customer</span><% } %>
           </td>
           <td><%= p.latest_note || '—' %><% if(p.latest_note_author){ %><br><span class="muted"><%= p.latest_note_author %> · <%= formatDate(p.latest_note_at) %></span><% } %></td>
           <td>
             <div class="stacked-actions">
-              <% if(!p.assigned_to){ %><form method="post" action="<%= routePath('/prospects/' + p.id + '/claim') %>"><button class="button secondary full">Claim</button></form><% } %>
-              <form method="post" action="<%= routePath('/prospects/' + p.id + '/contacted') %>">
+              <% if(!p.assigned_to){ %><form method="post" action="<%= routePath('/prospects/' + p.lead_id + '/claim') %>"><button class="button secondary full" data-loading-text="Claiming...">Claim</button></form><% } %>
+              <form method="post" action="<%= routePath('/prospects/' + p.lead_id + '/contacted') %>">
                 <textarea name="note_body" placeholder="Contact note"></textarea>
-                <button class="button primary full">Mark Contacted</button>
+                <button class="button primary full" data-loading-text="Saving...">Mark Contacted</button>
               </form>
-              <a class="button secondary full" href="<%= routePath('/customers/' + p.id + '/edit') %>">Edit Details</a>
+              <a class="button secondary full" href="<%= routePath('/customers/' + p.customer_id + '/edit') %>">Edit Customer</a>
             </div>
           </td>
         </tr>
