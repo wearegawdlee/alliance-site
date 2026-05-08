@@ -68,6 +68,27 @@ async function getPlan(id) {
   return { ...plan, runs: runs.rows };
 }
 
+
+async function getPlanScheduleSnapshot(id) {
+  const result = await pool.query(`
+    SELECT id, frequency, interval_count, day_of_week, day_of_month, next_run_date
+    FROM recurring_service_plans
+    WHERE id=$1
+  `, [id]);
+  return result.rows[0] || null;
+}
+
+async function getLatestRunDate(planId) {
+  const result = await pool.query(`
+    SELECT scheduled_for
+    FROM recurring_service_plan_runs
+    WHERE recurring_service_plan_id=$1
+    ORDER BY scheduled_for DESC, id DESC
+    LIMIT 1
+  `, [planId]);
+  return result.rows[0]?.scheduled_for || null;
+}
+
 async function createPlan(data) {
   const result = await pool.query(`
     INSERT INTO recurring_service_plans(customer_id,customer_location_id,service_line_id,work_order_type_id,assigned_user_id,title,description,frequency,interval_count,day_of_week,day_of_month,next_run_date,is_active)
@@ -107,10 +128,14 @@ function addMonths(value, months) {
   return dateOnly(d);
 }
 function nextRunDate(plan) {
+  return nextRunDateFromDate(plan, plan.next_run_date);
+}
+
+function nextRunDateFromDate(plan, fromDate) {
   const n = Math.max(1, Number(plan.interval_count || 1));
-  if (plan.frequency === 'monthly') return addMonths(plan.next_run_date, n);
-  if (plan.frequency === 'biweekly') return addDays(plan.next_run_date, 14 * n);
-  return addDays(plan.next_run_date, 7 * n);
+  if (plan.frequency === 'monthly') return addMonths(fromDate, n);
+  if (plan.frequency === 'biweekly') return addDays(fromDate, 14 * n);
+  return addDays(fromDate, 7 * n);
 }
 
 
@@ -156,4 +181,4 @@ async function generateNextWorkOrder(planId, userId) {
   } catch(e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
 }
 
-module.exports = { listPlans, getOptions, getCustomerLocations, getPlan, createPlan, updatePlan, generateNextWorkOrder, recordExistingWorkOrderRun, nextRunDate, dateOnly };
+module.exports = { listPlans, getOptions, getCustomerLocations, getPlan, getPlanScheduleSnapshot, getLatestRunDate, createPlan, updatePlan, generateNextWorkOrder, recordExistingWorkOrderRun, nextRunDate, nextRunDateFromDate, dateOnly };
