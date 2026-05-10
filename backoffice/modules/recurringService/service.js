@@ -25,8 +25,9 @@ async function updatePlan(id,body){
   }
   return repo.updatePlan(id,data);
 }
-async function generateNextWorkOrder(id,user){return repo.generateNextWorkOrder(id,user?.id);}
+async function generateNextWorkOrder(id,user){return repo.generateNextWorkOrder(id,user?.id,'manual');}
+async function generateDueWorkOrders(options){return repo.generateDueWorkOrders(options||{});}
 async function recordExistingWorkOrderRun(planId,workOrderId,scheduledFor,user){return repo.recordExistingWorkOrderRun(planId,workOrderId,scheduledFor,user?.id);}
 function nextRunDate(body){return repo.nextRunDate(normalize(body));}
 function dateOnly(value){return repo.dateOnly(value);}
-module.exports={listPlans,getOptions,getCustomerLocations,getPlan,createPlan,updatePlan,generateNextWorkOrder,recordExistingWorkOrderRun,nextRunDate,dateOnly};
+module.exports={listPlans,getOptions,getCustomerLocations,getPlan,createPlan,updatePlan,generateNextWorkOrder,generateDueWorkOrders,recordExistingWorkOrderRun,nextRunDate,dateOnly};

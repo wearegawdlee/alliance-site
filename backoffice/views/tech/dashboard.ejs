@@ -1,6 +1,6 @@
 <%- include('../partials-header', { title: 'My Jobs' }) %>
 
-<section class="page-header tech-page-header"><div><h1>My Jobs</h1><p>Assigned work orders for the field.</p></div></section>
+<section class="page-header tech-page-header"><div><h1>My Jobs</h1></div></section>
 
 <% const jobs = dashboard.jobs || []; %>
 <% const today = jobs.filter(j => j.scheduled_start_at && new Date(j.scheduled_start_at).toDateString() === new Date().toDateString()); %>

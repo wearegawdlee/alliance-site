@@ -1,0 +1,21 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header"><div><h1>Technician Capacity</h1></div><a class="button secondary" href="<%= routePath('/scheduling/calendar') %>">Calendar</a></section>
+<section class="card">
+  <h2>Set Capacity</h2>
+  <form method="post" action="<%= routePath('/scheduling/capacity') %>" class="form-grid">
+    <div class="grid three">
+      <label>Technician<select name="user_id" required><option value="">Select user</option><% options.users.forEach(u=>{ %><option value="<%= u.id %>"><%= u.display_name %></option><% }) %></select></label>
+      <label>Service Line<select name="service_line_id"><option value="">Any service</option><% options.serviceLines.forEach(sl=>{ %><option value="<%= sl.id %>"><%= sl.name %></option><% }) %></select></label>
+      <label>Max Jobs / Day<input type="number" min="1" name="max_jobs_per_day" value="8" required></label>
+    </div>
+    <button class="button primary">Save Capacity</button>
+  </form>
+</section>
+<section class="card">
+  <h2>Configured Capacity</h2>
+  <table class="data-table"><thead><tr><th>Technician</th><th>Service</th><th>Max Jobs / Day</th><th></th></tr></thead><tbody>
+    <% capacities.forEach(c=>{ %><tr><td><%= c.user_name %></td><td><%= c.service_line || 'Any service' %></td><td><%= c.max_jobs_per_day %></td><td><form method="post" action="<%= routePath('/scheduling/capacity/' + c.id + '/delete') %>"><button class="button secondary">Delete</button></form></td></tr><% }) %>
+    <% if(!capacities.length){ %><tr><td colspan="4">No capacity limits configured.</td></tr><% } %>
+  </tbody></table>
+</section>
+<%- include('../partials-footer') %>

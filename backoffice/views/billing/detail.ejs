@@ -35,7 +35,7 @@
       <a href="/pay/i/<%= invoice.invoice.public_payment_token %>" target="_blank">/pay/i/<%= invoice.invoice.public_payment_token %></a>
     </div>
   <% } else if(['submitted','payment_failed','payment_pending'].includes(invoice.invoice.status_code)){ %>
-    <p class="muted">A public payment link will be generated when the invoice is submitted.</p>
+    
   <% } %>
 </section>
 

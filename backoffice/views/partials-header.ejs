@@ -16,7 +16,7 @@
         </div>
         <nav class="nav grouped-nav">
           <% if(hasAnyRole(['admin','finance'])){ %>
-            <div class="nav-group"><div class="nav-group-title">Operations</div><a href="<%= routePath('/dashboard') %>">Dashboard</a><a href="<%= routePath('/work-orders') %>">Work Orders</a><a href="<%= routePath('/recurring-service') %>">Recurring</a></div>
+            <div class="nav-group"><div class="nav-group-title">Operations</div><a href="<%= routePath('/dashboard') %>">Dashboard</a><a href="<%= routePath('/scheduling/dispatch') %>">Schedule</a><a href="<%= routePath('/work-orders') %>">Work Orders</a><a href="<%= routePath('/recurring-service') %>">Recurring</a></div>
             <div class="nav-group"><div class="nav-group-title">Customers</div><a href="<%= routePath('/customers') %>">Customers</a><a href="<%= routePath('/prospects') %>">Prospects</a></div>
             <div class="nav-group"><div class="nav-group-title">Billing</div><a href="<%= routePath('/billing') %>">Work Invoicing</a><a href="<%= routePath('/catalog') %>">Catalog</a><a href="<%= routePath('/tax-rates') %>">Tax Rates</a></div>
           <% } %>

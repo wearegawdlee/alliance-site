@@ -1,0 +1,50 @@
+<%- include('../partials-header', { title }) %>
+<%
+  const monthStart = new Date(calendar.start + 'T00:00:00Z');
+  const monthLabel = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const prev = new Date(monthStart); prev.setUTCMonth(prev.getUTCMonth() - 1);
+  const next = new Date(monthStart); next.setUTCMonth(next.getUTCMonth() + 1);
+  const prevMonth = prev.toISOString().slice(0,7);
+  const nextMonth = next.toISOString().slice(0,7);
+  const days = [];
+  const gridStart = new Date(monthStart); gridStart.setUTCDate(gridStart.getUTCDate() - gridStart.getUTCDay());
+  for (let i = 0; i < 42; i++) { const d = new Date(gridStart); d.setUTCDate(gridStart.getUTCDate() + i); days.push(d); }
+  const workByDate = {};
+  calendar.workOrders.forEach(w => { const k = new Date(w.scheduled_date).toISOString().slice(0,10); (workByDate[k] ||= []).push(w); });
+  const closuresByDate = {};
+  calendar.closures.forEach(c => { const k = new Date(c.closure_date).toISOString().slice(0,10); (closuresByDate[k] ||= []).push(c); });
+%>
+<section class="page-header">
+  <div><h1>Schedule Calendar</h1></div>
+  <div class="button-row">
+    <a class="button secondary" href="<%= routePath('/scheduling/dispatch') %>">Dispatch Board</a>
+    <a class="button secondary" href="<%= routePath('/scheduling/closures') %>">Blackout Dates</a>
+    <a class="button secondary" href="<%= routePath('/scheduling/capacity') %>">Technician Capacity</a>
+    <form method="post" action="<%= routePath('/scheduling/generate-recurring') %>"><button class="button secondary" data-loading-text="Checking...">Run Check Now</button></form>
+  </div>
+</section>
+<section class="card schedule-toolbar">
+  <a class="button secondary" href="<%= routePath('/scheduling/calendar?month=' + prevMonth) %>">← Previous</a>
+  <h2><%= monthLabel %></h2>
+  <a class="button secondary" href="<%= routePath('/scheduling/calendar?month=' + nextMonth) %>">Next →</a>
+</section>
+<section class="card schedule-calendar-card">
+  <div class="calendar-grid calendar-head"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+  <div class="calendar-grid">
+    <% days.forEach(day => { const key = day.toISOString().slice(0,10); const inMonth = key.slice(0,7) === calendar.month; const jobs = workByDate[key] || []; const closures = closuresByDate[key] || []; const isWeekend = day.getUTCDay() === 0 || day.getUTCDay() === 6; %>
+      <div class="calendar-day <%= inMonth ? '' : 'outside-month' %> <%= isWeekend ? 'weekend' : '' %> <%= closures.length ? 'closed-day' : '' %>">
+        <div class="calendar-date"><strong><%= day.getUTCDate() %></strong><span><%= jobs.length %> job<%= jobs.length === 1 ? '' : 's' %></span></div>
+        <% closures.forEach(c => { %><div class="calendar-closure">Closed: <%= c.reason %><%= c.service_line ? ' · ' + c.service_line : '' %></div><% }) %>
+        <% jobs.slice(0,5).forEach(w => { %>
+          <a class="calendar-job service-<%= w.service_line_code %> status-<%= w.status_code %>" href="<%= routePath('/work-orders/' + w.id) %>">
+            <strong><%= w.title %></strong>
+            <span><%= w.customer %></span>
+            <small><%= w.assigned_to || 'Unassigned' %></small>
+          </a>
+        <% }) %>
+        <% if(jobs.length > 5){ %><div class="calendar-more">+ <%= jobs.length - 5 %> more</div><% } %>
+      </div>
+    <% }) %>
+  </div>
+</section>
+<%- include('../partials-footer') %>

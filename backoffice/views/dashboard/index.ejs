@@ -1,60 +1,162 @@
 <%- include('../partials-header') %>
-<div class="page-header">
+<%
+  const counts = dashboard.counts || {};
+  const charts = dashboard.charts || {};
+  const money = dashboard.money || {};
+  const workload = charts.workload || [];
+  const revenueTrend = charts.revenueTrend || [];
+  const leadTrend = charts.leadTrend || [];
+  const invoiceStatus = charts.invoiceStatus || [];
+  const maxWorkload = Math.max(1, ...workload.map(d => Number(d.job_count || 0)));
+  const maxRevenue = Math.max(1, ...revenueTrend.map(d => Number(d.amount || 0)));
+  const maxLeads = Math.max(1, ...leadTrend.map(d => Number(d.count || 0)));
+  const statusTotal = invoiceStatus.reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const paidStatus = invoiceStatus.find(row => row.code === 'paid');
+  const paidPct = statusTotal ? Math.round((Number(paidStatus?.count || 0) / statusTotal) * 100) : 0;
+  const todayLabel = new Date().toLocaleDateString([], { weekday:'long', month:'short', day:'numeric' });
+%>
+
+<section class="page-header dashboard-page-header">
   <div>
     <h1>Dashboard</h1>
-    <p>Operational queue: leads, work orders, invoices, and recent activity.</p>
   </div>
   <div class="button-row">
-    <a class="button secondary" href="<%= routePath('/customers') %>">View Customers</a>
+    <a class="button secondary" href="<%= routePath('/scheduling/dispatch') %>">Dispatch Board</a>
+    <a class="button secondary" href="<%= routePath('/billing') %>">Billing</a>
     <a class="button primary" href="<%= routePath('/work-orders') %>">View Work Orders</a>
+  </div>
+</section>
+
+<div class="dashboard-kpi-grid">
+  <a class="metric-card accent-green" href="<%= routePath('/work-orders') %>">
+    <span>Today’s Work</span>
+    <strong><%= counts.today_work_count || 0 %></strong>
+  </a>
+  <a class="metric-card accent-blue" href="<%= routePath('/scheduling/dispatch') %>">
+    <span>Unassigned</span>
+    <strong><%= counts.unassigned_work_order_count || 0 %></strong>
+  </a>
+  <a class="metric-card accent-amber" href="<%= routePath('/billing') %>">
+    <span>Unpaid Invoices</span>
+    <strong><%= counts.unpaid_invoice_count || 0 %></strong>
+    <% if(Number(counts.overdue_invoice_count || 0) > 0){ %><small><%= counts.overdue_invoice_count %> overdue</small><% } %>
+  </a>
+  <a class="metric-card accent-purple" href="<%= routePath('/prospects') %>">
+    <span>New Leads</span>
+    <strong><%= counts.new_lead_count || 0 %></strong>
+    <% if(Number(counts.open_lead_count || 0) > 0){ %><small><%= counts.open_lead_count %> open</small><% } %>
+  </a>
+  <div class="metric-card accent-money">
+    <span>Revenue This Month</span>
+    <strong><%= formatCurrency(counts.revenue_this_month || 0) %></strong>
   </div>
 </div>
 
-<div class="kpi-grid">
-  <div class="kpi-card"><span>Prospects</span><strong><%= dashboard.counts.prospect_count %></strong></div>
-  <div class="kpi-card"><span>Open Work Orders</span><strong><%= dashboard.counts.open_work_order_count %></strong></div>
-  <div class="kpi-card"><span>Unassigned</span><strong><%= dashboard.counts.unassigned_work_order_count %></strong></div>
-  <div class="kpi-card"><span>Unpaid Invoices</span><strong><%= dashboard.counts.unpaid_invoice_count %></strong></div>
+<div class="insight-grid">
+  <section class="card chart-card wide-chart">
+    <div class="section-title-row">
+      <div><h2>Scheduled Workload</h2></div>
+      <a class="button secondary" href="<%= routePath('/scheduling/dispatch') %>">Balance Schedule</a>
+    </div>
+    <div class="workload-chart">
+      <% workload.forEach(day => { const jobs = Number(day.job_count || 0); const pct = Math.max(8, Math.round((jobs / maxWorkload) * 100)); const date = new Date(day.day); %>
+        <div class="workload-day <%= day.closure_reason ? 'closed' : '' %>">
+          <div class="bar-wrap"><div class="bar-fill" style="height:<%= pct %>%"></div></div>
+          <strong><%= jobs %></strong>
+          <span><%= date.toLocaleDateString([], { weekday:'short' }) %></span>
+          <small><%= date.toLocaleDateString([], { month:'numeric', day:'numeric' }) %></small>
+          <% if(day.closure_reason){ %><em title="<%= day.closure_reason %>">Closed</em><% } %>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="card chart-card money-card">
+    <div class="section-title-row">
+      <div><h2>Money Snapshot</h2></div>
+    </div>
+    <div class="money-stack">
+      <div><span>Outstanding AR</span><strong><%= formatCurrency(money.outstanding_ar || 0) %></strong></div>
+      <div><span>Overdue AR</span><strong><%= formatCurrency(money.overdue_ar || 0) %></strong></div>
+      <div><span>Failed Payments</span><strong><%= counts.failed_payment_count || 0 %></strong></div>
+    </div>
+  </section>
+
+  <section class="card chart-card">
+    <h2>Revenue Trend</h2>
+    
+    <div class="spark-chart revenue-chart">
+      <% revenueTrend.forEach((point, idx) => { const amount = Number(point.amount || 0); const height = Math.max(4, Math.round((amount / maxRevenue) * 100)); %>
+        <span style="height:<%= height %>%" title="<%= new Date(point.day).toLocaleDateString() %>: <%= formatCurrency(amount) %>"></span>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="card chart-card">
+    <h2>Invoice Status</h2>
+    
+    <div class="donut-row">
+      <div class="css-donut" style="--pct:<%= paidPct %>"><strong><%= paidPct %>%</strong><span>paid</span></div>
+      <div class="status-list">
+        <% invoiceStatus.forEach(row => { %>
+          <div><span><%= row.name %></span><strong><%= row.count %></strong></div>
+        <% }) %>
+        <% if(!invoiceStatus.length){ %><p class="muted">No invoices yet.</p><% } %>
+      </div>
+    </div>
+  </section>
+
+  <section class="card chart-card">
+    <h2>Lead Intake</h2>
+    
+    <div class="spark-chart lead-chart">
+      <% leadTrend.forEach(point => { const count = Number(point.count || 0); const height = Math.max(4, Math.round((count / maxLeads) * 100)); %>
+        <span style="height:<%= height %>%" title="<%= new Date(point.day).toLocaleDateString() %>: <%= count %> leads"></span>
+      <% }) %>
+    </div>
+  </section>
 </div>
 
-<div class="dashboard-grid">
-  <section class="card priority-card">
-    <h2>Needs Attention</h2>
+<div class="operator-grid">
+  <section class="card action-queue-card">
+    <div class="section-title-row">
+      <div><h2>Action Queue</h2></div>
+    </div>
     <% if(!dashboard.newLeads.length && !dashboard.attentionWorkOrders.length && !dashboard.unpaidInvoices.length){ %>
-      <p class="muted">Nothing urgent right now.</p>
+      <div class="empty-state">Nothing urgent right now. Go be suspicious of how quiet it is.</div>
     <% } %>
 
-    <% if(dashboard.newLeads.length){ %>
-      <h3>New Website Leads</h3>
-      <div class="queue-list">
-      <% dashboard.newLeads.forEach(l=>{ %>
-        <a class="queue-item" href="<%= routePath('/customers/' + l.id) %>">
-          <strong><%= l.display_name %></strong>
-          <span><%= l.phone || l.email || 'No contact shown' %> · <%= l.city || 'Unknown city' %><%= l.state ? ', ' + l.state : '' %></span>
+    <% if(dashboard.attentionWorkOrders.length){ %>
+      <div class="queue-section-header"><h3>Work Orders</h3><a href="<%= routePath('/work-orders') %>">View all</a></div>
+      <div class="compact-list">
+      <% dashboard.attentionWorkOrders.forEach(wo=>{ %>
+        <a class="compact-row" href="<%= routePath('/work-orders/' + wo.id) %>">
+          <div><strong><%= wo.title %></strong><span><%= wo.customer %> · <%= wo.service_line %></span></div>
+          <em><%= wo.assigned_to || 'Unassigned' %></em>
         </a>
       <% }) %>
       </div>
     <% } %>
 
-    <% if(dashboard.attentionWorkOrders.length){ %>
-      <h3>Work Orders</h3>
-      <div class="queue-list">
-      <% dashboard.attentionWorkOrders.forEach(wo=>{ %>
-        <a class="queue-item" href="<%= routePath('/work-orders/' + wo.id) %>">
-          <strong><%= wo.title %></strong>
-          <span><%= wo.customer %> · <%= wo.status %> · <%= wo.assigned_to || 'Unassigned' %></span>
+    <% if(dashboard.newLeads.length){ %>
+      <div class="queue-section-header"><h3>Leads</h3><a href="<%= routePath('/prospects') %>">View all</a></div>
+      <div class="compact-list">
+      <% dashboard.newLeads.forEach(l=>{ %>
+        <a class="compact-row" href="<%= routePath('/customers/' + l.id) %>">
+          <div><strong><%= l.display_name %></strong><span><%= l.phone || l.email || 'No contact shown' %> · <%= l.city || 'Unknown city' %><%= l.state ? ', ' + l.state : '' %></span></div>
+          <em><%= l.status %></em>
         </a>
       <% }) %>
       </div>
     <% } %>
 
     <% if(dashboard.unpaidInvoices.length){ %>
-      <h3>Unpaid Invoices</h3>
-      <div class="queue-list">
+      <div class="queue-section-header"><h3>Unpaid Invoices</h3><a href="<%= routePath('/billing') %>">View all</a></div>
+      <div class="compact-list">
       <% dashboard.unpaidInvoices.forEach(i=>{ %>
-        <a class="queue-item" href="<%= routePath('/billing') %>">
-          <strong><%= i.invoice_number %> — <%= i.customer %></strong>
-          <span><%= i.status %> · <%= formatCurrency(Number(i.total_amount) - Number(i.paid_amount || 0)) %> remaining</span>
+        <a class="compact-row" href="<%= routePath('/billing') %>">
+          <div><strong><%= i.invoice_number %> — <%= i.customer %></strong><span><%= i.status %><%= i.due_date ? ' · Due ' + new Date(i.due_date).toLocaleDateString() : '' %></span></div>
+          <em><%= formatCurrency(i.remaining_amount || 0) %></em>
         </a>
       <% }) %>
       </div>
@@ -62,26 +164,26 @@
   </section>
 
   <section class="card">
-    <h2>Today</h2>
-    <% if(!dashboard.today.length){ %><p class="muted">No scheduled jobs today.</p><% } %>
-    <div class="queue-list">
+    <div class="section-title-row"><h2>Today</h2><a href="<%= routePath('/scheduling/dispatch') %>">Dispatch</a></div>
+    <% if(!dashboard.today.length){ %><div class="empty-state small">No scheduled jobs today.</div><% } %>
+    <div class="compact-list">
       <% dashboard.today.forEach(wo=>{ %>
-        <a class="queue-item" href="<%= routePath('/work-orders/' + wo.id) %>">
-          <strong><%= wo.title %></strong>
-          <span><%= wo.scheduled_start_at ? new Date(wo.scheduled_start_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'Unscheduled' %> · <%= wo.customer %> · <%= wo.assigned_to || 'Unassigned' %></span>
+        <a class="compact-row" href="<%= routePath('/work-orders/' + wo.id) %>">
+          <div><strong><%= wo.title %></strong><span><%= wo.customer %> · <%= wo.assigned_to || 'Unassigned' %></span></div>
+          <em><%= wo.scheduled_start_at ? new Date(wo.scheduled_start_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'Anytime' %></em>
         </a>
       <% }) %>
     </div>
   </section>
 
   <section class="card">
-    <h2>Upcoming</h2>
-    <% if(!dashboard.upcoming.length){ %><p class="muted">No upcoming scheduled jobs.</p><% } %>
-    <div class="queue-list">
+    <div class="section-title-row"><h2>Upcoming</h2><a href="<%= routePath('/scheduling/calendar') %>">Calendar</a></div>
+    <% if(!dashboard.upcoming.length){ %><div class="empty-state small">No upcoming scheduled jobs.</div><% } %>
+    <div class="compact-list">
       <% dashboard.upcoming.forEach(wo=>{ %>
-        <a class="queue-item" href="<%= routePath('/work-orders/' + wo.id) %>">
-          <strong><%= wo.title %></strong>
-          <span><%= wo.scheduled_start_at ? new Date(wo.scheduled_start_at).toLocaleString() : 'Unscheduled' %> · <%= wo.customer %> · <%= wo.assigned_to || 'Unassigned' %></span>
+        <a class="compact-row" href="<%= routePath('/work-orders/' + wo.id) %>">
+          <div><strong><%= wo.title %></strong><span><%= wo.customer %> · <%= wo.assigned_to || 'Unassigned' %></span></div>
+          <em><%= wo.scheduled_start_at ? new Date(wo.scheduled_start_at).toLocaleDateString([], {month:'short', day:'numeric'}) : 'Unscheduled' %></em>
         </a>
       <% }) %>
     </div>
@@ -89,16 +191,16 @@
 
   <section class="card">
     <h2>Recent Activity</h2>
-    <% if(!dashboard.recentActivity.length){ %><p class="muted">No activity yet.</p><% } %>
-    <div class="activity-list">
+    <% if(!dashboard.recentActivity.length){ %><div class="empty-state small">No activity yet.</div><% } %>
+    <div class="activity-feed">
       <% dashboard.recentActivity.forEach(a=>{ %>
-        <div class="activity-item">
-          <strong><%= a.event_type %></strong>
-          <span><%= a.event_body || (a.entity_type + ' #' + a.entity_id) %></span>
-          <small><%= new Date(a.created_at).toLocaleString() %></small>
+        <div class="activity-dot-item">
+          <span></span>
+          <div><strong><%= a.event_type %></strong><p><%= a.event_body || (a.entity_type + ' #' + a.entity_id) %></p><small><%= new Date(a.created_at).toLocaleString() %></small></div>
         </div>
       <% }) %>
     </div>
   </section>
 </div>
+
 <%- include('../partials-footer') %>

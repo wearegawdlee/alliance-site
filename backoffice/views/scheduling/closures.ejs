@@ -1,0 +1,22 @@
+<%- include('../partials-header', { title }) %>
+<section class="page-header"><div><h1>Blackout Dates</h1></div><a class="button secondary" href="<%= routePath('/scheduling/calendar') %>">Calendar</a></section>
+<section class="card">
+  <h2>Add Blackout Date</h2>
+  <form method="post" action="<%= routePath('/scheduling/closures') %>" class="form-grid">
+    <div class="grid four">
+      <label>Date<input type="text" class="js-date-picker" name="closure_date" required placeholder="YYYY-MM-DD"></label>
+      <label>Reason<input name="reason" required placeholder="Holiday, weather, company event..."></label>
+      <label>Type<select name="closure_type"><option value="holiday">Holiday</option><option value="weather">Weather</option><option value="company_event">Company Event</option><option value="other">Other</option></select></label>
+      <label>Service Line<select name="service_line_id"><option value="">All services</option><% options.serviceLines.forEach(sl=>{ %><option value="<%= sl.id %>"><%= sl.name %></option><% }) %></select></label>
+    </div>
+    <button class="button primary">Save Blackout Date</button>
+  </form>
+</section>
+<section class="card">
+  <h2>Configured Blackout Dates</h2>
+  <table class="data-table"><thead><tr><th>Date</th><th>Reason</th><th>Type</th><th>Service</th><th></th></tr></thead><tbody>
+    <% closures.forEach(c=>{ %><tr><td><%= new Date(c.closure_date).toLocaleDateString() %></td><td><%= c.reason %></td><td><%= c.closure_type %></td><td><%= c.service_line || 'All services' %></td><td><form method="post" action="<%= routePath('/scheduling/closures/' + c.id + '/delete') %>"><button class="button secondary">Delete</button></form></td></tr><% }) %>
+    <% if(!closures.length){ %><tr><td colspan="5">No blackout dates configured.</td></tr><% } %>
+  </tbody></table>
+</section>
+<%- include('../partials-footer') %>

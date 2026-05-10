@@ -183,8 +183,8 @@ async function run() {
         );
       }
       await c.query(
-        `INSERT INTO recurring_service_plan_runs(recurring_service_plan_id,work_order_id,scheduled_for,created_by_user_id)
-         VALUES($1,$2,current_date,$3)`,
+        `INSERT INTO recurring_service_plan_runs(recurring_service_plan_id,work_order_id,due_for,scheduled_for,created_by_user_id,generation_source)
+         VALUES($1,$2,current_date,current_date,$3,'seed')`,
         [plan.rows[0].id, workOrderId, poolGuy.id]
       );
 
