@@ -16,6 +16,8 @@ const publicIntakeRoutes = require('./modules/publicIntake/routes');
 const dashboardRoutes = require('./modules/dashboard/routes');
 const userRoutes = require('./modules/users/routes');
 const recurringServiceRoutes = require('./modules/recurringService/routes');
+const schedulingRoutes = require('./modules/scheduling/routes');
+const recurringScheduler = require('./modules/recurringService/scheduler');
 const techRoutes = require('./modules/tech/routes');
 const accountRoutes = require('./modules/account/routes');
 const paymentRoutes = require('./modules/payments/routes');
@@ -117,6 +119,7 @@ app.use(app.locals.routePath('/billing'), requireAuth, requireAnyRole(['admin','
 app.use(app.locals.routePath('/catalog'), requireAuth, requireAnyRole(['admin','finance']), catalogRoutes);
 app.use(app.locals.routePath('/tax-rates'), requireAuth, requireAnyRole(['admin','finance']), taxRateRoutes);
 app.use(app.locals.routePath('/recurring-service'), requireAuth, requireAnyRole(['admin','finance']), recurringServiceRoutes);
+app.use(app.locals.routePath('/scheduling'), requireAuth, requireAnyRole(['admin','finance']), schedulingRoutes);
 app.use(app.locals.routePath('/users'), requireAuth, requireRole('admin'), userRoutes);
 app.use(app.locals.routePath('/admin/stripe-sandbox'), requireAuth, requireRole('admin'), stripeSandboxRoutes);
 app.use(app.locals.routePath('/tech'), requireAuth, requireAnyRole(['admin','technician']), techRoutes);
@@ -129,5 +132,8 @@ function renderLoginError(res, error = 'Invalid email or password') { return res
 function normalizeBasePath(value) { const trimmed = normalizeTargetPath(value); return trimmed === '' ? '' : trimmed; }
 function normalizeTargetPath(target) { const t = String(target || '').trim(); if (!t || t === '/') return ''; return (t.startsWith('/') ? t : `/${t}`).replace(/\/+$/, ''); }
 
-if (require.main === module) app.listen(PORT, () => console.log(`${appConfig.brand.backofficeName} listening on http://localhost:${PORT}${BASE_PATH}`));
+if (require.main === module) app.listen(PORT, () => {
+  console.log(`${appConfig.brand.backofficeName} listening on http://localhost:${PORT}${BASE_PATH}`);
+  recurringScheduler.startRecurringScheduler();
+});
 module.exports = { app, BASE_PATH };

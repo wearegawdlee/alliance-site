@@ -22,7 +22,7 @@
     <span class="chip">Webhook secret: <%= status.stripe.webhookConfigured ? 'Configured' : 'Missing' %></span>
   </div>
   <% if (!status.enabled) { %>
-    <p class="muted">Set <code>STRIPE_SANDBOX_ENABLED=true</code> to use this page in production-like environments.</p>
+    
   <% } %>
 </div>
 

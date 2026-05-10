@@ -58,7 +58,7 @@ async function getPlan(id) {
   `, [id])).rows[0];
   if (!plan) return null;
   const runs = await pool.query(`
-    SELECT rspr.*, wo.title work_order_title, wos.name work_order_status, wos.code work_order_status_code
+    SELECT rspr.*, wo.title work_order_title, wo.scheduled_start_at, wos.name work_order_status, wos.code work_order_status_code
     FROM recurring_service_plan_runs rspr
     JOIN work_orders wo ON wo.id=rspr.work_order_id
     JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id
@@ -142,43 +142,215 @@ function nextRunDateFromDate(plan, fromDate) {
 async function recordExistingWorkOrderRun(planId, workOrderId, scheduledFor, userId) {
   const scheduledDate = dateOnly(scheduledFor);
   await pool.query(
-    `INSERT INTO recurring_service_plan_runs(recurring_service_plan_id,work_order_id,scheduled_for,created_by_user_id)
-     VALUES($1,$2,$3,$4)
+    `INSERT INTO recurring_service_plan_runs(recurring_service_plan_id,work_order_id,due_for,scheduled_for,created_by_user_id,generation_source)
+     VALUES($1,$2,$3,$3,$4,'manual')
      ON CONFLICT (work_order_id) DO NOTHING`,
     [planId, workOrderId, scheduledDate, userId || null]
   );
 }
 
-async function generateNextWorkOrder(planId, userId) {
+
+function todayDate() {
+  return dateOnly(new Date());
+}
+
+function isWeekend(dateValue) {
+  const d = normalizeDate(`${dateOnly(dateValue)}T00:00:00Z`);
+  const day = d.getUTCDay();
+  return day === 0 || day === 6;
+}
+
+async function isBusinessClosure(client, dateValue, serviceLineId) {
+  const result = await client.query(
+    `SELECT reason
+     FROM business_closures
+     WHERE closure_date=$1::date
+       AND (service_line_id IS NULL OR service_line_id=$2)
+     ORDER BY service_line_id NULLS FIRST
+     LIMIT 1`,
+    [dateOnly(dateValue), serviceLineId]
+  );
+  return result.rows[0]?.reason || null;
+}
+
+async function getTechnicianCapacity(client, userId, serviceLineId) {
+  if (!userId) return null;
+  const result = await client.query(
+    `SELECT max_jobs_per_day
+     FROM technician_daily_capacities
+     WHERE user_id=$1
+       AND (service_line_id=$2 OR service_line_id IS NULL)
+     ORDER BY service_line_id NULLS LAST
+     LIMIT 1`,
+    [userId, serviceLineId]
+  );
+  return result.rows[0] ? Number(result.rows[0].max_jobs_per_day || 0) : null;
+}
+
+async function countTechnicianJobsOnDate(client, userId, serviceLineId, scheduledDate) {
+  if (!userId) return 0;
+  const result = await client.query(
+    `SELECT COUNT(*)::int count
+     FROM work_orders wo
+     JOIN work_order_assignments woa ON woa.work_order_id=wo.id AND woa.user_id=$1
+     JOIN work_order_statuses wos ON wos.id=wo.work_order_status_id
+     WHERE wo.service_line_id=$2
+       AND wo.scheduled_start_at::date=$3::date
+       AND wos.code <> 'cancelled'`,
+    [userId, serviceLineId, dateOnly(scheduledDate)]
+  );
+  return Number(result.rows[0]?.count || 0);
+}
+
+async function chooseScheduledDate(client, plan, dueDate) {
+  let scheduledDate = dateOnly(dueDate);
+  const reasons = [];
+  const capacity = await getTechnicianCapacity(client, plan.assigned_user_id, plan.service_line_id);
+
+  for (let guard = 0; guard < 90; guard += 1) {
+    let blockedReason = null;
+    if (isWeekend(scheduledDate)) blockedReason = 'weekend';
+    const closureReason = await isBusinessClosure(client, scheduledDate, plan.service_line_id);
+    if (closureReason) blockedReason = closureReason;
+
+    if (!blockedReason && capacity && capacity > 0) {
+      const count = await countTechnicianJobsOnDate(client, plan.assigned_user_id, plan.service_line_id, scheduledDate);
+      if (count >= capacity) blockedReason = `technician capacity (${count}/${capacity})`;
+    }
+
+    if (!blockedReason) {
+      return { scheduledDate, adjustmentReason: reasons.length ? reasons.join('; ') : null };
+    }
+
+    reasons.push(`${scheduledDate}: ${blockedReason}`);
+    scheduledDate = addDays(scheduledDate, 1);
+  }
+
+  throw new Error(`Could not find an available scheduled date for recurring plan ${plan.id}`);
+}
+
+async function createWorkOrderForRecurringRun(client, plan, dueDate, scheduledDate, adjustmentReason, userId, source = 'scheduler') {
+  const dueFor = dateOnly(dueDate);
+  const existing = await client.query(
+    `SELECT work_order_id
+     FROM recurring_service_plan_runs
+     WHERE recurring_service_plan_id=$1 AND due_for=$2`,
+    [plan.id, dueFor]
+  );
+  if (existing.rows[0]) return { workOrderId: existing.rows[0].work_order_id, created: false };
+
+  const openStatusId = await getOpenStatusId(client);
+  const workOrderTypeId = plan.work_order_type_id || await getWorkOrderTypeId(client, plan.service_line_id, 'maintenance');
+  const workOrder = await client.query(`
+    INSERT INTO work_orders(customer_id,customer_location_id,service_line_id,work_order_type_id,work_order_status_id,title,description,scheduled_start_at)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8::date)
+    RETURNING id
+  `, [plan.customer_id, plan.customer_location_id, plan.service_line_id, workOrderTypeId, openStatusId, plan.title, plan.description, scheduledDate]);
+  const workOrderId = workOrder.rows[0].id;
+
+  if (plan.assigned_user_id) {
+    await client.query(
+      `INSERT INTO work_order_assignments(work_order_id,user_id,role_on_job)
+       VALUES($1,$2,'technician') ON CONFLICT DO NOTHING`,
+      [workOrderId, plan.assigned_user_id]
+    );
+  }
+
+  await client.query(
+    `INSERT INTO work_order_status_history(work_order_id,to_status_id,changed_by_user_id,reason)
+     VALUES($1,$2,$3,$4)`,
+    [workOrderId, openStatusId, userId || null, adjustmentReason ? `Generated from recurring service plan. ${adjustmentReason}` : 'Generated from recurring service plan']
+  );
+
+  await client.query(
+    `INSERT INTO recurring_service_plan_runs(recurring_service_plan_id,work_order_id,due_for,scheduled_for,adjustment_reason,created_by_user_id,generation_source)
+     VALUES($1,$2,$3,$4,$5,$6,$7)`,
+    [plan.id, workOrderId, dueFor, scheduledDate, adjustmentReason, userId || null, source]
+  );
+
+  const customerStatus = await client.query(`SELECT cs.code FROM customers c JOIN customer_statuses cs ON cs.id=c.customer_status_id WHERE c.id=$1`, [plan.customer_id]);
+  if (customerStatus.rows[0]?.code === 'prospect') {
+    const customerId = await getCustomerStatusId(client, 'customer');
+    await client.query(`UPDATE customers SET customer_status_id=$1,updated_at=current_timestamp WHERE id=$2`, [customerId, plan.customer_id]);
+    await client.query(`INSERT INTO customer_status_history(customer_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,'Recurring service plan generated first work order')`, [plan.customer_id, customerId, userId || null]);
+  }
+
+  return { workOrderId, created: true };
+}
+
+async function generateNextWorkOrder(planId, userId, source = 'manual') {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const plan = (await client.query(`SELECT * FROM recurring_service_plans WHERE id=$1 FOR UPDATE`, [planId])).rows[0];
     if (!plan) throw new Error('Recurring service plan not found');
     if (!plan.is_active) throw new Error('Recurring service plan is inactive');
-    const existing = await client.query(`SELECT work_order_id FROM recurring_service_plan_runs WHERE recurring_service_plan_id=$1 AND scheduled_for=$2`, [planId, plan.next_run_date]);
-    if (existing.rows[0]) { await client.query('COMMIT'); return existing.rows[0].work_order_id; }
-    const openStatusId = await getOpenStatusId(client);
-    const workOrderTypeId = plan.work_order_type_id || await getWorkOrderTypeId(client, plan.service_line_id, 'maintenance');
-    const workOrder = await client.query(`
-      INSERT INTO work_orders(customer_id,customer_location_id,service_line_id,work_order_type_id,work_order_status_id,title,description,scheduled_start_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8::date)
-      RETURNING id
-    `, [plan.customer_id, plan.customer_location_id, plan.service_line_id, workOrderTypeId, openStatusId, plan.title, plan.description, plan.next_run_date]);
-    const workOrderId = workOrder.rows[0].id;
-    if (plan.assigned_user_id) await client.query(`INSERT INTO work_order_assignments(work_order_id,user_id,role_on_job) VALUES($1,$2,'technician') ON CONFLICT DO NOTHING`, [workOrderId, plan.assigned_user_id]);
-    await client.query(`INSERT INTO work_order_status_history(work_order_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,'Generated from recurring service plan')`, [workOrderId, openStatusId, userId || null]);
-    await client.query(`INSERT INTO recurring_service_plan_runs(recurring_service_plan_id,work_order_id,scheduled_for,created_by_user_id) VALUES($1,$2,$3,$4)`, [planId, workOrderId, plan.next_run_date, userId || null]);
-    const customerStatus = await client.query(`SELECT cs.code FROM customers c JOIN customer_statuses cs ON cs.id=c.customer_status_id WHERE c.id=$1`, [plan.customer_id]);
-    if (customerStatus.rows[0]?.code === 'prospect') {
-      const customerId = await getCustomerStatusId(client, 'customer');
-      await client.query(`UPDATE customers SET customer_status_id=$1,updated_at=current_timestamp WHERE id=$2`, [customerId, plan.customer_id]);
-      await client.query(`INSERT INTO customer_status_history(customer_id,to_status_id,changed_by_user_id,reason) VALUES($1,$2,$3,'Recurring service plan generated first work order')`, [plan.customer_id, customerId, userId || null]);
-    }
+
+    const dueDate = dateOnly(plan.next_run_date);
+    const schedule = await chooseScheduledDate(client, plan, dueDate);
+    const result = await createWorkOrderForRecurringRun(client, plan, dueDate, schedule.scheduledDate, schedule.adjustmentReason, userId, source);
     await client.query(`UPDATE recurring_service_plans SET next_run_date=$1,updated_at=current_timestamp WHERE id=$2`, [nextRunDate(plan), planId]);
     await client.query('COMMIT');
-    return workOrderId;
+    return result.workOrderId;
   } catch(e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
 }
 
-module.exports = { listPlans, getOptions, getCustomerLocations, getPlan, getPlanScheduleSnapshot, getLatestRunDate, createPlan, updatePlan, generateNextWorkOrder, recordExistingWorkOrderRun, nextRunDate, nextRunDateFromDate, dateOnly };
+async function generateDueWorkOrders(options = {}) {
+  const lookaheadDays = Math.max(0, Number(options.lookaheadDays ?? process.env.RECURRING_LOOKAHEAD_DAYS ?? 14));
+  const userId = options.userId || null;
+  const source = options.source || 'scheduler';
+  const horizon = addDays(todayDate(), lookaheadDays);
+  const generated = [];
+  const skipped = [];
+  const client = await pool.connect();
+
+  try {
+    const lock = await client.query(`SELECT pg_try_advisory_lock(774401) acquired`);
+    if (!lock.rows[0]?.acquired) return { generated, skipped, locked: true, horizon };
+
+    try {
+      while (true) {
+        await client.query('BEGIN');
+        const plan = (await client.query(
+          `SELECT *
+           FROM recurring_service_plans
+           WHERE is_active=true
+             AND next_run_date <= $1::date
+           ORDER BY next_run_date ASC, id ASC
+           LIMIT 1
+           FOR UPDATE SKIP LOCKED`,
+          [horizon]
+        )).rows[0];
+
+        if (!plan) {
+          await client.query('COMMIT');
+          break;
+        }
+
+        try {
+          const dueDate = dateOnly(plan.next_run_date);
+          const schedule = await chooseScheduledDate(client, plan, dueDate);
+          const result = await createWorkOrderForRecurringRun(client, plan, dueDate, schedule.scheduledDate, schedule.adjustmentReason, userId, source);
+          const nextDate = nextRunDateFromDate(plan, dueDate);
+          await client.query(`UPDATE recurring_service_plans SET next_run_date=$1,updated_at=current_timestamp WHERE id=$2`, [nextDate, plan.id]);
+          await client.query('COMMIT');
+          if (result.created) generated.push({ planId: plan.id, workOrderId: result.workOrderId, dueDate, scheduledDate: schedule.scheduledDate, adjustmentReason: schedule.adjustmentReason });
+        } catch (e) {
+          await client.query('ROLLBACK');
+          skipped.push({ planId: plan.id, error: e.message });
+          // Move this plan out of the current run loop to prevent one bad plan from spinning forever.
+          await pool.query(`UPDATE recurring_service_plans SET updated_at=current_timestamp WHERE id=$1`, [plan.id]);
+          break;
+        }
+      }
+    } finally {
+      await client.query(`SELECT pg_advisory_unlock(774401)`);
+    }
+  } finally {
+    client.release();
+  }
+
+  return { generated, skipped, locked: false, horizon };
+}
+
+module.exports = { listPlans, getOptions, getCustomerLocations, getPlan, getPlanScheduleSnapshot, getLatestRunDate, createPlan, updatePlan, generateNextWorkOrder, generateDueWorkOrders, recordExistingWorkOrderRun, nextRunDate, nextRunDateFromDate, dateOnly, chooseScheduledDate };

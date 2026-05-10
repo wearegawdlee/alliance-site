@@ -1,5 +1,5 @@
 <%- include('../partials-header', { title: 'Work Orders' }) %>
-<section class="page-header"><div><h1>Work Orders</h1><p>Operational queue, dispatch, inspection items, and billing handoff.</p></div></section>
+<section class="page-header"><div><h1>Work Orders</h1></div></section>
 <section class="card">
   <form class="filter-form" method="get" action="<%= routePath('/work-orders') %>">
     <label>Search<input name="search" value="<%= query.search || '' %>" placeholder="Customer, city, service, title, notes..."></label>
