@@ -23,6 +23,7 @@ const accountRoutes = require('./modules/account/routes');
 const paymentRoutes = require('./modules/payments/routes');
 const publicPaymentRoutes = require('./modules/publicPayments/routes');
 const stripeSandboxRoutes = require('./modules/stripeSandbox/routes');
+const healthRoutes = require('./modules/health/routes');
 const paymentService = require('./modules/payments/service');
 const { requireAuth, requireRole, requireAnyRole, hasRole, hasAnyRole, redirectForRole } = require('./middleware/auth');
 
@@ -106,7 +107,7 @@ app.post(`${BASE_PATH}/login`, async (req, res) => {
   } catch (e) { console.error(e); renderLoginError(res); }
 });
 app.post(`${BASE_PATH}/logout`, (req, res) => req.session.destroy(() => res.redirect(app.locals.routePath('/login'))));
-app.get(`${BASE_PATH}/health`, (req, res) => res.json({ ok: true }));
+app.use(app.locals.routePath('/health'), healthRoutes);
 app.use('/pay', publicPaymentRoutes);
 
 app.use(`${BASE_PATH}/api/public`, publicIntakeRoutes);
