@@ -13,7 +13,9 @@
     "notify:test": "dotenv -e .env -- node scripts/send-test-notification.js",
     "db:seed:tax-rates": "dotenv -e .env -- node scripts/seed-ga-tax-rates.js",
     "pretest": "node scripts/reset-test-db.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "db:backup": "dotenv -e .env -- bash scripts/backup-db.sh",
+    "db:restore": "dotenv -e .env -- bash scripts/restore-db.sh"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
