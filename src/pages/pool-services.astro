@@ -1,0 +1,413 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+
+const BRAND = {
+  name: "Alliance Home Services",
+  garageDivision: "Alliance Garage Doors of Roswell",
+  poolDivision: "Spring Water Pool Services",
+  garagePhone: "(770)742-9433",
+  garagePhoneHref: "7707429433",
+  poolPhone: "(470)524-2197",
+  poolPhoneHref: "4705242197",
+  email: "contact@agdofroswell.com",
+  address: "Roswell, GA 30075",
+  hours: "Mon-Sun 9:00am-8:00pm",
+};
+
+const serviceAreas = [
+  "Alpharetta", "Atlanta", "Brookhaven", "Buckhead", "Canton", "Chamblee",
+  "Decatur", "Doraville", "Dunwoody", "Druid Hills", "East Cobb", "Johns Creek", "Kennesaw",
+  "Marietta", "Milton", "Norcross", "Peachtree Corners", "Roswell", "Sandy Springs", "Smyrna", "Suwanee", "Woodstock",
+];
+
+const services = [
+  {
+    title: "Pool Cleaning",
+    desc: "Regular skimming, brushing, vacuuming, and tile-line attention so leaves, pollen, and everyday buildup do not take over your pool.",
+    icon: "≈",
+    bullets: ["Skimming and brushing", "Vacuuming", "Tile-line cleaning"],
+  },
+  {
+    title: "Water Testing & Balancing",
+    desc: "Water testing and chemical balancing focused on the basics that affect clarity and comfort, including pH and chlorine levels.",
+    icon: "◌",
+    bullets: ["Water testing", "pH checks", "Chlorine balancing"],
+  },
+  {
+    title: "Recurring Pool Care",
+    desc: "Consistent upkeep for homeowners who would rather prevent cloudy water and heavy buildup than recover from them later.",
+    icon: "✓",
+    bullets: ["Weekly service", "Recurring upkeep", "Clear communication"],
+  },
+  {
+    title: "Equipment Checks During Service",
+    desc: "Basic checks of pumps, filters, baskets, and visible equipment so potential concerns can be identified and discussed early.",
+    icon: "⌁",
+    bullets: ["Pump checks", "Filter checks", "Basket cleaning"],
+  },
+];
+
+const whyCards = [
+  {
+    title: "Care matched to the pool",
+    body: "Start with the help you actually need, whether that is recurring upkeep, a one-time cleanup, water balancing, or a seasonal reset.",
+  },
+  {
+    title: "The essentials covered",
+    body: "Cleaning, water care, baskets, filters, and visible equipment concerns are handled as connected parts of the same service visit.",
+  },
+  {
+    title: "Problems noticed sooner",
+    body: "Routine attention makes it easier to catch changing water conditions, restricted flow, or visible equipment concerns before they become bigger headaches.",
+  },
+  {
+    title: "Straightforward local follow-up",
+    body: "Tell us what you are seeing, where the pool is located, and whether you need one-time or recurring care. We will confirm scope and availability with you.",
+  },
+];
+
+const faqs = [
+  {
+    q: "What can routine pool service include?",
+    a: "Depending on the service requested, visits can include skimming, brushing, vacuuming, tile-line cleaning, water testing and balancing, basket cleaning, and basic checks of pumps and filters. We will confirm the exact scope before service begins.",
+  },
+  {
+    q: "Do you offer one-time and recurring pool service?",
+    a: "You can request either. Tell us whether you need ongoing upkeep, a one-time cleanup, chemical balancing, or a seasonal reset, and we will confirm current availability.",
+  },
+  {
+    q: "What should I mention about an equipment concern?",
+    a: "Describe what you notice, such as weak circulation, unusual noise, a dirty filter, or a basket that is not pulling normally. Basic visible checks are available during service; we will tell you if the issue may require a separate repair evaluation.",
+  },
+  {
+    q: "What should I include in my request?",
+    a: "Include the service address, the current condition of the water, how much debris or buildup you are dealing with, any equipment concerns, and whether you want one-time or recurring care.",
+  },
+];
+
+const title = `Pool Services | ${BRAND.name}`;
+const description =
+  "Pool cleaning, water testing and balancing, recurring maintenance, and basic equipment checks from Spring Water Pool Services in Roswell and Metro Atlanta.";
+---
+
+<Base {title} {description}>
+  <SiteHeader variant="pool" />
+
+  <main>
+    <section class="relative overflow-hidden bg-[#05314b] text-white">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(121,216,247,0.45),_transparent_30%),linear-gradient(135deg,_#04273b_0%,_#075c7e_52%,_#7adcf8_100%)]"></div>
+      <div class="absolute inset-0 opacity-20">
+        <div class="absolute -right-24 top-10 h-80 w-80 rounded-full border border-white/40"></div>
+        <div class="absolute -bottom-28 left-1/4 h-96 w-96 rounded-full border border-white/20"></div>
+      </div>
+      <div class="relative mx-auto max-w-7xl px-4 py-20 md:py-28 lg:py-32">
+        <div class="max-w-4xl">
+          <p class="mb-4 text-lg font-bold uppercase tracking-[0.14em] text-[#d8f6ff] sm:text-xl md:text-2xl">{BRAND.poolDivision}</p>
+          <h1 class="text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+            Pool care that keeps the water clear and the weekly work off your list
+          </h1>
+          <p class="mt-5 max-w-3xl text-lg leading-8 text-white/92">
+            Get help with skimming, brushing, vacuuming, water testing and balancing, recurring maintenance, and basic equipment checks for your Roswell or Metro Atlanta pool.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href="#contact" class="rounded-lg bg-white px-6 py-4 font-semibold text-[#075c7e] shadow-lg shadow-black/20 hover:bg-[#e8fbff]">Request Pool Service</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-[#06264a] text-white">
+      <div class="mx-auto grid max-w-7xl gap-4 border-t border-white/10 px-4 py-7 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["Consistent Cleaning", "Skimming, brushing, and vacuuming"],
+          ["Balanced Water", "Testing, pH, and chlorine care"],
+          ["Recurring Options", "A steadier pool-care routine"],
+          ["Equipment Awareness", "Pumps, filters, and baskets checked"],
+        ].map(([titleText, body]) => (
+          <div class="flex items-center gap-4 border-white/10 py-2 lg:border-r lg:last:border-r-0">
+            <div class="grid h-12 w-12 place-items-center rounded-full border border-white/20 text-xl text-[#8fe8ff]">✓</div>
+            <div>
+              <p class="font-semibold">{titleText}</p>
+              <p class="text-sm text-white/70">{body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section id="services" class="scroll-mt-48 bg-[#f4fbfe]">
+      <div class="mx-auto max-w-7xl px-4 py-16 md:py-20">
+        <div class="mx-auto max-w-3xl text-center">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#0b7aa5]">Pool Services</p>
+          <h2 class="mt-3 text-3xl font-bold tracking-tight text-[#05314b] md:text-4xl">Choose the pool care your home actually needs.</h2>
+          <p class="mt-4 text-slate-600">
+            Start with recurring maintenance or request focused help for a cleanup, water-care problem, seasonal reset, or visible equipment concern.
+          </p>
+        </div>
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {services.map((service) => (
+            <article class="group rounded-2xl border border-cyan-100 bg-white p-6 shadow-lg shadow-slate-900/10 transition hover:-translate-y-1 hover:border-[#0b7aa5]/40 hover:shadow-xl">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-5">
+                <div class="grid h-14 w-14 place-items-center rounded-full bg-[#075c7e] text-2xl text-white shadow-sm">{service.icon}</div>
+                <div class="h-1 w-14 rounded-full bg-[#4dc7ea]"></div>
+              </div>
+              <div class="pt-6">
+                <h3 class="text-xl font-bold text-[#05314b]">{service.title}</h3>
+                <p class="mt-3 text-sm leading-6 text-slate-600">{service.desc}</p>
+                <ul class="mt-5 space-y-2 text-sm text-slate-700">
+                  {service.bullets.map((bullet) => (
+                    <li class="flex gap-2">
+                      <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#0b7aa5]"></span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="why" class="scroll-mt-48 bg-[#05314b] text-white">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[0.9fr_1.4fr] md:py-20">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#8fe8ff]">Why Choose {BRAND.name} for pool care?</p>
+          <h2 class="mt-3 text-3xl font-bold tracking-tight md:text-4xl">A cleaner pool without turning it into another weekly chore.</h2>
+          <p class="mt-4 text-white/82">
+            Regular cleaning and water care help you stay ahead of debris, cloudy water, and the small warning signs that are easy to miss between swims.
+          </p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+          {whyCards.map((card) => (
+            <article class="border-l border-white/15 bg-white/[0.03] p-5">
+              <div class="mb-4 grid h-11 w-11 place-items-center rounded-full border border-[#8fe8ff]/50 text-[#8fe8ff]">✓</div>
+              <h3 class="font-semibold">{card.title}</h3>
+              <p class="mt-2 text-sm leading-6 text-white/75">{card.body}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="areas" class="scroll-mt-48 bg-[#f4fbfe]">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:items-center">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#0b7aa5]">Service Areas</p>
+          <h2 class="mt-3 text-3xl font-bold text-[#05314b] md:text-4xl">Pool service requests around Roswell and Metro Atlanta.</h2>
+          <p class="mt-4 text-slate-600">Search your city below to check whether it is in the general service area. Final availability may depend on route and schedule.</p>
+        </div>
+        <div class="rounded-3xl bg-[#05314b] p-6 text-white shadow-xl shadow-slate-900/10">
+          <div class="relative space-y-3">
+            <input id="service-area-input" placeholder="Search your city..." list="service-areas" class="w-full rounded-2xl bg-white px-4 py-4 pr-12 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/30" />
+            <button type="button" id="service-area-check" class="w-full rounded-2xl bg-[#0b7aa5] px-4 py-3 font-semibold text-white hover:bg-[#086a90]">Check Availability</button>
+            <datalist id="service-areas">
+              {serviceAreas.map((area) => <option value={area} />)}
+            </datalist>
+            <p id="service-area-result" class="mt-3 text-sm" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="scroll-mt-48 bg-[#0b7aa5] text-white">
+      <div class="mx-auto max-w-5xl px-4 py-16">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold">FAQ</h2>
+          <p class="mt-3 text-white/85">Quick answers before you request pool service.</p>
+        </div>
+        <div class="mt-8 grid gap-4">
+          {faqs.map((item) => (
+            <article class="rounded-2xl border border-white/20 bg-white p-5 text-slate-900 shadow-lg shadow-cyan-950/20">
+              <h3 class="font-semibold text-[#05314b]">{item.q}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">{item.a}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" data-mobile-before="why" class="scroll-mt-48 bg-[#f4fbfe]">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div class="rounded-3xl bg-[#05314b] p-8 text-white shadow-xl shadow-slate-900/10">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#8fe8ff]">Request Pool Service</p>
+          <h2 class="mt-3 text-3xl font-bold md:text-4xl">Tell us what the pool is doing. We will take it from there.</h2>
+          <p class="mt-4 text-white/82">For the fastest follow-up, include your address, the water or cleaning issue you are seeing, any equipment concerns, and whether you want one-time or recurring service.</p>
+          <div class="mt-7 space-y-3 text-sm">
+            <p><strong>Pool Services:</strong> <a class="underline decoration-white/30 underline-offset-4 hover:text-[#8fe8ff]" href={`tel:${BRAND.poolPhoneHref}`}>{BRAND.poolPhone}</a></p>
+            <p><strong>Garage Doors:</strong> <a class="underline decoration-white/30 underline-offset-4 hover:text-[#b8ca80]" href={`tel:${BRAND.garagePhoneHref}`}>{BRAND.garagePhone}</a></p>
+            <p><strong>Email:</strong> <a class="underline decoration-white/30 underline-offset-4 hover:text-[#8fe8ff]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a></p>
+            <p><strong>Hours:</strong> {BRAND.hours}</p>
+          </div>
+        </div>
+
+        <form class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/10 md:p-7" data-lead-form data-lead-source="Alliance Home Services pool services form">
+          <input type="hidden" name="brand" value="Alliance Home Services" />
+          <input type="hidden" name="business_source" value="alliance_home_services" />
+          <input type="hidden" name="page_source" value="pool_services" />
+          <input type="hidden" name="landing_page" value="/pool-services" />
+          <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="name">Name</label>
+              <input id="name" name="name" autocomplete="name" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="phone">Phone</label>
+              <input id="phone" name="phone" autocomplete="tel" inputmode="tel" pattern="[0-9()+.\-\s]{7,20}" maxlength="20" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="email">Email</label>
+              <input id="email" type="email" name="email" autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="preferred_contact">Preferred Contact Method</label>
+              <select id="preferred_contact" name="preferred_contact" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15">
+                <option value="">Select one</option>
+                <option>Call</option>
+                <option>Text</option>
+                <option>Email</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-sm font-semibold text-slate-700" for="address">Address</label>
+            <input id="address" name="address" autocomplete="address-line1" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" />
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-3">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="city">City</label>
+              <input id="city" name="city" autocomplete="address-level2" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="state">State</label>
+              <input id="state" name="state" value="GA" autocomplete="address-level1" readonly class="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-slate-600" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="zip">ZIP Code</label>
+              <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" />
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="service_category">Which service do you need?</label>
+              <select id="service_category" name="service_category" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15">
+                <option value="">Select one</option>
+                <option selected>Pool Service</option>
+                <option>Garage Door Service</option>
+                <option>Both</option>
+                <option>Not Sure</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="service_type">Pool Service Type</label>
+              <select id="service_type" name="service_type" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15">
+                <option value="">Select one</option>
+                <option>Pool Cleaning</option>
+                <option>Pool Maintenance</option>
+                <option>Chemical Balancing</option>
+                <option>Filter / Equipment Check</option>
+                <option>Recurring Pool Service</option>
+                <option>One-Time Pool Service</option>
+                <option>Free Estimate</option>
+                <option>Not Sure Yet</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="source">How did you hear about us?</label>
+              <select id="source" name="source" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15">
+                <option value="">Select one</option>
+                <option>Google Search</option>
+                <option>Instagram</option>
+                <option>Facebook</option>
+                <option>Nextdoor</option>
+                <option>Yard Sign / Truck</option>
+                <option>Friend / Referral</option>
+                <option>Repeat Customer</option>
+                <option>Alliance Home Services Website</option>
+                <option>Other</option>
+              </select>
+              <input id="source_other" name="source_other" class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" placeholder="If Other or Referral, tell us who or where" style="display:none" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-sm font-semibold text-slate-700" for="message">What do you need help with?</label>
+            <textarea id="message" name="message" rows={4} class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" placeholder="Routine cleaning, cloudy water, chemical balancing, equipment concern, recurring service, or both."></textarea>
+          </div>
+
+          <button type="submit" class="mt-5 w-full rounded-xl bg-[#0b7aa5] px-5 py-4 font-semibold text-white hover:bg-[#086a90]">Send Pool Service Request</button>
+          <p class="mt-3 hidden rounded-xl px-3 py-2 text-sm" data-lead-status role="status" aria-live="polite"></p>
+          <div class="mt-4 text-center">
+            <p class="text-xs text-slate-500">By submitting, you agree to be contacted about your service request.</p>
+            <p class="text-xs text-slate-500">We only use your info to reply. No sharing, no spam.</p>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-[#05314b] text-white">
+    <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm md:grid-cols-4">
+      <div>
+        <img src="/logo-main.webp" alt={`${BRAND.name} logo`} class="h-16 w-auto rounded bg-white p-2" />
+        <p class="mt-4 text-white/70">Practical pool cleaning, water care, and recurring maintenance for Roswell and Metro Atlanta homes.</p>
+      </div>
+      <div>
+        <p class="font-semibold">Quick Links</p>
+        <ul class="mt-3 space-y-2 text-white/75">
+          <li><a class="hover:text-[#8fe8ff]" href="/">Home</a></li>
+          <li><a class="hover:text-[#b8ca80]" href="/garage-doors">Garage Doors</a></li>
+          <li><a class="hover:text-[#8fe8ff]" href="/pool-services">Pool Services</a></li>
+          <li><a class="hover:text-[#8fe8ff]" href="/pool-specials">Pool Specials</a></li>
+          <li><a class="hover:text-[#8fe8ff]" href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-semibold">Contact</p>
+        <ul class="mt-3 space-y-2 text-white/75">
+          <li>Pool: <a class="hover:text-[#8fe8ff]" href={`tel:${BRAND.poolPhoneHref}`}>{BRAND.poolPhone}</a></li>
+          <li>Garage Doors: <a class="hover:text-[#b8ca80]" href={`tel:${BRAND.garagePhoneHref}`}>{BRAND.garagePhone}</a></li>
+          <li><a class="hover:text-[#8fe8ff]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a></li>
+          <li>{BRAND.address}</li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-semibold">Divisions</p>
+        <ul class="mt-3 space-y-2 text-white/75">
+          <li>{BRAND.poolDivision}</li>
+          <li>{BRAND.garageDivision}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 py-4 text-center text-xs text-white/55">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
+  </footer>
+
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: `${BRAND.name} - ${BRAND.poolDivision}`,
+      telephone: BRAND.poolPhone,
+      email: BRAND.email,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: BRAND.address,
+        addressLocality: "Roswell",
+        addressRegion: "GA",
+        postalCode: "30075",
+        addressCountry: "US"
+      },
+      url: "https://agdofroswell.com/pool-services"
+    })}
+  </script>
+
+  <script src="/service-areas.js" defer></script>
+  <script src="/form.js" defer></script>
+  <script src="/responsive-section-order.js" defer></script>
+</Base>

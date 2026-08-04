@@ -1,0 +1,31 @@
+---
+import Base from "../layouts/Base.astro";
+
+const title = "Pool Service Request Received | Alliance Home Services";
+const description = "Spring Water Pool Services received your request and will follow up about your pool-care needs.";
+---
+
+<Base {title} {description}>
+  <section class="min-h-screen bg-[#eef8fd] text-[#05314b]">
+    <div class="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
+      <a href="/" aria-label="Visit home page">
+        <img src="/logo-main.webp" alt="Alliance Home Services logo" class="mx-auto h-20 object-contain md:h-24" />
+      </a>
+
+      <div class="mt-8 rounded-[2rem] border border-[#05314b]/10 bg-white px-6 py-10 shadow-sm md:px-10">
+        <h1 class="text-3xl font-semibold md:text-4xl">Thanks—we received your pool service request</h1>
+        <p class="mt-4 text-base text-[#1a2142] md:text-lg">
+          Spring Water Pool Services will review the details and follow up about the service scope, availability, and next step.
+        </p>
+        <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <a href="tel:4705242197" class="rounded-2xl bg-[#0b7aa5] px-6 py-3 font-medium text-white hover:bg-[#086a90]">
+            Call Pool Services
+          </a>
+          <a href="/" class="rounded-2xl border border-[#05314b]/15 bg-white px-6 py-3 font-medium text-[#05314b] hover:bg-[#eef8fd]">
+            Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

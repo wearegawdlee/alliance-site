@@ -1,0 +1,224 @@
+---
+type HeaderVariant = "home" | "garage" | "pool" | "specials" | "garage-specials" | "pool-specials";
+
+interface Props {
+  variant: HeaderVariant;
+}
+
+const { variant } = Astro.props;
+
+const BRAND_NAME = "Alliance Home Services";
+
+const settings = {
+  home: {
+    sticky: true,
+    specialHref: "/specials",
+    specialLabel: "Specials",
+    contactHref: "/garage-doors#contact",
+    accentClass: "hover:text-[#5f743d]",
+    menuBarClass: "bg-[#06264a]",
+    activeDivision: "home",
+    mobileCtaHref: "#garage-division",
+    mobileCtaLabel: "Choose a Service",
+  },
+  garage: {
+    sticky: true,
+    specialHref: "/garage-door-specials",
+    specialLabel: "Garage Door Specials",
+    contactHref: "#contact",
+    accentClass: "hover:text-[#5f743d]",
+    menuBarClass: "bg-[#06264a]",
+    activeDivision: "garage",
+    mobileCtaHref: "#contact",
+    mobileCtaLabel: "Request Garage Door Service",
+  },
+  pool: {
+    sticky: true,
+    specialHref: "/pool-specials",
+    specialLabel: "Pool Specials",
+    contactHref: "#contact",
+    accentClass: "hover:text-[#0b7aa5]",
+    menuBarClass: "bg-[#05314b]",
+    activeDivision: "pool",
+    mobileCtaHref: "#contact",
+    mobileCtaLabel: "Request Pool Service",
+  },
+  specials: {
+    sticky: false,
+    specialHref: "/specials",
+    specialLabel: "Specials",
+    contactHref: "/#contact",
+    accentClass: "hover:text-[#5f743d]",
+    menuBarClass: "bg-[#06264a]",
+    activeDivision: "specials",
+    mobileCtaHref: "/",
+    mobileCtaLabel: "Choose a Service",
+  },
+  "garage-specials": {
+    sticky: false,
+    specialHref: "/specials",
+    specialLabel: "Specials",
+    contactHref: "/#contact",
+    accentClass: "hover:text-[#5f743d]",
+    menuBarClass: "bg-[#06264a]",
+    activeDivision: "garage",
+    mobileCtaHref: "#quick-estimate",
+    mobileCtaLabel: "Claim Garage Door Special",
+  },
+  "pool-specials": {
+    sticky: false,
+    specialHref: "/specials",
+    specialLabel: "Specials",
+    contactHref: "/#contact",
+    accentClass: "hover:text-[#0b7aa5]",
+    menuBarClass: "bg-[#05314b]",
+    activeDivision: "pool",
+    mobileCtaHref: "#quick-estimate",
+    mobileCtaLabel: "Request Pool Estimate",
+  },
+} satisfies Record<HeaderVariant, {
+  sticky: boolean;
+  specialHref: string;
+  specialLabel: string;
+  contactHref: string;
+  accentClass: string;
+  menuBarClass: string;
+  activeDivision: "home" | "garage" | "pool" | "specials";
+  mobileCtaHref: string;
+  mobileCtaLabel: string;
+}>;
+
+const current = settings[variant];
+const garageActive = current.activeDivision === "garage";
+const poolActive = current.activeDivision === "pool";
+const specialsActive = variant === "specials" || variant === "garage-specials" || variant === "pool-specials";
+---
+
+<header id="site-header" class:list={["relative z-50 border-b border-slate-900/10 bg-white/95 shadow-sm backdrop-blur", { "sticky top-0": current.sticky }]}>
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+    <a href="/" class="flex items-center gap-3" aria-label={`${BRAND_NAME} home`}>
+      <img src="/logo-alliance-home-services.png" alt={`${BRAND_NAME} logo`} class="h-20 w-auto object-contain md:h-28" />
+    </a>
+
+    <button
+      id="menu-btn"
+      class="relative flex h-12 w-12 flex-col items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow md:hidden"
+      aria-label="Open navigation"
+      aria-controls="mobile-menu"
+      aria-expanded="false"
+    >
+      <span data-menu-line="top" class:list={["block h-0.5 w-5 transition duration-200", current.menuBarClass]}></span>
+      <span data-menu-line="middle" class:list={["block h-0.5 w-5 transition duration-200", current.menuBarClass]}></span>
+      <span data-menu-line="bottom" class:list={["block h-0.5 w-5 transition duration-200", current.menuBarClass]}></span>
+    </button>
+
+    <nav class="hidden items-center gap-6 text-sm font-medium text-slate-700 md:flex">
+      <a href="/" class="hover:text-[#5f743d]">Home</a>
+      <a href="/garage-doors" class="hover:text-[#5f743d]">Garage Doors</a>
+      <a href="/pool-services" class="hover:text-[#0b7aa5]">Pool Services</a>
+      <a href={current.specialHref} class={current.accentClass}>{current.specialLabel}</a>
+      <a href={current.contactHref} class={current.accentClass}>Contact</a>
+    </nav>
+  </div>
+
+  <div id="mobile-menu-backdrop" data-open="false" class="fixed inset-0 z-40 bg-[#041a33]/35 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 md:hidden"></div>
+
+  <nav
+    id="mobile-menu"
+    data-open="false"
+    aria-hidden="true"
+    aria-label="Mobile navigation"
+    class="pointer-events-none invisible absolute left-3 right-3 top-full z-50 -mt-2 -translate-y-2 scale-[0.98] opacity-0 transition duration-200 ease-out md:hidden"
+  >
+    <div class="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white p-3 shadow-2xl shadow-[#041a33]/25">
+      <div class="flex items-center justify-between px-2 pb-3 pt-1">
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Explore Alliance</p>
+        <a href="/" class="text-sm font-semibold text-[#06264a] hover:text-[#5f743d]" aria-current={current.activeDivision === "home" ? "page" : undefined}>Home</a>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <a
+          href="/garage-doors"
+          class:list={[
+            "group rounded-2xl border p-4 transition",
+            garageActive
+              ? "border-[#7d9253] bg-[#06264a] text-white shadow-lg shadow-[#06264a]/20"
+              : "border-[#d8ded0] bg-[#f7f5ef] text-[#06264a] hover:-translate-y-0.5 hover:border-[#7d9253]",
+          ]}
+          aria-current={garageActive ? "page" : undefined}
+        >
+          <span class:list={["grid h-9 w-9 place-items-center rounded-full text-lg", garageActive ? "bg-white/12 text-[#dce7b8]" : "bg-[#06264a] text-white"]}>⌂</span>
+          <span class="mt-3 block text-[0.68rem] font-bold uppercase tracking-[0.16em] opacity-70">Service Division</span>
+          <span class="mt-1 block text-base font-bold leading-tight">Garage Doors</span>
+        </a>
+
+        <a
+          href="/pool-services"
+          class:list={[
+            "group rounded-2xl border p-4 transition",
+            poolActive
+              ? "border-[#79d8f7] bg-[linear-gradient(135deg,_#05314b_0%,_#0b7aa5_100%)] text-white shadow-lg shadow-[#075c7e]/20"
+              : "border-[#bfe8f4] bg-[#f4fbfe] text-[#075c7e] hover:-translate-y-0.5 hover:border-[#0b7aa5]",
+          ]}
+          aria-current={poolActive ? "page" : undefined}
+        >
+          <span class:list={["grid h-9 w-9 place-items-center rounded-full text-lg", poolActive ? "bg-white/12 text-[#d8f6ff]" : "bg-[#075c7e] text-white"]}>≈</span>
+          <span class="mt-3 block text-[0.68rem] font-bold uppercase tracking-[0.16em] opacity-70">Service Division</span>
+          <span class="mt-1 block text-base font-bold leading-tight">Pool Services</span>
+        </a>
+      </div>
+
+      <div class="mt-3 grid grid-cols-2 gap-3">
+        <a href={current.specialHref} class:list={["rounded-xl border px-4 py-3 text-sm font-semibold transition", specialsActive ? (poolActive ? "border-[#79d8f7] bg-[#e8f9fe] text-[#075c7e]" : "border-[#7d9253]/40 bg-[#eef2e5] text-[#4e612f]") : "border-slate-200 text-slate-700 hover:border-[#7d9253] hover:text-[#5f743d]"]} aria-current={specialsActive ? "page" : undefined}>
+          {current.specialLabel}
+        </a>
+        <a href={current.contactHref} class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#0b7aa5] hover:text-[#0b7aa5]">Contact</a>
+      </div>
+
+      <a href={current.mobileCtaHref} class:list={["mt-3 flex items-center justify-between rounded-2xl px-5 py-4 font-semibold text-white shadow-lg transition hover:-translate-y-0.5", poolActive ? "bg-[#075c7e] shadow-[#075c7e]/20 hover:bg-[#064867]" : "bg-[#06264a] shadow-[#06264a]/20 hover:bg-[#0a335f]"]}>
+        <span>{current.mobileCtaLabel}</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </nav>
+</header>
+
+<script src="/mobile-menu.js" defer></script>
+
+<style>
+  #mobile-menu[data-open="true"] {
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  #mobile-menu-backdrop[data-open="true"] {
+    pointer-events: auto;
+    opacity: 1;
+  }
+
+  #mobile-menu-backdrop[data-open="false"] {
+    pointer-events: none;
+  }
+
+  #menu-btn[aria-expanded="true"] [data-menu-line="top"] {
+    transform: translateY(0.5rem) rotate(45deg);
+  }
+
+  #menu-btn[aria-expanded="true"] [data-menu-line="middle"] {
+    opacity: 0;
+  }
+
+  #menu-btn[aria-expanded="true"] [data-menu-line="bottom"] {
+    transform: translateY(-0.5rem) rotate(-45deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #mobile-menu,
+    #mobile-menu-backdrop,
+    #menu-btn [data-menu-line] {
+      transition: none;
+    }
+  }
+</style>

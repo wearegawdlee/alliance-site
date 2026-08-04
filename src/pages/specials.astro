@@ -1,172 +1,61 @@
 ---
 import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 
-const BIZ = {
-  name: "Alliance Garage Doors of Roswell",
-  phone: "(770)742-9433",
-  phoneHref: "7707429433",
-  email: "contact@agdofroswell.com",
-  hours: "Mon–Sun 9:00am–8:00pm",
-  site: "agdofroswell.com",
+const BRAND = {
+  name: "Alliance Home Services",
+  garageDivision: "Alliance Garage Doors of Roswell",
+  poolDivision: "Spring Water Pool Services",
+  garagePhone: "(770)742-9433",
+  garagePhoneHref: "7707429433",
+  poolPhone: "(470)524-2197",
+  poolPhoneHref: "4705242197",
 };
 
-const title = `Spring Replacement & Conversion Special | ${BIZ.name}`;
+const title = `Specials | ${BRAND.name}`;
 const description =
-  "Spring Replacement & Conversion Special: $150 off service through June 30, 2026. Free inspections and free quotes from Alliance Garage Doors of Roswell.";
+  "Choose the right Alliance Home Services special for garage door service or pool service.";
 ---
 
 <Base {title} {description}>
-  <header class="border-b border-slate-900/10 bg-white/95 shadow-sm backdrop-blur">
-    <div class="bg-[#06264a] text-white">
-      <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between md:text-sm">
-        <p>⌖ Proudly Serving Roswell & North Atlanta</p>
-        <div class="flex flex-wrap gap-4 text-white/90">
-          <span>◷ {BIZ.hours}</span>
-          <a class="font-semibold hover:text-[#8fa463]" href={`tel:${BIZ.phoneHref}`}>☎ {BIZ.phone}</a>
-        </div>
-      </div>
-    </div>
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-      <a href="/" aria-label="Visit full website"><img src="/logo-header.png" alt={`${BIZ.name} logo`} class="h-20 w-auto object-contain md:h-28" /></a>
-      <nav class="hidden items-center gap-6 text-sm font-medium text-slate-700 md:flex">
-        <a href="/" class="hover:text-[#5f743d]">Home</a>
-        <a href="/#services" class="hover:text-[#5f743d]">Services</a>
-        <a href="/#why" class="hover:text-[#5f743d]">Why Us</a>
-        <a href="/#recent" class="hover:text-[#5f743d]">Recent Work</a>
-        <a href="/#areas" class="hover:text-[#5f743d]">Areas</a>
-        <a href="/#faq" class="hover:text-[#5f743d]">FAQ</a>
-        <a href="/#contact" class="hover:text-[#5f743d]">Contact</a>
-        <a href="#quick-estimate" class="rounded-lg bg-[#657b45] px-5 py-3 font-semibold text-white shadow-sm hover:bg-[#55693a]">Claim Special</a>
-      </nav>
-    </div>
-  </header>
+  <SiteHeader variant="specials" />
 
   <main>
     <section class="relative overflow-hidden bg-[#06264a] text-white">
-      <div class="absolute inset-0">
-        <img src="/After1.webp" alt="Garage door opening smoothly" class="h-full w-full object-cover opacity-50" />
-        <div class="absolute inset-0 bg-gradient-to-r from-[#061f3e] via-[#06264a]/90 to-[#06264a]/35"></div>
-      </div>
-      <div class="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[0.95fr_1.05fr] md:items-center md:py-24">
-        <div>
-          <h1 class="mt-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl">SPRING INTO SMOOTH OPERATION</h1>
-          <div class="mt-7 space-y-4 text-white/90">
-            <p class="text-2xl leading-snug md:text-[2rem]">
-              Spring Replacement &amp;<br />
-              Conversion Special<br />
-              <span class="font-bold text-[#b2c47d]">$150 OFF</span>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(184,202,128,0.18),_transparent_30%),linear-gradient(135deg,_#041a33_0%,_#06264a_46%,_#0b4c70_100%)]"></div>
+      <div class="relative mx-auto max-w-7xl px-4 py-18 md:py-24">
+        <div class="max-w-4xl">
+          <p class="text-sm font-bold uppercase tracking-[0.22em] text-[#b8ca80]">{BRAND.name}</p>
+          <h1 class="mt-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl">Choose the special that matches the service you need.</h1>
+          <p class="mt-5 max-w-3xl text-lg leading-8 text-white/90">
+            Pick your lane first so the offer, form, and follow-up all stay aligned with the job you actually want.
+          </p>
+        </div>
+
+        <div class="mt-10 grid gap-6 lg:grid-cols-2">
+          <a href="/garage-door-specials" class="group rounded-[2rem] border border-white/15 bg-white/10 p-8 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/14">
+            <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#b8ca80]">{BRAND.garageDivision}</p>
+            <h2 class="mt-4 text-3xl font-bold tracking-tight">Garage Door Special</h2>
+            <p class="mt-4 max-w-xl text-base leading-7 text-white/82">
+              Spring replacement and conversion offer for garage door customers who want the dedicated garage service lane.
             </p>
-            <div class="pt-2 text-lg uppercase tracking-wide text-white/80">
-              <p>Free Inspections</p>
-              <p>Free Quotes</p>
+            <div class="mt-8 inline-flex items-center gap-3 rounded-full bg-[#7d9253] px-5 py-3 font-semibold text-white transition group-hover:bg-[#6d814a]">
+              View Garage Door Special
             </div>
-          </div>
-          <div class="mt-8 flex flex-wrap gap-4">
-            <a href="#quick-estimate" class="rounded-lg bg-[#7d9253] px-6 py-4 font-semibold text-white shadow-lg shadow-black/20 hover:bg-[#657b45]">Claim $150 Off →</a>
-            <a href={`tel:${BIZ.phoneHref}`} class="rounded-lg border border-white/40 bg-white/10 px-6 py-4 font-semibold text-white backdrop-blur hover:bg-white/20">Call {BIZ.phone}</a>
-          </div>
+          </a>
+
+          <a href="/pool-specials" class="group rounded-[2rem] border border-white/15 bg-white/10 p-8 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/14">
+            <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#8fe8ff]">{BRAND.poolDivision}</p>
+            <h2 class="mt-4 text-3xl font-bold tracking-tight">Pool Services Special</h2>
+            <p class="mt-4 max-w-xl text-base leading-7 text-white/82">
+              Pool-only specials for recurring service, seasonal help, and clean route-specific follow-up.
+            </p>
+            <div class="mt-8 inline-flex items-center gap-3 rounded-full bg-white px-5 py-3 font-semibold text-[#075c7e] transition group-hover:bg-[#e8fbff]">
+              View Pool Services Special
+            </div>
+          </a>
         </div>
-        <div class="rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
-          <img src="/After1.webp" alt="Garage door opening smoothly" class="h-[24rem] w-full rounded-2xl object-cover" />
-          <div class="mt-4 grid gap-3 text-sm text-white/85 sm:grid-cols-3">
-            <div class="rounded-xl bg-white/10 p-3">Free inspections</div>
-            <div class="rounded-xl bg-white/10 p-3">Free quotes</div>
-            <div class="rounded-xl bg-white/10 p-3">Local Roswell service</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="bg-[#f7f5ef]">
-      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-        <div class="rounded-3xl bg-[#06264a] p-8 text-white shadow-xl shadow-slate-900/10">
-          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#9aad68]">Limited-time spring offer</p>
-          <h2 class="mt-3 text-3xl font-bold">Need help with your garage door? We’re ready to help.</h2>
-          <p class="mt-4 text-white/80">Tell us what you need and we’ll follow up fast. Schedule your free estimate today.</p>
-          <div class="mt-7 space-y-3 text-sm">
-            <p><strong>Website:</strong> {BIZ.site}</p>
-            <p><strong>Hours:</strong> {BIZ.hours}</p>
-            <p><strong>Phone:</strong> <a class="underline decoration-white/30 underline-offset-4 hover:text-[#9aad68]" href={`tel:${BIZ.phoneHref}`}>{BIZ.phone}</a></p>
-          </div>
-        </div>
-
-        <form id="quick-estimate" class="rounded-3xl border border-slate-200 bg-white p-5 text-slate-900 shadow-xl shadow-slate-900/10 md:p-7" data-lead-form data-lead-source="Spring special form">
-          <input type="hidden" name="form_name" value="bio-funnel-specials" />
-          <input type="hidden" name="landing_page" value="/specials" />
-          <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
-
-          <div class="mb-6 text-center">
-            <h2 class="text-2xl font-bold text-[#08284c]">Claim your spring special</h2>
-            <p class="mt-2 text-sm text-slate-600">Tell us what you need and we’ll follow up fast.</p>
-          </div>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="name">Name</label>
-              <input id="name" name="name" required autocomplete="name" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="phone">Phone</label>
-              <input id="phone" name="phone" required autocomplete="tel" inputmode="tel" pattern="[0-9()+.\-\s]{7,20}" maxlength="20" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="email">Email</label>
-              <input id="email" name="email" type="email" autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="preferred_contact">Preferred Contact Method</label>
-              <select id="preferred_contact" name="preferred_contact" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15">
-                <option value="">Select one</option>
-                <option>Call</option>
-                <option>Text</option>
-                <option>Email</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <label class="block text-sm font-semibold text-slate-700" for="address">Address</label>
-            <input id="address" name="address" required autocomplete="address-line1" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
-          </div>
-
-          <div class="mt-4 grid gap-4 md:grid-cols-3">
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="city">City</label>
-              <input id="city" name="city" required autocomplete="address-level2" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="state">State</label>
-              <input id="state" name="state" value="GA" readonly autocomplete="address-level1" class="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-slate-600" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-700" for="zip">ZIP Code</label>
-              <input id="zip" name="zip" required inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <label class="block text-sm font-semibold text-slate-700" for="service_type">Service Type</label>
-            <select id="service_type" name="service_type" required class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15">
-              <option value="">Select one</option>
-              <option>Spring Replacement</option>
-              <option>Spring Conversion</option>
-              <option>Spring Repair / Inspection</option>
-              <option>Not Sure Yet</option>
-            </select>
-          </div>
-
-          <div class="mt-4">
-            <label class="block text-sm font-semibold text-slate-700" for="message">What do you need?</label>
-            <textarea id="message" name="message" rows={3} class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" placeholder="Broken spring, aging springs, conversion question, inspection request, etc."></textarea>
-          </div>
-
-          <button type="submit" class="mt-5 w-full rounded-xl bg-[#06264a] px-5 py-4 font-semibold text-white hover:bg-[#0a335f]">Claim $150 Off</button>
-          <p class="mt-3 hidden rounded-xl px-3 py-2 text-sm" data-lead-status role="status" aria-live="polite"></p>
-          <p class="mt-4 text-center text-xs text-slate-500">By submitting, you agree to be contacted about your service request.</p>
-        </form>
       </div>
     </section>
   </main>
-
-  <script src="/form.js" defer></script>
 </Base>

@@ -61,10 +61,27 @@
     return formSource;
   };
 
+  const normalizeServiceCategory = (value) => {
+    const selected = String(value || "").trim().toLowerCase();
+
+    if (selected === "garage door service") return "garage_door";
+    if (selected === "pool service") return "pool";
+    if (selected === "both") return "both";
+    if (selected === "not sure") return "unsure";
+
+    return selected.replace(/\s+/g, "_") || "unsure";
+  };
+
   const buildPayload = (form) => {
     const values = Object.fromEntries(new FormData(form).entries());
 
     return {
+      brand: values.brand || "Alliance Home Services",
+      business_source: values.business_source || "alliance_home_services",
+      page_source: values.page_source || "home",
+      service_category: normalizeServiceCategory(values.service_category),
+      landing_page: values.landing_page,
+      form_name: values.form_name,
       name: values.name,
       phone: values.phone,
       email: values.email,
