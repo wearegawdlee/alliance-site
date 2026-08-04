@@ -1,0 +1,92 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+
+const BRAND = {
+  name: "Alliance Home Services",
+  poolDivision: "Spring Water Pool Services",
+  garagePhone: "(770)742-9433",
+  garagePhoneHref: "7707429433",
+  poolPhone: "(470)524-2197",
+  poolPhoneHref: "4705242197",
+  email: "contact@agdofroswell.com",
+};
+
+const title = `Pool Specials | ${BRAND.name}`;
+const description =
+  "Request a free estimate for recurring pool service, one-time cleanups, chemical balancing, and seasonal pool resets from Spring Water Pool Services.";
+---
+
+<Base {title} {description}>
+  <SiteHeader variant="pool-specials" />
+
+  <main>
+    <section class="relative overflow-hidden bg-[#05314b] text-white">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(121,216,247,0.28),_transparent_30%),linear-gradient(135deg,_#04273b_0%,_#05314b_52%,_#0a7aa5_100%)]"></div>
+      <div class="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[0.95fr_1.05fr] md:items-center md:py-24">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#8fe8ff]">{BRAND.poolDivision}</p>
+          <h1 class="mt-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl">Start with a free pool-service estimate</h1>
+          <p class="mt-5 text-2xl leading-snug md:text-4xl">Get a clear next step for <span class="font-bold text-[#8fe8ff]">recurring care, a one-time cleanup, water balancing, or a seasonal reset.</span></p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href="#quick-estimate" class="rounded-lg bg-white px-6 py-4 font-semibold text-[#075c7e] shadow-lg shadow-black/20 hover:bg-[#e8fbff]">Request Free Estimate</a>
+            <a href={`tel:${BRAND.poolPhoneHref}`} class="rounded-lg border border-white/40 bg-white/10 px-6 py-4 font-semibold text-white backdrop-blur hover:bg-white/20">Call {BRAND.poolPhone}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-[#f4fbfe]">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        <div class="rounded-3xl bg-[#05314b] p-8 text-white shadow-xl shadow-slate-900/10">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#8fe8ff]">Free Pool-Service Estimate</p>
+          <h2 class="mt-3 text-3xl font-bold">Tell us what is happening with your pool.</h2>
+          <p class="mt-4 text-white/80">Cloudy water, heavy debris, inconsistent chemistry, missed maintenance, or an equipment concern—share what you are seeing and whether you want one-time or recurring care.</p>
+        </div>
+
+        <form id="quick-estimate" class="rounded-3xl border border-slate-200 bg-white p-5 text-slate-900 shadow-xl shadow-slate-900/10 md:p-7" data-lead-form data-lead-source="Pool special form">
+          <input type="hidden" name="brand" value="Alliance Home Services" />
+          <input type="hidden" name="business_source" value="alliance_home_services" />
+          <input type="hidden" name="page_source" value="pool_specials" />
+          <input type="hidden" name="landing_page" value="/pool-specials" />
+          <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="block text-sm font-semibold text-slate-700">Name<input name="name" required autocomplete="name" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" /></label>
+            <label class="block text-sm font-semibold text-slate-700">Phone<input name="phone" required autocomplete="tel" inputmode="tel" pattern="[0-9()+.\-\s]{7,20}" maxlength="20" class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" /></label>
+          </div>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="block text-sm font-semibold text-slate-700">Service Category
+              <select name="service_category" required class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15">
+                <option value="">Select one</option>
+                <option selected>Pool Service</option>
+                <option>Garage Door Service</option>
+                <option>Both</option>
+                <option>Not Sure</option>
+              </select>
+            </label>
+            <label class="block text-sm font-semibold text-slate-700">Service Type
+              <select name="service_type" required class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15">
+                <option value="">Select one</option>
+                <option>Recurring Pool Service</option>
+                <option>One-Time Pool Service</option>
+                <option>Seasonal Pool Reset</option>
+                <option>Pool Cleaning</option>
+                <option>Chemical Balancing</option>
+                <option>Filter / Equipment Check</option>
+                <option>Not Sure Yet</option>
+              </select>
+            </label>
+          </div>
+          <div class="mt-4">
+            <label class="block text-sm font-semibold text-slate-700">Message<textarea name="message" rows={3} class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 focus:border-[#0b7aa5] focus:outline-none focus:ring-4 focus:ring-[#79d8f7]/15" placeholder="Recurring pool service, cleanup, cloudy water, or seasonal reset."></textarea></label>
+          </div>
+          <button type="submit" class="mt-5 w-full rounded-xl bg-[#05314b] px-5 py-4 font-semibold text-white hover:bg-[#064867]">Request Free Estimate</button>
+          <p class="mt-3 hidden rounded-xl px-3 py-2 text-sm" data-lead-status role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="/form.js" defer></script>
+</Base>

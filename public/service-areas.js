@@ -1,7 +1,7 @@
 (function () {
   const serviceAreas = [
-    "Alpharetta","Atlanta","Brookhaven","Buckhead","Buford","Canton","Chamblee",
-    "Cumming","Decatur","Doraville","Duluth","Dunwoody","Druid Hills","East Cobb","Johns Creek","Kennesaw",
+    "Alpharetta","Atlanta","Brookhaven","Buckhead","Canton","Chamblee",
+    "Decatur","Doraville","Dunwoody","Druid Hills","East Cobb","Johns Creek","Kennesaw",
     "Marietta","Milton","Norcross","Peachtree Corners","Roswell","Sandy Springs","Smyrna","Suwanee","Woodstock",
   ];
 

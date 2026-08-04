@@ -1,0 +1,413 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+
+const BRAND = {
+  name: "Alliance Home Services",
+  garageDivision: "Alliance Garage Doors of Roswell",
+  poolDivision: "Spring Water Pool Services",
+  garagePhone: "(770)742-9433",
+  garagePhoneHref: "7707429433",
+  poolPhone: "(470)524-2197",
+  poolPhoneHref: "4705242197",
+  email: "contact@agdofroswell.com",
+  address: "Roswell, GA 30075",
+  hours: "Mon-Sun 9:00am-8:00pm",
+};
+
+const serviceAreas = [
+  "Alpharetta", "Atlanta", "Brookhaven", "Buckhead", "Canton", "Chamblee",
+  "Decatur", "Doraville", "Dunwoody", "Druid Hills", "East Cobb", "Johns Creek", "Kennesaw",
+  "Marietta", "Milton", "Norcross", "Peachtree Corners", "Roswell", "Sandy Springs", "Smyrna", "Suwanee", "Woodstock",
+];
+
+const garageServices = [
+  {
+    title: "Repairs",
+    desc: "Broken springs, cables, rollers, tracks, panels, off-track doors, and noisy operation fixes.",
+    icon: "✦",
+    bullets: ["Torsion and extension springs", "Cables, rollers, and hinges", "Track and alignment"],
+  },
+  {
+    title: "Openers",
+    desc: "Install, replace, or repair belt and chain drive openers with smart-home setup support.",
+    icon: "⌁",
+    bullets: ["LiftMaster and Genie", "Keypads and remotes", "MyQ, HomeKit, and Google"],
+  },
+  {
+    title: "New Doors",
+    desc: "Sales and installation for steel, carriage, insulated, and glass garage doors.",
+    icon: "⌂",
+    bullets: ["Design consult", "Insulated R-values", "Haul-away included"],
+  },
+  {
+    title: "Maintenance",
+    desc: "Tune-ups, safety checks, balance checks, and preventative care before expensive failures.",
+    icon: "✓",
+    bullets: ["Annual tune-ups", "Safety sensors", "Door balance and force"],
+  },
+];
+
+const whyCards = [
+  {
+    title: "No pressure, just solutions",
+    body: "Clear diagnostics and options. If a repair is all you need, that’s what we’ll do.",
+  },
+  {
+    title: "Parts that last",
+    body: "We use high-cycle springs, sealed rollers, and pro-grade hardware to extend service life.",
+  },
+  {
+    title: "Respect for your time",
+    body: "Tight arrival windows and text updates so you’re not stuck waiting all day.",
+  },
+  {
+    title: "Local and accountable",
+    body: "Owned in Roswell. We live where we work. Your referrals keep us honest.",
+  },
+];
+
+const faqs = [
+  {
+    q: "What should I include when requesting an estimate?",
+    a: "For fastest pricing, include your service address and text us photos of the door and/or issue.",
+  },
+  {
+    q: "Do you handle broken springs and opener issues?",
+    a: "Yes. If your door is stuck, heavy, noisy, uneven, or not responding to the opener, we can diagnose the issue and recommend the safest repair.",
+  },
+  {
+    q: "Where do you service?",
+    a: "We’re based in Roswell and cover North Atlanta, including Alpharetta, Sandy Springs, Marietta, Milton, and surrounding areas.",
+  },
+];
+
+const title = `Garage Door Services | ${BRAND.name}`;
+const description =
+  "Residential garage door repair, spring replacement, opener installs, and new doors from Alliance Garage Doors of Roswell.";
+---
+
+<Base {title} {description}>
+  <SiteHeader variant="garage" />
+
+  <main>
+    <section class="relative overflow-hidden bg-[#06264a] text-white">
+      <div class="absolute inset-0">
+        <img src="/After1.webp" alt="Finished garage door project" class="h-full w-full object-cover opacity-45" />
+        <div class="absolute inset-0 bg-[linear-gradient(135deg,_rgba(6,31,62,0.97)_0%,_rgba(6,38,74,0.92)_48%,_rgba(8,104,144,0.55)_100%)]"></div>
+      </div>
+      <div class="relative mx-auto max-w-7xl px-4 py-20 md:py-28 lg:py-32">
+        <div class="max-w-4xl">
+          <p class="mb-4 text-lg font-bold uppercase tracking-[0.14em] text-[#d8f6ff] sm:text-xl md:text-2xl">{BRAND.garageDivision}</p>
+          <h1 class="text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+            Fast, reliable garage door repair and installation
+          </h1>
+          <p class="mt-5 max-w-3xl text-lg leading-8 text-white/90">
+            Broken spring, opener issue, off-track door, or full replacement. We'll help you get it fixed.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href="#contact" class="rounded-lg bg-[#7d9253] px-6 py-4 font-semibold text-white shadow-lg shadow-black/20 hover:bg-[#657b45]">Your FREE Estimate</a>
+            <a href="/garage-door-specials" class="rounded-lg border border-white/40 bg-white/10 px-6 py-4 font-semibold text-white backdrop-blur hover:bg-white/20">Current Specials</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-[#06264a] text-white">
+      <div class="mx-auto grid max-w-7xl gap-4 border-t border-white/10 px-4 py-7 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["✓", "Family Owned", "Local & trusted"],
+          ["✓", "Licensed & Insured", "Your home is protected"],
+          ["✓", "IDEA Certified", "Professional technicians"],
+          ["✓", "Respect for your time", "Clear arrival windows"],
+        ].map(([icon, titleText, body]) => (
+          <div class="flex items-center gap-4 border-white/10 py-2 lg:border-r lg:last:border-r-0">
+            <div class="grid h-12 w-12 place-items-center rounded-full border border-white/20 text-xl text-[#9aad68]">{icon}</div>
+            <div>
+              <p class="font-semibold">{titleText}</p>
+              <p class="text-sm text-white/70">{body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section id="services" class="scroll-mt-48 bg-[#f7f5ef]">
+      <div class="mx-auto max-w-7xl px-4 py-16 md:py-20">
+        <div class="mx-auto max-w-3xl text-center">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#7d9253]">Garage Door Services</p>
+          <p class="mt-4 text-slate-600">
+            Whether it’s a broken spring, dented panel, or a quiet new opener, we keep your doors functioning safely and securely.
+          </p>
+        </div>
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {garageServices.map((service) => (
+            <article class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/10 transition hover:-translate-y-1 hover:border-[#7d9253]/40 hover:shadow-xl">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-5">
+                <div class="grid h-14 w-14 place-items-center rounded-full bg-[#06264a] text-2xl text-white shadow-sm">{service.icon}</div>
+                <div class="h-1 w-14 rounded-full bg-[#7d9253]"></div>
+              </div>
+              <div class="pt-6">
+                <h3 class="text-xl font-bold text-[#08284c]">{service.title}</h3>
+                <p class="mt-3 text-sm leading-6 text-slate-600">{service.desc}</p>
+                <ul class="mt-5 space-y-2 text-sm text-slate-700">
+                  {service.bullets.map((bullet) => (
+                    <li class="flex gap-2">
+                      <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#7d9253]"></span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="why" class="scroll-mt-48 bg-[#06264a] text-white">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[0.9fr_1.4fr] md:py-20">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#9aad68]">Why Choose {BRAND.garageDivision}</p>
+          <h2 class="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Why choose {BRAND.garageDivision}?</h2>
+          <p class="mt-4 text-white/80">
+            We’re the crew neighbors call when they want it fixed right the first time.
+          </p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+          {whyCards.map((card) => (
+            <article class="border-l border-white/15 bg-white/[0.03] p-5">
+              <div class="mb-4 grid h-11 w-11 place-items-center rounded-full border border-[#9aad68]/50 text-[#9aad68]">✓</div>
+              <h3 class="font-semibold">{card.title}</h3>
+              <p class="mt-2 text-sm leading-6 text-white/75">{card.body}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="recent" class="scroll-mt-48 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-16 md:py-20">
+        <div class="mx-auto max-w-3xl text-center">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#7d9253]">Recent Work</p>
+          <h2 class="mt-3 text-3xl font-bold tracking-tight text-[#08284c] md:text-4xl">A few before and after pics from the past month.</h2>
+        </div>
+        <div class="mt-10 grid gap-6 md:grid-cols-2">
+          <figure class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/10">
+            <img src="/Before1.webp" alt="Garage door project before service" class="h-72 w-full object-cover" />
+          </figure>
+          <figure class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/10">
+            <img src="/After1.webp" alt="Garage door project after service" class="h-72 w-full object-cover" />
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="areas" class="scroll-mt-48 bg-[#f7f5ef]">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:items-center">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#7d9253]">Service Areas</p>
+          <h2 class="mt-3 text-3xl font-bold text-[#08284c] md:text-4xl">Based in Roswell, covering North Atlanta.</h2>
+          <p class="mt-4 text-slate-600">Search your city below to confirm whether you are in the general garage door service area.</p>
+        </div>
+        <div class="rounded-3xl bg-[#06264a] p-6 text-white shadow-xl shadow-slate-900/10">
+          <div class="relative space-y-3">
+            <input id="service-area-input" placeholder="Search your city..." list="service-areas" class="w-full rounded-2xl bg-white px-4 py-4 pr-12 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#9aad68]/30" />
+            <button type="button" id="service-area-check" class="w-full rounded-2xl bg-[#7d9253] px-4 py-3 font-semibold text-white hover:bg-[#657b45]">Check Availability</button>
+            <datalist id="service-areas">
+              {serviceAreas.map((area) => <option value={area} />)}
+            </datalist>
+            <p id="service-area-result" class="mt-3 text-sm" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="scroll-mt-48 bg-[#7d9253] text-white">
+      <div class="mx-auto max-w-5xl px-4 py-16">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold">FAQ</h2>
+          <p class="mt-3 text-white/85">Quick answers before you request garage door service.</p>
+        </div>
+        <div class="mt-8 grid gap-4">
+          {faqs.map((item) => (
+            <article class="rounded-2xl border border-white/20 bg-white p-5 text-slate-900 shadow-lg shadow-[#435126]/20">
+              <h3 class="font-semibold text-[#08284c]">{item.q}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">{item.a}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" data-mobile-before="why" class="scroll-mt-48 bg-[#f7f5ef]">
+      <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div class="rounded-3xl bg-[#06264a] p-8 text-white shadow-xl shadow-slate-900/10">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-[#9aad68]">Get an Estimate</p>
+          <h2 class="mt-3 text-3xl font-bold md:text-4xl">Call, text, or send the form.</h2>
+          <p class="mt-4 text-white/80">For fastest pricing, include your service address and text us photos of the door and/or issue.</p>
+          <div class="mt-7 space-y-3 text-sm">
+            <p><strong>Call/Text:</strong> <a class="underline decoration-white/30 underline-offset-4 hover:text-[#9aad68]" href={`tel:${BRAND.garagePhoneHref}`}>{BRAND.garagePhone}</a></p>
+            <p><strong>Email:</strong> <a class="underline decoration-white/30 underline-offset-4 hover:text-[#9aad68]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a></p>
+            <p><strong>Hours:</strong> {BRAND.hours}</p>
+          </div>
+        </div>
+
+        <form class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/10 md:p-7" data-lead-form data-lead-source="Alliance Garage Doors garage doors page form">
+          <input type="hidden" name="brand" value="Alliance Home Services" />
+          <input type="hidden" name="business_source" value="alliance_home_services" />
+          <input type="hidden" name="page_source" value="garage_doors" />
+          <input type="hidden" name="landing_page" value="/garage-doors" />
+          <input type="hidden" name="service_category" value="Garage Door Service" />
+          <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="name">Name</label>
+              <input id="name" name="name" autocomplete="name" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="phone">Phone</label>
+              <input id="phone" name="phone" autocomplete="tel" inputmode="tel" pattern="[0-9()+.\\-\\s]{7,20}" maxlength="20" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="email">Email</label>
+              <input id="email" type="email" name="email" autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="preferred_contact">Preferred Contact Method</label>
+              <select id="preferred_contact" name="preferred_contact" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15">
+                <option value="">Select one</option>
+                <option>Call</option>
+                <option>Text</option>
+                <option>Email</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-sm font-semibold text-slate-700" for="address">Address</label>
+            <input id="address" name="address" autocomplete="address-line1" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-3">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="city">City</label>
+              <input id="city" name="city" autocomplete="address-level2" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="state">State</label>
+              <input id="state" name="state" value="GA" autocomplete="address-level1" readonly class="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-slate-600" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="zip">ZIP Code</label>
+              <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" />
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="service_type">Service Type</label>
+              <select id="service_type" name="service_type" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15">
+                <option value="">Select one</option>
+                <option>Repair</option>
+                <option>Opener</option>
+                <option>New Door</option>
+                <option>Maintenance</option>
+                <option>Free Estimate</option>
+                <option>Not Sure Yet</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700" for="source">How did you hear about us?</label>
+              <select id="source" name="source" required autocomplete="off" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15">
+                <option value="">Select one</option>
+                <option>Google Search</option>
+                <option>Instagram</option>
+                <option>Facebook</option>
+                <option>Nextdoor</option>
+                <option>Yard Sign / Truck</option>
+                <option>Friend / Referral</option>
+                <option>Repeat Customer</option>
+                <option>Other</option>
+              </select>
+              <input id="source_other" name="source_other" class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" placeholder="If Other or Referral, tell us who or where" style="display:none" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-sm font-semibold text-slate-700" for="message">What’s going on?</label>
+            <textarea id="message" name="message" rows={4} class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-3 focus:border-[#7d9253] focus:outline-none focus:ring-4 focus:ring-[#7d9253]/15" placeholder="Broken spring, opener issue, new door quote, noisy operation, or another garage door problem."></textarea>
+          </div>
+
+          <button type="submit" class="mt-5 w-full rounded-xl bg-[#06264a] px-5 py-4 font-semibold text-white hover:bg-[#0a335f]">Send Request</button>
+          <p class="mt-3 hidden rounded-xl px-3 py-2 text-sm" data-lead-status role="status" aria-live="polite"></p>
+          <div class="mt-4 text-center">
+            <p class="text-xs text-slate-500">By submitting, you agree to be contacted about your service request.</p>
+            <p class="text-xs text-slate-500">We only use your info to reply. No sharing, no spam.</p>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-[#06264a] text-white">
+    <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm md:grid-cols-4">
+      <div>
+        <img src="/logo-main.webp" alt={`${BRAND.name} logo`} class="h-16 w-auto rounded bg-white p-2" />
+        <p class="mt-4 text-white/70">Garage door and pool services under one clearer umbrella brand.</p>
+      </div>
+      <div>
+        <p class="font-semibold">Quick Links</p>
+        <ul class="mt-3 space-y-2 text-white/75">
+          <li><a class="hover:text-[#9aad68]" href="/">Home</a></li>
+          <li><a class="hover:text-[#9aad68]" href="/garage-doors">Garage Doors</a></li>
+          <li><a class="hover:text-[#78d9ff]" href="/pool-services">Pool Services</a></li>
+          <li><a class="hover:text-[#9aad68]" href="/garage-door-specials">Garage Door Specials</a></li>
+          <li><a class="hover:text-[#9aad68]" href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-semibold">Contact</p>
+        <ul class="mt-3 space-y-2 text-white/75">
+          <li>Garage Doors: <a class="hover:text-[#9aad68]" href={`tel:${BRAND.garagePhoneHref}`}>{BRAND.garagePhone}</a></li>
+          <li>Pool: <a class="hover:text-[#78d9ff]" href={`tel:${BRAND.poolPhoneHref}`}>{BRAND.poolPhone}</a></li>
+          <li><a class="hover:text-[#9aad68]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a></li>
+          <li>{BRAND.address}</li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-semibold">Divisions</p>
+        <ul class="mt-3 space-y-2 text-white/75">
+          <li>{BRAND.garageDivision}</li>
+          <li>{BRAND.poolDivision}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 py-4 text-center text-xs text-white/55">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
+  </footer>
+
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "HomeAndConstructionBusiness",
+      name: BRAND.name,
+      telephone: BRAND.garagePhone,
+      email: BRAND.email,
+      areaServed: serviceAreas,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: BRAND.address,
+        addressLocality: "Roswell",
+        addressRegion: "GA",
+        postalCode: "30075",
+        addressCountry: "US"
+      },
+      url: "https://agdofroswell.com/garage-doors"
+    })}
+  </script>
+
+  <script src="/service-areas.js" defer></script>
+  <script src="/form.js" defer></script>
+  <script src="/responsive-section-order.js" defer></script>
+</Base>
